@@ -36,9 +36,6 @@ int main(int argv, char* argc[]) {
     embGateway->start();
 
     cout << "Hello World!" << endl;
-    embGateway->stop();
-    cout << "What this!" << endl;
-    LOG(INFO) << "Stop Gateway-Picaso version emb-0.0.1";
 
     gw::managers::ManagerDetails *managerDetails1;
     gw::managers::ManagerDetails *managerDetails2;
@@ -74,10 +71,18 @@ int main(int argv, char* argc[]) {
     auto manager1 = reinterpret_cast<gw::managers::GWManagerIf*>(managerDetails1->initializeFunc());
     auto manager2 = reinterpret_cast<gw::managers::GWManagerIf*>(managerDetails2->initializeFunc());
 
+    manager1->setListener(embGateway);
+    manager2->setListener(embGateway);
     manager1->startManager();
     manager2->startManager();
+    manager1->notifyListener("DeviceManager");
+    manager1->notifyListener("NetworkManager");
     manager1->stopManager();
     manager2->stopManager();
+
+    embGateway->stop();
+    cout << "What this!" << endl;
+    LOG(INFO) << "Stop Gateway-Picaso version emb-0.0.1";
 
     dlclose(dmhndl);
     dlclose(nmhndl);

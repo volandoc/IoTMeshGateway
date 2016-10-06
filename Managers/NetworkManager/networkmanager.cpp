@@ -16,6 +16,21 @@ int NetworkManager::startManager(){
     return 0;
 }
 
+int NetworkManager::executeCommand(){
+    std::cout << "Network Manager: executeCommand" << std::endl;
+    return 0;
+}
+
+int NetworkManager::getCommandSet(){
+    std::cout << "Network Manager: getCommandSet" << std::endl;
+    return 0;
+}
+
+int NetworkManager::getCapabilitiesSet(){
+    std::cout << "Network Manager: getCapabilitiesSet" << std::endl;
+    return 0;
+}
+
 int NetworkManager::stopManager(){
     std::cout << "Network Manager: Stopped" << std::endl;
     return 0;

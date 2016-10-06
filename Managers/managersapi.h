@@ -1,5 +1,8 @@
 #ifndef MANAGERSAPI_H
 #define MANAGERSAPI_H
+
+#include <string>
+
 namespace gw {
 namespace managers {
 
@@ -15,11 +18,34 @@ namespace managers {
 #   define GW_MANAGER_EXPORT // empty
 #endif
 
-class GWManagerIf{
-public:
-    virtual int startManager()=0;
-    virtual int stopManager()=0;
 
+class GWManagerListenerIF{
+public :
+    virtual int sendToCloud()=0;
+    virtual int notifyListener(std::string message)=0;
+    virtual int errorHandler()=0;
+    virtual int commandResult()=0;
+};
+
+
+class GWManagerIf{
+private:
+    GWManagerListenerIF* managerListener;
+public:
+    virtual void setListener(GWManagerListenerIF* mngrListener){
+        this->managerListener=mngrListener;
+    }
+
+    virtual int notifyListener(std::string message){
+        this->managerListener->notifyListener(message);
+        return 0;
+    }
+
+    virtual int startManager()=0;
+    virtual int executeCommand()=0;
+    virtual int getCommandSet()=0;
+    virtual int getCapabilitiesSet()=0;
+    virtual int stopManager()=0;
 };
 
 GW_MANAGER_EXPORT typedef GWManagerIf* (*GetManagerFunc)();
@@ -39,12 +65,12 @@ struct ManagerDetails {
 
 #define GW_MANAGER(classType, managerName, managerVersion)          \
   extern "C" {                                                      \
-      GW_MANAGER_EXPORT gw::managers::GWManagerIf* getManager()\
+      GW_MANAGER_EXPORT gw::managers::GWManagerIf* getManager()     \
       {                                                             \
           static classType singleton;                               \
           return &singleton;                                        \
       }                                                             \
-      GW_MANAGER_EXPORT gw::managers::ManagerDetails exportDetails = \
+      GW_MANAGER_EXPORT gw::managers::ManagerDetails exportDetails =\
       {                                                             \
           GW_MANAGER_STANDART_INFO,                                 \
           #classType,                                               \

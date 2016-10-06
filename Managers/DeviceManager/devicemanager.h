@@ -9,6 +9,9 @@ public:
     virtual ~DeviceManager();
 
     virtual int startManager();
+    virtual int executeCommand();
+    virtual int getCommandSet();
+    virtual int getCapabilitiesSet();
     virtual int stopManager();
 
 };

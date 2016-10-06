@@ -1,3 +1,4 @@
+#include <iostream>
 #include "gateway.h"
 #include "mqttclient.h"
 #include <string.h>
@@ -33,6 +34,23 @@ int gateway::start(void){
     mqttClient->do_subscribe(topics_count, topics, 1);
     mqttClient->do_publish("Test", "{'test':'message'}", 0);
 
+    return 0;
+}
+
+int gateway::sendToCloud(){
+    return 0;
+}
+
+int gateway::notifyListener(string message){
+    std::cout << "Gateway Nitified: " << message << endl;
+    return 0;
+}
+
+int gateway::errorHandler(){
+    return 0;
+}
+
+int gateway::commandResult(){
     return 0;
 }
 

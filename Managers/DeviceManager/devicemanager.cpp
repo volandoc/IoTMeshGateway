@@ -16,6 +16,21 @@ int DeviceManager::startManager(){
     return 0;
 }
 
+int DeviceManager::executeCommand(){
+    std::cout << "Device Manager: executeCommand" << std::endl;
+    return 0;
+}
+
+int DeviceManager::getCommandSet(){
+    std::cout << "Device Manager: getCommandSet" << std::endl;
+    return 0;
+}
+
+int DeviceManager::getCapabilitiesSet(){
+    std::cout << "Device Manager: getCapabilitiesSet" << std::endl;
+    return 0;
+}
+
 int DeviceManager::stopManager(){
     std::cout << "Device Manager: Stopped" << std::endl;
     return 0;

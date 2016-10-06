@@ -3,17 +3,22 @@
 
 #include <string.h>
 #include "mqttclient.h"
+#include "Managers/managersapi.h"
 
 using namespace std;
 
-class gateway
-{
+class gateway: public gw::managers::GWManagerListenerIF{
 public:
     gateway(void);
     gateway(const char *iFN, const char *confFolder);
-    ~gateway(void);
+    virtual ~gateway(void);
     int start(void);
     int stop(void);
+
+    virtual int sendToCloud();
+    virtual int notifyListener(string);
+    virtual int errorHandler();
+    virtual int commandResult();
 
 private:
     void loadConfig();
