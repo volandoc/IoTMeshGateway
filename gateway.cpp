@@ -1,7 +1,8 @@
 #include <iostream>
+#include <string.h>
 #include "gateway.h"
 #include "mqttclient.h"
-#include <string.h>
+#include "easylogging++.h"
 
 gateway::gateway(void){
     this->mqttHost = "localhost";
@@ -42,7 +43,7 @@ int gateway::sendToCloud(){
 }
 
 int gateway::notifyListener(string message){
-    std::cout << "Gateway Nitified: " << message << endl;
+    LOG(INFO) << "Gateway Notified: " << message << endl;
     return 0;
 }
 

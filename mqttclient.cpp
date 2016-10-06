@@ -1,7 +1,8 @@
-#include "mqttclient.h"
 #include <mosquittopp.h>
 #include <iostream>
 #include <string.h>
+#include "easylogging++.h"
+#include "mqttclient.h"
 
 mqttclient::mqttclient(const char *id, const char *host, int port, int keepalive, bool clean_session, int max_inflight, bool eol, int protocol_version): mosquittopp(id){
     config.id = id;
@@ -89,33 +90,33 @@ int mqttclient::do_publish(const char *topic, const char *message, int qos){
 
 void mqttclient::on_connect(int rc){
     if( rc == 0 ){
-        std::cout << ">> myMosq - connected with server\n";
+        LOG(INFO) << ">> myMosq - connected with server";
     } else {
-        std::cout << ">> myMosq - Impossible to connect with server(" << rc << ")\n";
+        LOG(INFO) << ">> myMosq - Impossible to connect with server(" << rc << ")";
     }
 }
 
 void mqttclient::on_disconnect(int rc){
-    std::cout << ">> myMosq - disconnection(" << rc << ")\n";
+    LOG(INFO) << ">> myMosq - disconnection(" << rc << ")";
     if(!disconnected_by_user){
         this->reconnect_async();
     }
 }
 
 void mqttclient::on_subscribe(int mid, int qos_count, const int *granted_qos){
-    std::cout << ">> myMosq - Topic(" << mid << ")(" << qos_count << ")(" << granted_qos << ") subscribed\n";
+    LOG(INFO) << ">> myMosq - Topic(" << mid << ")(" << qos_count << ")(" << granted_qos << ") subscribed";
 }
 
 void mqttclient::on_unsubscribe(int mid){
-    std::cout << ">> myMosq - Topic(" << mid << ") unsubscribed\n";
+    LOG(INFO) << ">> myMosq - Topic(" << mid << ") unsubscribed";
 }
 
 void mqttclient::on_message(const struct mosquitto_message *message){
-    std::cout << ">> myMosq - Message(" << message->mid << ") on Topic(" << message->topic << ")\n";
+    LOG(INFO) << ">> myMosq - Message(" << message->mid << ") on Topic(" << message->topic << ")";
 }
 
 void mqttclient::on_publish(int mid){
-    std::cout << ">> myMosq - Message(" << mid << ") succeed to be published\n";
+    LOG(INFO) << ">> myMosq - Message(" << mid << ") succeed to be published";
 }
 
 void mqttclient::on_error(){
