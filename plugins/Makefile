@@ -1,15 +1,15 @@
-MANAGERS := $(sort $(dir $(wildcard */)))
+PLUGINS := $(sort $(dir $(wildcard */)))
 
 all: subdirs
 
 subdirs:
-	for dir in $(MANAGERS); do \
+	for dir in $(PLUGINS); do \
 		$(MAKE) all -C $$dir; \
 	done	
 
 clean: csubdirs
 
 csubdirs:
-	for dir in $(MANAGERS); do \
+	for dir in $(PLUGINS); do \
 		$(MAKE) clean -C $$dir; \
 	done	

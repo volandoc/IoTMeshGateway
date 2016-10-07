@@ -1,37 +1,37 @@
-#include "devicemanager.h"
+#include "LifXBulbPlugin.h"
 #include <iostream>
 
-GW_MANAGER(DeviceManager, "Device Manager", "0.0.1")
+UCL_PLUGIN(LifXBulbPlugin, "LifX Bulb Plugin", "0.0.1")
 
-DeviceManager::DeviceManager(){
+LifXBulbPlugin::LifXBulbPlugin(){
     std::cout << "Device Manager: Created" << std::endl;
 }
 
-DeviceManager::~DeviceManager(){
+LifXBulbPlugin::~LifXBulbPlugin(){
     std::cout << "Device Manager: Removed" << std::endl;
 }
 
-int DeviceManager::startManager(){
+int LifXBulbPlugin::startPlugin(){
     std::cout << "Device Manager: Started" << std::endl;
     return 0;
 }
 
-int DeviceManager::executeCommand(){
+int LifXBulbPlugin::executeCommand(){
     std::cout << "Device Manager: executeCommand" << std::endl;
     return 0;
 }
 
-int DeviceManager::getCommandSet(){
+int LifXBulbPlugin::getCommandSet(){
     std::cout << "Device Manager: getCommandSet" << std::endl;
     return 0;
 }
 
-int DeviceManager::getCapabilitiesSet(){
+int LifXBulbPlugin::getCapabilitiesSet(){
     std::cout << "Device Manager: getCapabilitiesSet" << std::endl;
     return 0;
 }
 
-int DeviceManager::stopManager(){
+int LifXBulbPlugin::stopPlugin(){
     std::cout << "Device Manager: Stopped" << std::endl;
     return 0;
 }

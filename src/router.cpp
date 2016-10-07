@@ -1,35 +1,35 @@
 #include <iostream>
 #include <string.h>
-#include "gateway.h"
+#include "router.h"
 #include "mqttclient.h"
 #include "easylogging++.h"
 
-gateway::gateway(void){
+router::router(void){
     this->mqttHost = "localhost";
-    this->gatewayId = "embgw123";
+    this->routerId = "embgw123";
     this->mqttPort = 1883;
     this->CONFIGURATION_FOLDER = "conf";
     this->initFileName = "";
 }
 
-gateway::gateway(const char *iFN, const char *confFolder){
+router::router(const char *iFN, const char *confFolder){
     this->CONFIGURATION_FOLDER = confFolder;
     this->initFileName = iFN;
 }
 
-gateway::~gateway(void){
+router::~router(void){
 }
 
-void gateway::loadConfig(){
+void router::loadConfig(){
 
 }
 
-int gateway::start(void){
+int router::start(void){
     loadConfig();
     const char *topics[]={"Test", "Test2"};
     int topics_count=2;
 
-    this->mqttClient = new mqttclient(this->gatewayId, this->mqttHost);
+    this->mqttClient = new mqttclient(this->routerId, this->mqttHost);
 
     mqttClient->do_connect_async();
     mqttClient->do_subscribe(topics_count, topics, 1);
@@ -38,24 +38,24 @@ int gateway::start(void){
     return 0;
 }
 
-int gateway::sendToCloud(){
+int router::sendToCloud(){
     return 0;
 }
 
-int gateway::notifyListener(string message){
-    LOG(INFO) << "Gateway Notified: " << message << endl;
+int router::notificationArived(string message){
+    LOG(INFO) << "router Notified: " << message << endl;
     return 0;
 }
 
-int gateway::errorHandler(){
+int router::errorHandler(){
     return 0;
 }
 
-int gateway::commandResult(){
+int router::commandResult(){
     return 0;
 }
 
-int gateway::stop(void){
+int router::stop(void){
 
     mqttClient->do_disconnect();
     delete mqttClient;

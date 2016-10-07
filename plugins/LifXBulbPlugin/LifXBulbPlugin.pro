@@ -4,18 +4,18 @@
 #
 #-------------------------------------------------
 
-QT       -= core gui
+QT     -= core gui
 CONFIG += c++11
 
-TARGET = DeviceManager
+TARGET = LifXBulbPlugin
 TEMPLATE = lib
 
-DEFINES += GW_MANAGERS_EXPORTS
+DEFINES += UCL_PLUGINS_EXPORTS
 
-SOURCES += devicemanager.cpp
+SOURCES += src/LifXBulbPlugin.cpp
 
-HEADERS += devicemanager.h \
-    ../managersapi.h
+HEADERS += include/LifXBulbPlugin.h \
+    ../include/pluginsapi.h
 
 unix {
     target.path = /usr/lib

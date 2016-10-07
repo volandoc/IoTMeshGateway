@@ -11,11 +11,11 @@
 
 INITIALIZE_EASYLOGGINGPP
 
-#include "gateway.h"
+#include "router.h"
 #include "mqttclient.h"
-#include "Managers/managersapi.h"
+#include "pluginsapi.h"
 
-gateway * embGateway = new gateway();
+router * embGateway = new router();
 list<void *> mngrslist;
 
 void sleep(unsigned msec) {
@@ -80,9 +80,9 @@ int main(int argv, char* argc[]) {
     registerSignalHandler();
 
     // Set the plugin shared library location
-    mngrslist=loadManagers("../Managers");
-    std::string path1("../Managers/DeviceManager/libDeviceManager.so.1.0.0");
-    std::string path2("../Managers/NetworkManager/libNetworkManager.so.1.0.0");
+    mngrslist=loadManagers("../plugins");
+    std::string path1("../plugins/LifXBulbPlugin/LifXBulbPlugin.so.1.0.0");
+    std::string path2("../plugins/NetworkingPlugin/NetworkingPlugin.so.1.0.0");
     void *dmhndl = dlopen(path1.c_str(), RTLD_NOW);
     if(dmhndl==NULL){
         LOG(ERROR) << dlerror();
@@ -98,48 +98,46 @@ int main(int argv, char* argc[]) {
 
     LOG(INFO) << "Hello World!";
 
-    gw::managers::ManagerDetails *managerDetails1;
-    gw::managers::ManagerDetails *managerDetails2;
+    ucl::plugins::PluginDetails *managerDetails1;
+    ucl::plugins::PluginDetails *managerDetails2;
 
-    managerDetails1 = reinterpret_cast<gw::managers::ManagerDetails*> (dlsym(dmhndl, "exportDetails"));
+    managerDetails1 = reinterpret_cast<ucl::plugins::PluginDetails*> (dlsym(dmhndl, "exportDetails"));
 
-    managerDetails2 = reinterpret_cast<gw::managers::ManagerDetails*> (dlsym(nmhndl, "exportDetails"));
+    managerDetails2 = reinterpret_cast<ucl::plugins::PluginDetails*> (dlsym(nmhndl, "exportDetails"));
 
     LOG(INFO) << "Plugin Info: "
                 << "\n\tAPI Version: " << managerDetails1->apiVersion
-                << "\n\tFile Name: " << managerDetails1->fileName
                 << "\n\tClass Name: " << managerDetails1->className
-                << "\n\tPlugin Name: " << managerDetails1->managerName
-                << "\n\tPlugin Version: " << managerDetails1->managerVersion
+                << "\n\tPlugin Name: " << managerDetails1->pluginName
+                << "\n\tPlugin Version: " << managerDetails1->pluginVersion
                 << std::endl;
 
     LOG(INFO) << "Plugin Info: "
                 << "\n\tAPI Version: " << managerDetails2->apiVersion
-                << "\n\tFile Name: " << managerDetails2->fileName
                 << "\n\tClass Name: " << managerDetails2->className
-                << "\n\tPlugin Name: " << managerDetails2->managerName
-                << "\n\tPlugin Version: " << managerDetails2->managerVersion
+                << "\n\tPlugin Name: " << managerDetails2->pluginName
+                << "\n\tPlugin Version: " << managerDetails2->pluginVersion
                 << std::endl;
 
     // API Version checking
-    if (managerDetails1->apiVersion != GW_MANAGER_API_VERSION)
+    if (managerDetails1->apiVersion != UCL_PLUGINS_API_VERSION)
         throw std::runtime_error("Plugin ABI version mismatch.");
 
-    if (managerDetails2->apiVersion != GW_MANAGER_API_VERSION)
+    if (managerDetails2->apiVersion != UCL_PLUGINS_API_VERSION)
         throw std::runtime_error("Plugin ABI version mismatch.");
 
     // Instantiate the plugin
-    auto manager1 = reinterpret_cast<gw::managers::GWManagerIf*>(managerDetails1->initializeFunc());
-    auto manager2 = reinterpret_cast<gw::managers::GWManagerIf*>(managerDetails2->initializeFunc());
+    auto manager1 = reinterpret_cast<ucl::plugins::UCLPluginIf*>(managerDetails1->initializeFunc());
+    auto manager2 = reinterpret_cast<ucl::plugins::UCLPluginIf*>(managerDetails2->initializeFunc());
 
     manager1->setListener(embGateway);
     manager2->setListener(embGateway);
-    manager1->startManager();
-    manager2->startManager();
+    manager1->startPlugin();
+    manager2->startPlugin();
     manager1->notifyListener("DeviceManager");
     manager1->notifyListener("NetworkManager");
-    manager1->stopManager();
-    manager2->stopManager();
+    manager1->stopPlugin();
+    manager2->stopPlugin();
 
     dlclose(dmhndl);
     dlclose(nmhndl);
