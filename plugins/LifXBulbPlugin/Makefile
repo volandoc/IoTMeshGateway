@@ -28,12 +28,12 @@ AR            = ar cqs
 ###
 # Define target file names
 ###
-TARGET        = LifXBulbPlugin.so.1.0.0
-TARGETA       = LifXBulbPlugin.a
-TARGET0       = LifXBulbPlugin.so
-TARGETD       = LifXBulbPlugin.so.1.0.0
-TARGET1       = LifXBulbPlugin.so.1
-TARGET2       = LifXBulbPlugin.so.1.0
+TARGET        = libLifXBulbPlugin.so.1.0.0
+TARGETA       = libLifXBulbPlugin.a
+TARGET0       = libLifXBulbPlugin.so
+TARGETD       = libLifXBulbPlugin.so.1.0.0
+TARGET1       = libLifXBulbPlugin.so.1
+TARGET2       = libLifXBulbPlugin.so.1.0
 
 
 ###

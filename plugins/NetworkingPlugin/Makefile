@@ -29,12 +29,12 @@ SYMLINK       = ln -f -s
 ###
 # Define target file names
 ###
-TARGET        = NetworkingPlugin.so.1.0.0
-TARGETA       = NetworkingPlugin.a
-TARGET0       = NetworkingPlugin.so
-TARGETD       = NetworkingPlugin.so.1.0.0
-TARGET1       = NetworkingPlugin.so.1
-TARGET2       = NetworkingPlugin.so.1.0
+TARGET        = libNetworkingPlugin.so.1.0.0
+TARGETA       = libNetworkingPlugin.a
+TARGET0       = libNetworkingPlugin.so
+TARGETD       = libNetworkingPlugin.so.1.0.0
+TARGET1       = libNetworkingPlugin.so.1
+TARGET2       = libNetworkingPlugin.so.1.0
 
 
 ###

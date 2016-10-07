@@ -81,8 +81,8 @@ int main(int argv, char* argc[]) {
 
     // Set the plugin shared library location
     mngrslist=loadManagers("../plugins");
-    std::string path1("../plugins/LifXBulbPlugin/LifXBulbPlugin.so.1.0.0");
-    std::string path2("../plugins/NetworkingPlugin/NetworkingPlugin.so.1.0.0");
+    std::string path1("../plugins/LifXBulbPlugin/libLifXBulbPlugin.so.1.0.0");
+    std::string path2("../plugins/NetworkingPlugin/libNetworkingPlugin.so.1.0.0");
     void *dmhndl = dlopen(path1.c_str(), RTLD_NOW);
     if(dmhndl==NULL){
         LOG(ERROR) << dlerror();
