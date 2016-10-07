@@ -16,8 +16,8 @@ LFLAGS        = -Wl,-O1
 LIBS          = $(SUBLIBS) -lmosquittopp -ldl -lpthread
 INCPATH       = -I../EmbGateway/include -I./include -I./plugins/include
 DESTDIR       = bin
-SOURCES       = main.cpp route.cpp mqttclient.cpp
-OBJECTS       = main.o router.o mqttclient.o
+SOURCES       = main.cpp plugincontainer.cpp route.cpp mqttclient.cpp
+OBJECTS       = main.o plugincontainer.o router.o mqttclient.o
 
 BIN_DIR = bin
 SUBPROJECT_DIR  = plugins
@@ -53,6 +53,9 @@ $(TARGET): $(OBJECTS)
 
 main.o: src/main.cpp include/router.h include/mqttclient.h plugins/include/pluginsapi.h include/easylogging++.h
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o main.o src/main.cpp
+
+plugincontainer.o: src/plugincontainer.cpp include/plugincontainer.h include/plugincontainerif.h
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o plugincontainer.o src/plugincontainer.cpp
 
 mqttclient.o: src/mqttclient.cpp include/mqttclient.h
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o mqttclient.o src/mqttclient.cpp

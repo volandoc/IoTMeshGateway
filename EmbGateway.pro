@@ -17,6 +17,7 @@ HEADERS += \
     include/mqttclient.h \
     include/templates.h \
     plugins/include/pluginsapi.h \
-    include/plugincontainer.h
+    include/plugincontainer.h \
+    include/plugincontainerif.h
 
 LIBS += -lmosquittopp -ldl
