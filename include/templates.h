@@ -1,5 +1,5 @@
-#ifndef GWTEMPLATES_H
-#define GWTEMPLATES_H
+#ifndef TEMPLATES_H
+#define TEMPLATES_H
 
 #include <cstdlib>
 

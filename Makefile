@@ -14,13 +14,13 @@ CFLAGS        = -c -pipe -O2 -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -c -pipe -O2 -std=gnu++11 -Wall -W -fPIC $(DEFINES)
 LFLAGS        = -Wl,-O1
 LIBS          = $(SUBLIBS) -lmosquittopp -ldl -lpthread
-INCPATH       = -I../EmbGateway -I.
+INCPATH       = -I../EmbGateway/include -I./include -I./plugins/include
 DESTDIR       = bin
-SOURCES       = main.cpp gateway.cpp mqttclient.cpp
-OBJECTS       = main.o gateway.o mqttclient.o
+SOURCES       = main.cpp plugincontainer.cpp route.cpp mqttclient.cpp
+OBJECTS       = main.o plugincontainer.o router.o mqttclient.o
 
 BIN_DIR = bin
-MANAGERS_DIR  = Managers
+SUBPROJECT_DIR  = plugins
 
 ###
 # Define system commands
@@ -46,21 +46,24 @@ all: managers $(TARGET)
 	-$(MOVE_FILE) $(TARGET) $(DESTDIR)
 
 managers:
-	$(MAKE) -C $(MANAGERS_DIR)
+	$(MAKE) -C $(SUBPROJECT_DIR)
 
 $(TARGET): $(OBJECTS)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
 
-ain.o: main.cpp gateway.h mqttclient.h Managers/managersapi.h easylogging++.h
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
+main.o: src/main.cpp include/router.h include/mqttclient.h plugins/include/pluginsapi.h include/easylogging++.h
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o main.o src/main.cpp
 
-mqttclient.o: mqttclient.cpp mqttclient.h
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o mqttclient.o mqttclient.cpp
+plugincontainer.o: src/plugincontainer.cpp include/plugincontainer.h include/plugincontainerif.h
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o plugincontainer.o src/plugincontainer.cpp
 
-gateway.o: gateway.cpp gateway.h mqttclient.h Managers/managersapi.h
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o gateway.o gateway.cpp
+mqttclient.o: src/mqttclient.cpp include/mqttclient.h
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o mqttclient.o src/mqttclient.cpp
+
+router.o: src/router.cpp include/router.h include/mqttclient.h plugins/include/pluginsapi.h
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o router.o src/router.cpp
 
 clean:
 	-$(DEL_DIR) $(BIN_DIR)
 	-$(DEL_FILE) $(OBJECTS)
-	$(MAKE) clean -C $(MANAGERS_DIR)
+	$(MAKE) clean -C $(SUBPROJECT_DIR)

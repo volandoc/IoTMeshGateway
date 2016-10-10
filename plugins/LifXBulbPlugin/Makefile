@@ -8,33 +8,32 @@ LINK          = g++
 ###
 # Define compile flags and defines
 ###
-DISTNAME      = NetworkManager1.0.0
-DEFINES       = -DGW_MANAGERS_EXPORTS
+DISTNAME      =  LifXBulbPlugin1.0.0
+DEFINES       = -DUCL_PLUGINS_EXPORTS
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-LFLAGS        = -shared -Wl,-soname,libNetworkManager.so.1
-INCPATH       = -I../NetworkManager -I.
+LFLAGS        = -shared -Wl,-soname,LifXBulbPlugin.so.1
+INCPATH       = -I./include -I../include
 LIBS          = $(SUBLIBS) -lpthread 
 DESTDIR       = 
-SOURCES       = networkmanager.cpp 
-OBJECTS       = networkmanager.o
+SOURCES       = src/LifXBulbPlugin.cpp 
+OBJECTS       = LifXBulbPlugin.o
 
 ###
 # Define system commands
 ###
 DEL_FILE      = rm -f
 AR            = ar cqs
-SYMLINK       = ln -f -s
 
 ###
 # Define target file names
 ###
-TARGET        = libNetworkManager.so.1.0.0
-TARGETA       = libNetworkManager.a
-TARGET0       = libNetworkManager.so
-TARGETD       = libNetworkManager.so.1.0.0
-TARGET1       = libNetworkManager.so.1
-TARGET2       = libNetworkManager.so.1.0
+TARGET        = libLifXBulbPlugin.so.1.0.0
+TARGETA       = libLifXBulbPlugin.a
+TARGET0       = libLifXBulbPlugin.so
+TARGETD       = libLifXBulbPlugin.so.1.0.0
+TARGET1       = libLifXBulbPlugin.so.1
+TARGET2       = libLifXBulbPlugin.so.1.0
 
 
 ###
@@ -45,9 +44,9 @@ all: $(TARGET) staticlib
 $(TARGET):  $(OBJECTS)  
 	-$(DEL_FILE) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
-	-$(SYMLINK) $(TARGET) $(TARGET0)
-	-$(SYMLINK) $(TARGET) $(TARGET1)
-	-$(SYMLINK) $(TARGET) $(TARGET2)
+	-ln -s $(TARGET) $(TARGET0)
+	-ln -s $(TARGET) $(TARGET1)
+	-ln -s $(TARGET) $(TARGET2)
 
 staticlib: $(TARGETA)
 
@@ -55,9 +54,9 @@ $(TARGETA):  $(OBJECTS)
 	-$(DEL_FILE) $(TARGETA) 
 	$(AR) $(TARGETA) $(OBJECTS)
 
-networkmanager.o: networkmanager.cpp networkmanager.h \
-		../managersapi.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o networkmanager.o networkmanager.cpp
+LifXBulbPlugin.o: src/LifXBulbPlugin.cpp include/LifXBulbPlugin.h \
+		../include/pluginsapi.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o LifXBulbPlugin.o src/LifXBulbPlugin.cpp
 
 clean:
 	-$(DEL_FILE) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2) $(TARGETA) $(OBJECTS)

@@ -1,34 +1,33 @@
-#ifndef GATEWAY_H
-#define GATEWAY_H
+#ifndef ROUTER_H
+#define ROUTER_H
 
-#include <string.h>
+#include <string>
 #include "mqttclient.h"
-#include "Managers/managersapi.h"
+#include "pluginsapi.h"
 
 using namespace std;
 
-class gateway: public gw::managers::GWManagerListenerIF{
+class router: public ucl::plugins::NotificationListenerIF{
 public:
-    gateway(void);
-    gateway(const char *iFN, const char *confFolder);
-    virtual ~gateway(void);
+    router(void);
+    router(const char *iFN, const char *confFolder);
+    virtual ~router(void);
     int start(void);
     int stop(void);
 
     virtual int sendToCloud();
-    virtual int notifyListener(string);
+    virtual int notificationArived(string);
     virtual int errorHandler();
     virtual int commandResult();
 
 private:
     void loadConfig();
-
     const char *initFileName;
     const char *CONFIGURATION_FOLDER;
     mqttclient *mqttClient;
-    const char *gatewayId;
+    const char *routerId;
     const char *mqttHost;
     int mqttPort;
 };
 
-#endif // GATEWAY_H
+#endif // ROUTER_H

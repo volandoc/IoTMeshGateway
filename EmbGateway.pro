@@ -3,15 +3,21 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-SOURCES += main.cpp \
-    mqttclient.cpp \
-    gateway.cpp \
+INCLUDEPATH += $$PWD/include \
+    $$PWD/plugins/include
+
+SOURCES += src/main.cpp \
+    src/mqttclient.cpp \
+    src/router.cpp \
+    src/plugincontainer.cpp
 
 HEADERS += \
-    easylogging++.h \
-    gateway.h \
-    mqttclient.h \
-    gwtemplates.h \
-    Managers/managersapi.h \
+    include/easylogging++.h \
+    include/router.h \
+    include/mqttclient.h \
+    include/templates.h \
+    plugins/include/pluginsapi.h \
+    include/plugincontainer.h \
+    include/plugincontainerif.h
 
 LIBS += -lmosquittopp -ldl
