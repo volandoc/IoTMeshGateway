@@ -1,5 +1,5 @@
 GLEmbGateway
-=================
+============
 
 ### Table of Contents
 <pre>
@@ -31,7 +31,7 @@ Gateway - project, which was created for combining different devices running on 
  [Goto Top](#table-of-contents)
 
 ### Environment
-GLEmbGateway running on linux systems, for more information please read ["Environment setup"]()
+GLEmbGateway running on linux systems, for more information please read ["Environment setup"](docs/environment.md)
 
  [Goto Top](#table-of-contents)
 
@@ -40,22 +40,59 @@ GLEmbGateway running on linux systems, for more information please read ["Enviro
  * [POCO](https://pocoproject.org/)  C++ framework used for working with SQLite, json, XML
  * [Easylogging++](https://github.com/easylogging/easyloggingpp) - very simple but powerfull logging library (added to sources of GLEmbGateway)
 
-for more information please read ["Dependencies instalation"]()
+for more information please read ["Dependencies instalation"](docs/dependencies.md)
 
  [Goto Top](#table-of-contents)
 
 # Getting started
 ### Donwload
+Stable version using git 
+```bash
+git clone https://portal-ua.globallogic.com/gitlab/andrii.maslianyi/EmbGateway.git
+cd EmbGateway
+```
+
+Latest version using git 
+```bash
+git clone https://portal-ua.globallogic.com/gitlab/andrii.maslianyi/EmbGateway.git
+cd EmbGateway
+git checkout dev
+```
+
  [Goto Top](#table-of-contents)
 
 ### Compiling
+The build system is based on GNU Make 3.80 (or newer). If you do not have GNU Make 3.80 (or newer) installed on your machine, you will need to download it from <http://directory.fsf.org/devel/build/make.html> and build and install it prior to building the EmbGateway sources.
+
+To compile go to source folder and run
+```bash
+$ make all
+```
+
+If you prefer to use IDE for compiling project contains files for [QT-Creator](https://www.qt.io/ide/). Please [download](https://www.qt.io/download/) QT-Creator version 5.5.0 or later and install folowing manual by QT team.
+
+After instalation run QT-Creator and press "Open Project" button in main screen. Provide path to EmbGateway project files. When project successfuly open go to "projects" tab in left menu and in "build&run" tab add build-step "Make" with argument "install"
+
 [Goto Top](#table-of-contents)
 
 ### Installing
+Not implemented yet
+
 [Goto Top](#table-of-contents)
 
 ### Runing
+After compiling run
+```bash
+$ cd bin && ./embgateway
+```
+
 [Goto Top](#table-of-contents)
 
 # Configuration
+There is two configiration files in [conf](conf/) folder.
+
+[logger.conf](conf/logger.conf) - contain configuration for Easylogging++. You can read all documentation about configuration here <https://github.com/easylogging/easyloggingpp#using-configuration-file>
+
+[gateway.conf](conf/logger.conf) - contains configuration for core component
+
 [Goto Top](#table-of-contents)
