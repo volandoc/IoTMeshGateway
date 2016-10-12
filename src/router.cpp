@@ -43,7 +43,7 @@ int router::sendToCloud(){
 }
 
 int router::notificationArived(string message){
-    LOG(INFO) << "router Notified: " << message << endl;
+    LOG(INFO) << "router Notified: " << message;
     return 0;
 }
 

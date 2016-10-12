@@ -13,6 +13,7 @@ public:
     virtual std::string GetPluginsPath()=0;
     virtual std::map<std::string, ucl::plugins::UCLPluginIf*> GetLoadedPlugins()=0;
     virtual std::map<std::string, int> GetFailedPlugins()=0;
+    virtual int registerPluginsListener(ucl::plugins::NotificationListenerIF*) = 0;
     virtual int unloadPlugins()=0;
     virtual bool HasLoadErrors()=0;
 };
