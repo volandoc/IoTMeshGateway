@@ -23,9 +23,25 @@ In most linux repositories mosquitto provided without dinamyc libraries, so you 
 The following packages are required for mosquitto:
 
 * tcp-wrappers (optional, package name libwrap0-dev)
+```bash
+$ sudo apt-get install libwrap0-dev
+```
+
 * openssl (version 1.0.0 or greater if TLS-PSK support is needed, can be disabled)
+```bash
+$ sudo apt-get install openssl libssl-dev
+```
+
 * c-ares (for DNS-SRV support, can be disabled)
+```bash
+$ sudo apt-get install libc-ares-dev
+```
+
 * libuuid (from e2fsprogs, can be disabled)
+```bash
+$ sudo apt-get install uuid-dev
+```
+
 * On Windows, the Redhat pthreads library is required if threading support is
   to be included.
 
@@ -35,12 +51,9 @@ To compile run
 ```bash
 $ make all
 ```
-, but also see the file config.mk for more details on the
-various options that can be compiled in.
+but also see the file config.mk for more details on the various options that can be compiled in.
 
-Where possible use the Makefiles to compile. This is particularly relevant for
-the client libraries as symbol information will be included.  Use cmake to
-compile on Windows or Mac.
+Where possible use the Makefiles to compile. This is particularly relevant for the client libraries as symbol information will be included.  Use cmake to compile on Windows or Mac.
 
 ### Instalation
 
@@ -50,7 +63,7 @@ $ make install
 ```
 [Goto Top](#table-of-contents)
 
-#POCO C++
+# POCO C++
 ### Description
 [POCO](https://pocoproject.org/) open source C++ class libraries for building network- and internet-based applications that run on desktop, server, mobile and embedded systems
 
