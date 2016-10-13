@@ -3,6 +3,7 @@
 
 #include <mosquittopp.h>
 #include <string>
+#include "mqttclientconfig.h"
 
 struct mosquitto_config {
     const char *id;
@@ -90,6 +91,8 @@ public:
     void on_disconnect(int rc);
 
 private:
+    bool is_onboarded;
+
     void config_init(struct mosquitto_config *cfg);
     void config_cleanup();
 
