@@ -14,7 +14,7 @@ CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,NetworkingPlugin.so.1
 INCPATH       = -I../include -I./include
-LIBS          = $(SUBLIBS) -lpthread 
+LIBS          = $(SUBLIBS) -lpthread -lPocoFoundation
 DESTDIR       = 
 SOURCES       = src/NetworkingPlugin.cpp 
 OBJECTS       = NetworkingPlugin.o

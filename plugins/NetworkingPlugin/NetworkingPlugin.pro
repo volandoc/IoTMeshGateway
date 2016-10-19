@@ -21,6 +21,8 @@ HEADERS += include/NetworkingPlugin.h \
     ../include/pluginsapi.h \
     ../include/easylogging++.h
 
+LIBS += -lPocoFoundation
+
 unix {
     target.path = $$PWD
     INSTALLS += target

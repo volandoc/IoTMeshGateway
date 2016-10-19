@@ -1,9 +1,11 @@
 #include "LifXBulbPlugin.h"
 #include <iostream>
 
-UCL_PLUGIN(LifXBulbPlugin, "LifX Bulb Plugin", "0.0.1")
-
 LifXBulbPlugin::LifXBulbPlugin(){
+    this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
+    this->pluginDetails.className = "LifXBulbPlugin";
+    this->pluginDetails.pluginName ="LifX Bulb Plugin";
+    this->pluginDetails.pluginVersion = "0.0.1";
     std::cout << "Device Manager: Created" << std::endl;
 }
 
@@ -29,6 +31,10 @@ int LifXBulbPlugin::getCommandSet(){
 int LifXBulbPlugin::getCapabilitiesSet(){
     std::cout << "Device Manager: getCapabilitiesSet" << std::endl;
     return 0;
+}
+
+PluginDetails* LifXBulbPlugin::getPluginDetails(){
+    return &pluginDetails;
 }
 
 int LifXBulbPlugin::stopPlugin(){

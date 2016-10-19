@@ -20,6 +20,8 @@ SOURCES += src/LifXBulbPlugin.cpp
 HEADERS += include/LifXBulbPlugin.h \
     ../include/pluginsapi.h
 
+LIBS += -lPocoFoundation
+
 unix {
     target.path = $$PWD
     INSTALLS += target

@@ -3,11 +3,10 @@
 
 #include <string>
 #include "mqttclient.h"
-#include "pluginsapi.h"
 
 using namespace std;
 
-class router: public ucl::plugins::NotificationListenerIF{
+class router {
 public:
     router(void);
     router(const char *iFN, const char *confFolder);

@@ -1,9 +1,11 @@
 #include "NetworkingPlugin.h"
 #include <iostream>
 
-UCL_PLUGIN(NetworkingPlugin, "Networking Plugin", "0.0.1")
-
 NetworkingPlugin::NetworkingPlugin(){
+    this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
+    this->pluginDetails.className = "NetworkingPlugin";
+    this->pluginDetails.pluginName ="Networking Plugin";
+    this->pluginDetails.pluginVersion = "0.0.1";
     std::cout << "Network Manager: Created" << std::endl;
 }
 
@@ -29,6 +31,10 @@ int NetworkingPlugin::getCommandSet(){
 int NetworkingPlugin::getCapabilitiesSet(){
     std::cout << "Network Manager: getCapabilitiesSet" << std::endl;
     return 0;
+}
+
+PluginDetails* NetworkingPlugin::getPluginDetails(){
+     return &pluginDetails;
 }
 
 int NetworkingPlugin::stopPlugin(){

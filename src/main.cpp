@@ -8,13 +8,21 @@
 
 INITIALIZE_EASYLOGGINGPP
 
+#include <Poco/ClassLoader.h>
+#include <Poco/Manifest.h>
 #include "router.h"
 #include "mqttclient.h"
 #include "pluginsapi.h"
 #include "plugincontainer.h"
+#include "innerbusapi.h"
 
-router embGateway = router();
-PluginContainer pluginContainer = PluginContainer();
+typedef Poco::ClassLoader<InnerBusIF> BusLoader;
+typedef Poco::Manifest<InnerBusIF> BusManifest;
+
+router embGateway;
+PluginContainer pluginContainer;
+BusLoader busLoader;
+InnerBusClientIF* busClient = NULL;
 
 void sleep(unsigned msec) {
     struct timespec req, rem;
@@ -36,15 +44,16 @@ void sleep(unsigned msec) {
 }
 
 void signalHandler( int signum ) {
-    LOG(INFO) << "What this!";
     LOG(INFO) << "Interrupt signal (" << signum << ") received.\n";
     LOG(INFO) << "Stop Gateway-Picaso version emb-0.0.1";
     // cleanup and close up stuff here
     // terminate program
     pluginContainer.unloadPlugins();
     embGateway.stop();
+    busLoader.unloadLibrary("../core/InnerBus/InnerBus.so");
+    delete busClient;
+    busClient=NULL;
     exit(signum);
-
 }
 
 void registerSignalHandler( void ) {
@@ -63,12 +72,28 @@ int main(int argv, char* argc[]) {
 
     registerSignalHandler();
 
+    std::string path("../core/InnerBus/InnerBus");
+    path.append(Poco::SharedLibrary::suffix());
+    try {
+        busLoader.loadLibrary(path);
+        LOG(INFO) << (busLoader.isLibraryLoaded(path)? "Loaded" : "Failed");
+    } catch(Poco::Exception excp) {
+        LOG(ERROR) << excp.displayText();
+    }
+
+    InnerBusIF& innerBus = busLoader.instance("InnerBus");
+
+    innerBus.loadConfig();
+
+    busClient = innerBus.createIBusClient();
+
+    busClient->getInfo();
+
     LOG(INFO) << "Start Gateway-Picaso version emb-0.0.1";
     embGateway.start();
 
     LOG(INFO) << "Hello World!";
     pluginContainer.LoadPlugins();
-    pluginContainer.registerPluginsListener(&embGateway);
 
     while(true){
         sleep(1000);
