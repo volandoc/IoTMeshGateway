@@ -209,8 +209,7 @@ void InnerBusClient::setConfig(void *config){
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
     this->cfg = *(struct mosquitto_config*)config;
 
-    //PluginDetails* plgDetails = callbackObj->getPluginDetails();
-    std::string plgName("Default");//std::string plgName(plgDetails->pluginName);
+    std::string plgName="Default";
     cfg.id = cfg.id + plgName;
     cfg.pubtopic = plgName + "/" + cfg.pubtopic;
     cfg.subtopic = plgName + "/" + cfg.subtopic;
@@ -222,7 +221,10 @@ void InnerBusClient::setConfig(void *config){
 void InnerBusClient::setListener(void *listener){
     if(listener!=NULL){
         callbackObj = (class UCLPluginIf *)listener;
-        cfg.id = callbackObj->getPluginDetails()->className;
+        cfg.id = Poco::replace(cfg.id, "Default", callbackObj->getPluginDetails()->className);
+        cfg.subtopic = Poco::replace(cfg.subtopic, "Default", callbackObj->getPluginDetails()->className);
+        cfg.pubtopic = Poco::replace(cfg.pubtopic, "Default", callbackObj->getPluginDetails()->className);
+        cfg.will_payload = Poco::replace(cfg.will_payload, "Default", callbackObj->getPluginDetails()->className);
     }
 }
 
@@ -256,8 +258,8 @@ int InnerBusClient::sendMessage(std::string message){
 
 void InnerBusClient::getInfo() {
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
-    logger.information(":\
-    %s InnerBus client info: \n\
+    logger.information(":\n\
+    %s InnerBus client info:\n\
         mqtt.host: %s\n\
         mqtt.port: %d\n\
         mqtt.subtopic: %s\n\
@@ -270,6 +272,8 @@ void InnerBusClient::on_connect(int rc) {
     if( rc == 0 ){
         logger.debug("%s- connected with server", cfg.id);
         connected = true;
+        this->subscribe();
+        this->publish("available");
     } else {
         logger.debug("%s - Impossible to connect with server (%d)", cfg.id, rc);
         connected = false;
@@ -309,7 +313,6 @@ void InnerBusClient::on_message(const struct mosquitto_message *message) {
 
 void InnerBusClient::on_subscribe(int mid, int qos_count, const int *granted_qos) {
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
-
     logger.debug("%s- Topic(%d)(%d)(%d) subscribed", cfg.id, mid, qos_count, granted_qos);
 }
 

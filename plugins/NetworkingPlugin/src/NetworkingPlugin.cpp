@@ -36,6 +36,8 @@ int NetworkingPlugin::setIBusClient(InnerBusClientIF* client){
     Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
     this->busClient = client;
     this->busClient->setListener(this);
+    this->busClient->getInfo();
+
     return 0;
 }
 

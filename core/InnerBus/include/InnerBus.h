@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <mosquitto.h>
+#include <Poco/String.h>
 #include <Poco/Logger.h>
 #include <Poco/AutoPtr.h>
 #include <Poco/ClassLibrary.h>
