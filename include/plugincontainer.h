@@ -10,8 +10,6 @@
 
 #include <map>
 #include "plugincontainerif.h"
-#include "pluginsapi.h"
-#include "easylogging++.h"
 
 typedef Poco::ClassLoader<UCLPluginIf> PluginLoader;
 typedef Poco::Manifest<UCLPluginIf> PluginManifest;
@@ -23,23 +21,24 @@ private:
     const std::string pluginDirPath;
     bool lerror;
 
-    std::map<std::string, std::string> loadedPlugins;
-    std::list<UCLPluginIf*> runningPlugins;
+    std::map<std::string, std::string> pluginsList;
+    std::list<std::string> loadedPlugins;
     std::map<std::string, int> failedPlugins;
 
     void generatePluginList();
     int LoadPlugin(std::string pname);
-    void startPlugins();
-    void stopPlugins();
 
 public:
     PluginContainer(std::string path="../plugins");
     virtual ~PluginContainer();
 
     virtual int LoadPlugins();
-    virtual std::list<std::string> GetPluginsList();
+    virtual int addIBusClients(InnerBusIF& ibus);
+    virtual void startPlugins();
+    virtual void stopPlugins();
+    virtual std::map<std::string, std::string> GetPluginsList();
     virtual std::string GetPluginsPath();
-    virtual std::map<std::string, std::string> GetLoadedPlugins();
+    virtual std::list<std::string> GetLoadedPlugins();
     virtual std::map<std::string, int> GetFailedPlugins();
     virtual int unloadPlugins();
     virtual bool HasLoadErrors();

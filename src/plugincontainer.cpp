@@ -1,10 +1,4 @@
 #include "plugincontainer.h"
-//#include <Poco/AutoPtr.h>
-//#include <Poco/Util/LoggingConfigurator.h>
-//#include <Poco/Util/PropertyFileConfiguration.h>
-
-//Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> pConfig = new Poco::Util::PropertyFileConfiguration("../conf/loggerconf.properties");
-//Poco::Util::LoggingConfigurator configurator;
 
 PluginContainer::PluginContainer(std::string path): pluginDirPath(path), lerror(false) {
     Poco::Logger& logger = Poco::Logger::get("PluginContainer");
@@ -37,23 +31,53 @@ int PluginContainer::LoadPlugins() {
 
     generatePluginList();
 
-    //startPlugins();
-
     return result;
 }
 
-void PluginContainer::startPlugins() {
+int PluginContainer::addIBusClients(InnerBusIF& ibus){
     Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+    logger.debug("IBus instance Rceived");
 
-    std::map<std::string,std::string>::iterator itCur = this->loadedPlugins.begin();
-    std::map<std::string,std::string>::iterator itEnd = this->loadedPlugins.end();
+    std::map<std::string,std::string>::iterator itCur = this->pluginsList.begin();
+    std::map<std::string,std::string>::iterator itEnd = this->pluginsList.end();
 
     for (; itCur != itEnd; ++itCur) {
         std::string plgName = itCur->first;
         try {
             UCLPluginIf& tmpPlugin = pluginLoader.instance(plgName);
-            tmpPlugin.startPlugin();
-            logger.debug("Plugin <%s> started", itCur->first);
+            int rc = tmpPlugin.setIBusClient(ibus.createIBusClient());
+            if( rc == 0 ){
+                logger.debug("Plugin <%s> ", plgName);
+            } else {
+                logger.debug("Plugin <%s> failed", plgName);
+            }
+        } catch(Poco::Exception excp) {
+            logger.log(excp, __FILE__, 48);
+        }
+    }
+
+    return 0;
+}
+
+void PluginContainer::startPlugins() {
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+
+    std::map<std::string,std::string>::iterator itCur = this->pluginsList.begin();
+    std::map<std::string,std::string>::iterator itEnd = this->pluginsList.end();
+
+    for (; itCur != itEnd; ++itCur) {
+        std::string plgName = itCur->first;
+        try {
+            UCLPluginIf& tmpPlugin = pluginLoader.instance(plgName);
+            int rc = tmpPlugin.startPlugin();
+            if( rc == 0 ){
+                logger.debug("Plugin <%s> started", plgName);
+                loadedPlugins.push_back(itCur->first);
+            } else {
+                logger.debug("Plugin <%s> failed", plgName);
+                std::string fpIndex = itCur->first + ":" + itCur->second;
+                failedPlugins[fpIndex] = -2;
+            }
         } catch(Poco::Exception excp) {
             logger.log(excp, __FILE__, 48);
         }
@@ -63,19 +87,20 @@ void PluginContainer::startPlugins() {
 void PluginContainer::stopPlugins() {
     Poco::Logger& logger = Poco::Logger::get("PluginContainer");
 
-    std::map<std::string,std::string>::iterator itCur = this->loadedPlugins.begin();
-    std::map<std::string,std::string>::iterator itEnd = this->loadedPlugins.end();
+    std::list<std::string>::iterator itCur = this->loadedPlugins.begin();
+    std::list<std::string>::iterator itEnd = this->loadedPlugins.end();
 
     for (; itCur != itEnd; ++itCur) {
-        std::string plgName = itCur->first;
+        std::string plgName = *itCur;
         try {
             UCLPluginIf& tmpPlugin = pluginLoader.instance(plgName);
             tmpPlugin.stopPlugin();
-            logger.debug("Plugin <%s> stoped", itCur->first);
+            logger.debug("Plugin <%s> stoped", plgName);
         } catch(Poco::Exception excp) {
             logger.log(excp, __FILE__, 48);
         }
     }
+    loadedPlugins.clear();
 }
 
 void PluginContainer::generatePluginList() {
@@ -90,7 +115,13 @@ void PluginContainer::generatePluginList() {
         PluginManifest::Iterator endMan(it->second->end());
         for (; itMan != endMan; ++itMan) {
             logger.information(itMan->name());
-            this->loadedPlugins[itMan->name()] = it->first;
+            this->pluginsList[itMan->name()] = it->first;
+            try {
+                pluginLoader.instance(itMan->name());
+            } catch(Poco::Exception excp) {
+                logger.log(excp, __FILE__, 48);
+            }
+
         }
     }
 }
@@ -102,6 +133,7 @@ int PluginContainer::LoadPlugin(std::string pname) {
         this->pluginLoader.loadLibrary(pname);
     } catch(Poco::Exception excp){
         logger.log(excp, __FILE__, 88);
+        failedPlugins[pname] = -1;
         return -1;
     }
 
@@ -109,6 +141,7 @@ int PluginContainer::LoadPlugin(std::string pname) {
         logger.information("Plugin file <%s> loaded",pname);
     } else {
         logger.information("Plugin file <%s> not loaded",pname);
+        failedPlugins[pname] = -1;
         return -1;
     }
 
@@ -119,12 +152,11 @@ std::string PluginContainer::GetPluginsPath() {
     return this->pluginDirPath;
 }
 
-std::list<std::string> PluginContainer::GetPluginsList() {
-    std::list<std::string> result;
-    return result;
+std::map<std::string, std::string> PluginContainer::GetPluginsList() {
+    return this->pluginsList;
 }
 
-std::map<std::string, std::string> PluginContainer::GetLoadedPlugins() {
+std::list<std::string> PluginContainer::GetLoadedPlugins() {
     return this->loadedPlugins;
 }
 
@@ -139,16 +171,21 @@ bool PluginContainer::HasLoadErrors() {
 int PluginContainer::unloadPlugins(){
     Poco::Logger& logger = Poco::Logger::get("PluginContainer");
 
-    //stopPlugins();
+    stopPlugins();
 
-    std::map<std::string,std::string>::iterator itCur = this->loadedPlugins.begin();
-    std::map<std::string,std::string>::iterator itEnd = this->loadedPlugins.begin();
+    std::map<std::string,std::string>::iterator itCur = this->pluginsList.begin();
+    std::map<std::string,std::string>::iterator itEnd = this->pluginsList.end();
 
     for (; itCur != itEnd; ++itCur) {
-        logger.information("Plugin name: %s", itCur->first);
         if( pluginLoader.isLibraryLoaded(itCur->second)) {
             pluginLoader.unloadLibrary(itCur->second);
+            logger.information("Plugins in <%s> unloaded", itCur->second);
+        } else {
+            logger.debug("<%s> not loaded", itCur->second);
         }
     }
+
+    pluginsList.clear();
+
     return 0;
 }

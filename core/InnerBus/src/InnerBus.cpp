@@ -83,7 +83,6 @@ int topic_matches_sub(const char *sub, const char *topic, bool *result){
 
 InnerBusClient::InnerBusClient(){
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
-    //this->callbackObj = callback;
     logger.debug("InnerBus client created");
 }
 
@@ -94,7 +93,7 @@ InnerBusClient::~InnerBusClient(){
     lib_cleanup();
     //mosquitto_destroy(m_mosq);
     logger.debug("InnerBus client destroyed");
-    //this->callbackObj = NULL;
+    callbackObj = NULL;
 }
 
 //
@@ -220,8 +219,14 @@ void InnerBusClient::setConfig(void *config){
     logger.debug("InnerBus client config setted");
 }
 
-int InnerBusClient::connect() {
+void InnerBusClient::setListener(void *listener){
+    if(listener!=NULL){
+        callbackObj = (class UCLPluginIf *)listener;
+        cfg.id = callbackObj->getPluginDetails()->className;
+    }
+}
 
+int InnerBusClient::connect() {
     int rc = mosquitto_connect(m_mosq, cfg.host.c_str(), cfg.port, cfg.keepalive);
     rc = this->loop_start();
     return rc;

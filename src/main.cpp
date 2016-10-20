@@ -80,25 +80,23 @@ int main(int argv, char* argc[]) {
         busLoader.loadLibrary(path);
         logger.information((busLoader.isLibraryLoaded(path)? "Loaded" : "Failed"));
     } catch(Poco::Exception excp) {
-        logger.log(excp, __FILE__ , 84);
+        logger.log(excp, __FILE__ , 83);
     }
 
     InnerBusIF& innerBus = busLoader.instance("InnerBus");
 
     innerBus.loadConfig();
-
     busClient = innerBus.createIBusClient();
-
     busClient->getInfo();
-
     busClient->init();
-
     busClient->connect_async();
 
     logger.information("Start Embedded IoT Gateway version emb-0.0.1");
 
     logger.information("Hello World!");
     pluginContainer.LoadPlugins();
+    pluginContainer.addIBusClients(innerBus);
+    pluginContainer.startPlugins();
 
     while(true){
         sleep(1000);

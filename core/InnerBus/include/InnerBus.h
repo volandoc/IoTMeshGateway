@@ -37,7 +37,7 @@ struct mosquitto_config {
 
 class InnerBusClient: public InnerBusClientIF {
 private:
-    //UCLPluginIf* callbackObj;
+    UCLPluginIf* callbackObj=NULL;
     mosquitto *m_mosq;
     mosquitto_config cfg;
     bool disconnected_by_user = false;
@@ -70,6 +70,7 @@ public:
     virtual int connect();
     virtual int connect_async();
     virtual int disconnect();
+    virtual void setListener(void *listener);
     virtual int sendMessage(std::string message);
     virtual void setConfig(void *config);
     virtual void getInfo();

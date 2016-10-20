@@ -2,6 +2,7 @@
 #define NETWORKING_PLUGIN_H
 
 #include <Poco/ClassLibrary.h>
+#include <Poco/Logger.h>
 #include "pluginsapi.h"
 
 class NetworkingPlugin: public UCLPluginIf {

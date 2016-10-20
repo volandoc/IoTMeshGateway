@@ -11,13 +11,12 @@ SOURCES += src/main.cpp \
     src/plugincontainer.cpp
 
 HEADERS += \
-    include/easylogging++.h \
-    include/templates.h \
     plugins/include/pluginsapi.h \
     include/plugincontainer.h \
     include/plugincontainerif.h \
     core/include/innerbusapi.h \
-    core/include/innerbusclientapi.h
+    core/include/innerbusclientapi.h \
+    include/gwtemplates.h
 
 LIBS += -lmosquittopp -ldl -lPocoFoundation
 
