@@ -7,11 +7,13 @@
 class LifXBulbPlugin: public UCLPluginIf{
 private:
     PluginDetails pluginDetails;
+    InnerBusClientIF* busClient = NULL;
 public:
     LifXBulbPlugin();
     virtual ~LifXBulbPlugin();
 
     virtual int startPlugin();
+    virtual int setIBusClient(InnerBusClientIF* client);
     virtual int executeCommand();
     virtual int getCommandSet();
     virtual int getCapabilitiesSet();

@@ -19,7 +19,7 @@ SOURCES += src/NetworkingPlugin.cpp
 
 HEADERS += include/NetworkingPlugin.h \
     ../include/pluginsapi.h \
-    ../include/easylogging++.h
+    ../../core/include/innerbusclientapi.h
 
 LIBS += -lPocoFoundation
 

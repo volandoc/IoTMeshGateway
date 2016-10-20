@@ -14,7 +14,14 @@ LifXBulbPlugin::~LifXBulbPlugin(){
 }
 
 int LifXBulbPlugin::startPlugin(){
+    this->busClient->init();
+    this->busClient->connect_async();
     std::cout << "Device Manager: Started" << std::endl;
+    return 0;
+}
+
+int LifXBulbPlugin::setIBusClient(InnerBusClientIF* client){
+    this->busClient = client;
     return 0;
 }
 

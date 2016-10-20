@@ -13,7 +13,7 @@ DEFINES       = -DUCL_PLUGINS_EXPORTS
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,LifXBulbPlugin.so.1
-INCPATH       = -I./include -I../include 
+INCPATH       = -I./include -I../include -I../../core/include
 LIBS          = $(SUBLIBS) -lpthread -lPocoFoundation
 DESTDIR       = 
 SOURCES       = src/LifXBulbPlugin.cpp 
@@ -55,7 +55,7 @@ $(TARGETA):  $(OBJECTS)
 	$(AR) $(TARGETA) $(OBJECTS)
 
 LifXBulbPlugin.o: src/LifXBulbPlugin.cpp include/LifXBulbPlugin.h \
-		../include/pluginsapi.h
+		../include/pluginsapi.h ../../core/include/innerbusclientapi.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o LifXBulbPlugin.o src/LifXBulbPlugin.cpp
 
 clean:

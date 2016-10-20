@@ -19,7 +19,8 @@ DEFINES += IBUS_EXPORT
 SOURCES += src/InnerBus.cpp
 
 HEADERS += include/InnerBus.h \
-        ../include/innerbusapi.h
+        ../include/innerbusapi.h \
+        ../include/innerbusclientapi.h \
         ../../plugins/include/pluginsapi.h
 
 LIBS += -lmosquittopp -lPocoFoundation -lPocoUtil

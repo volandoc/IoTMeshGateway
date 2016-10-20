@@ -7,11 +7,13 @@
 class NetworkingPlugin: public UCLPluginIf {
 private:
     PluginDetails pluginDetails;
+    InnerBusClientIF* busClient = NULL;
 public:
     NetworkingPlugin();
     virtual ~NetworkingPlugin();
 
     virtual int startPlugin();
+    virtual int setIBusClient(InnerBusClientIF* client);
     virtual int executeCommand();
     virtual int getCommandSet();
     virtual int getCapabilitiesSet();

@@ -14,7 +14,7 @@ CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,InnerBus
 INCPATH       = -I./include -I../include -I../../plugins/include
-LIBS          = $(SUBLIBS) -lpthread -lPocoFoundation -lPocoUtil
+LIBS          = $(SUBLIBS) -lmosquitto -lpthread -lPocoFoundation -lPocoUtil
 DESTDIR       = 
 SOURCES       = src/InnerBus.cpp 
 OBJECTS       = InnerBus.o

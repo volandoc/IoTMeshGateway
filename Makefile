@@ -13,11 +13,11 @@ DEFINES       =
 CFLAGS        = -c -pipe -O2 -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -c -pipe -O2 -std=gnu++11 -Wall -W -fPIC $(DEFINES)
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) -lmosquittopp -ldl -lpthread -lPocoFoundation
+LIBS          = $(SUBLIBS) -ldl -lpthread -lPocoFoundation -lPocoUtil
 INCPATH       = -I../EmbGateway/include -I./include -I./plugins/include -I./core/include
 DESTDIR       = bin
-SOURCES       = main.cpp plugincontainer.cpp route.cpp mqttclient.cpp
-OBJECTS       = main.o plugincontainer.o router.o mqttclient.o
+SOURCES       = main.cpp plugincontainer.cpp
+OBJECTS       = main.o plugincontainer.o
 
 BIN_DIR = bin
 SUBPROJECT_DIR  = plugins
@@ -55,17 +55,11 @@ pluginlibs:
 $(TARGET): $(OBJECTS)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
 
-main.o: src/main.cpp include/router.h include/mqttclient.h plugins/include/pluginsapi.h include/easylogging++.h core/include/innerbusapi.h
+main.o: src/main.cpp plugins/include/pluginsapi.h core/include/innerbusapi.h
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o main.o src/main.cpp
 
 plugincontainer.o: src/plugincontainer.cpp include/plugincontainer.h include/plugincontainerif.h
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o plugincontainer.o src/plugincontainer.cpp
-
-mqttclient.o: src/mqttclient.cpp include/mqttclient.h
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o mqttclient.o src/mqttclient.cpp
-
-router.o: src/router.cpp include/router.h include/mqttclient.h plugins/include/pluginsapi.h
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o router.o src/router.cpp
 
 clean:
 	-$(DEL_DIR) $(BIN_DIR)

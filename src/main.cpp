@@ -3,15 +3,13 @@
 #include <cerrno>
 #include <csignal>
 
-#define ELPP_NO_DEFAULT_LOG_FILE
-#include "easylogging++.h"
-
-INITIALIZE_EASYLOGGINGPP
-
 #include <Poco/ClassLoader.h>
 #include <Poco/Manifest.h>
-#include "router.h"
-#include "mqttclient.h"
+#include <Poco/Logger.h>
+#include <Poco/AutoPtr.h>
+#include <Poco/Util/LoggingConfigurator.h>
+#include <Poco/Util/PropertyFileConfiguration.h>
+
 #include "pluginsapi.h"
 #include "plugincontainer.h"
 #include "innerbusapi.h"
@@ -19,10 +17,11 @@ INITIALIZE_EASYLOGGINGPP
 typedef Poco::ClassLoader<InnerBusIF> BusLoader;
 typedef Poco::Manifest<InnerBusIF> BusManifest;
 
-router embGateway;
 PluginContainer pluginContainer;
 BusLoader busLoader;
 InnerBusClientIF* busClient = NULL;
+Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> pConfig = new Poco::Util::PropertyFileConfiguration("../conf/loggerconf.properties");
+Poco::Util::LoggingConfigurator configurator;
 
 void sleep(unsigned msec) {
     struct timespec req, rem;
@@ -44,15 +43,21 @@ void sleep(unsigned msec) {
 }
 
 void signalHandler( int signum ) {
-    LOG(INFO) << "Interrupt signal (" << signum << ") received.\n";
-    LOG(INFO) << "Stop Gateway-Picaso version emb-0.0.1";
+    Poco::Logger& logger = Poco::Logger::get("Main");
+
+
+    logger.information("Interrupt signal (%d) received.\n", signum);
+    logger.information("Stop Gateway-Picaso version emb-0.0.1");
     // cleanup and close up stuff here
     // terminate program
     pluginContainer.unloadPlugins();
-    embGateway.stop();
-    busLoader.unloadLibrary("../core/InnerBus/InnerBus.so");
+
+    busClient->disconnect();
     delete busClient;
     busClient=NULL;
+
+    busLoader.unloadLibrary("../core/InnerBus/InnerBus.so");
+
     exit(signum);
 }
 
@@ -63,12 +68,9 @@ void registerSignalHandler( void ) {
 
 
 int main(int argv, char* argc[]) {
+    configurator.configure(pConfig);
 
-    START_EASYLOGGINGPP(argv, argc);
-    // Load configuration from file
-    // el::Configurations conf("../conf/logger.conf");
-    // Actually reconfigure all loggers instead
-    el::Loggers::configureFromGlobal("../conf/logger.conf");
+    Poco::Logger& logger = Poco::Logger::get("Main");
 
     registerSignalHandler();
 
@@ -76,9 +78,9 @@ int main(int argv, char* argc[]) {
     path.append(Poco::SharedLibrary::suffix());
     try {
         busLoader.loadLibrary(path);
-        LOG(INFO) << (busLoader.isLibraryLoaded(path)? "Loaded" : "Failed");
+        logger.information((busLoader.isLibraryLoaded(path)? "Loaded" : "Failed"));
     } catch(Poco::Exception excp) {
-        LOG(ERROR) << excp.displayText();
+        logger.log(excp, __FILE__ , 84);
     }
 
     InnerBusIF& innerBus = busLoader.instance("InnerBus");
@@ -89,15 +91,17 @@ int main(int argv, char* argc[]) {
 
     busClient->getInfo();
 
-    LOG(INFO) << "Start Gateway-Picaso version emb-0.0.1";
-    embGateway.start();
+    busClient->init();
 
-    LOG(INFO) << "Hello World!";
+    busClient->connect_async();
+
+    logger.information("Start Embedded IoT Gateway version emb-0.0.1");
+
+    logger.information("Hello World!");
     pluginContainer.LoadPlugins();
 
     while(true){
         sleep(1000);
     }
     return 0;
-
 }

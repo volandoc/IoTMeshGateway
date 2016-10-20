@@ -18,6 +18,11 @@ int NetworkingPlugin::startPlugin(){
     return 0;
 }
 
+int NetworkingPlugin::setIBusClient(InnerBusClientIF* client){
+    this->busClient = client;
+    return 0;
+}
+
 int NetworkingPlugin::executeCommand(){
     std::cout << "Network Manager: executeCommand" << std::endl;
     return 0;
