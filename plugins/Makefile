@@ -1,4 +1,4 @@
-PLUGINS = LifXBulbPlugin NetworkingPlugin
+PLUGINS = LifXBulbPlugin NetworkingPlugin CloudConnector
 
 all: subdirs
 

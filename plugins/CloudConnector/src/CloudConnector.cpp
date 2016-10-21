@@ -5,7 +5,7 @@ CloudConnector::CloudConnector(){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
     this->pluginDetails.className = "CloudConnector";
-    this->pluginDetails.pluginName ="Networking Plugin";
+    this->pluginDetails.pluginName ="CloudConnector Plugin";
     this->pluginDetails.pluginVersion = "0.0.1";
     logger.debug("Plugin Created");
 }

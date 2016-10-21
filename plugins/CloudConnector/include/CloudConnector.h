@@ -1,5 +1,5 @@
-#ifndef NETWORKING_PLUGIN_H
-#define NETWORKING_PLUGIN_H
+#ifndef CLOUD_CONNECTOR_PLUGIN_H
+#define CLOUD_CONNECTOR_PLUGIN_H
 
 #include <Poco/ClassLibrary.h>
 #include <Poco/Logger.h>
@@ -26,4 +26,4 @@ POCO_BEGIN_MANIFEST(UCLPluginIf)
     POCO_EXPORT_SINGLETON(CloudConnector)
 POCO_END_MANIFEST
 
-#endif // NETWORKING_PLUGIN_H
+#endif // CLOUD_CONNECTOR_PLUGIN_H
