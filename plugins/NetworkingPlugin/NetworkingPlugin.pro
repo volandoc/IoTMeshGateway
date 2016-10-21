@@ -17,8 +17,9 @@ DEFINES += UCL_PLUGINS_EXPORTS
 
 SOURCES += src/NetworkingPlugin.cpp
 
-HEADERS += include/NetworkingPlugin.h\
-    ../include/pluginsapi.h
+HEADERS += include/NetworkingPlugin.h \
+    ../include/pluginsapi.h \
+    ../include/easylogging++.h
 
 unix {
     target.path = $$PWD

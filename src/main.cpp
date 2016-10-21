@@ -13,7 +13,7 @@ INITIALIZE_EASYLOGGINGPP
 #include "pluginsapi.h"
 #include "plugincontainer.h"
 
-router * embGateway = new router();
+router embGateway = router();
 PluginContainer pluginContainer = PluginContainer();
 
 void sleep(unsigned msec) {
@@ -42,7 +42,7 @@ void signalHandler( int signum ) {
     // cleanup and close up stuff here
     // terminate program
     pluginContainer.unloadPlugins();
-    embGateway->stop();
+    embGateway.stop();
     exit(signum);
 
 }
@@ -64,10 +64,11 @@ int main(int argv, char* argc[]) {
     registerSignalHandler();
 
     LOG(INFO) << "Start Gateway-Picaso version emb-0.0.1";
-    embGateway->start();
+    embGateway.start();
 
     LOG(INFO) << "Hello World!";
     pluginContainer.LoadPlugins();
+    pluginContainer.registerPluginsListener(&embGateway);
 
     while(true){
         sleep(1000);
