@@ -3,8 +3,13 @@
 #include <string.h>
 #include "easylogging++.h"
 #include "mqttclient.h"
+#include "mqttclientconfig.h"
+#include "JSON_messages.h"
 
-mqttclient::mqttclient(const char *id, const char *host, int port, int keepalive, bool clean_session, int max_inflight, bool eol, int protocol_version): mosquittopp(id){
+mqttclient::mqttclient(const char *id, const char *host, int port, int keepalive, bool clean_session, int max_inflight, bool eol, int protocol_version)
+    : mosquittopp(id, clean_session)
+    , is_onboarded(false)
+{
     config.id = id;
     config.host = host;
     config.port = port;
@@ -91,6 +96,11 @@ int mqttclient::do_publish(const char *topic, const char *message, int qos){
 void mqttclient::on_connect(int rc){
     if( rc == 0 ){
         LOG(INFO) << ">> myMosq - connected with server";
+
+        const char *topics[]={MQTT_TOPIC_SERV_PUBL_COMMAND};
+        int topics_count=1;
+
+        do_subscribe(topics_count, topics, 1);
     } else {
         LOG(INFO) << ">> myMosq - Impossible to connect with server(" << rc << ")";
     }
@@ -105,6 +115,38 @@ void mqttclient::on_disconnect(int rc){
 
 void mqttclient::on_subscribe(int mid, int qos_count, const int *granted_qos){
     LOG(INFO) << ">> myMosq - Topic(" << mid << ")(" << qos_count << ")(" << granted_qos << ") subscribed";
+
+    int i;
+
+    int rc;
+    char *msg = NULL;
+
+    if(false == is_onboarded)
+    {
+        is_onboarded = true;
+
+        msg = (char*)generate_onbording_msg();
+
+        if (msg != NULL)
+        {
+            rc = do_publish(MQTT_TOIPIC_UNIT_PUBL_UNIT_ON_BOARD, msg, 1);
+
+            if(MOSQ_ERR_SUCCESS != rc)
+            {
+                std::cout << "on_subscribe -> Error: Publish returned " << rc << ", disconnecting.\n";
+                do_disconnect();
+            }
+            else
+            {
+                std::cout << "on_subscribe -> publish success on topic " << MQTT_TOIPIC_UNIT_PUBL_UNIT_ON_BOARD;
+            }
+        }
+    }
+
+    for(i=1; i<qos_count; i++){
+        std::cout << ", granted_qos " << granted_qos[i];
+    }
+    std::cout << "\n";
 }
 
 void mqttclient::on_unsubscribe(int mid){
@@ -112,7 +154,29 @@ void mqttclient::on_unsubscribe(int mid){
 }
 
 void mqttclient::on_message(const struct mosquitto_message *message){
-    LOG(INFO) << ">> myMosq - Message(" << message->mid << ") on Topic(" << message->topic << ")";
+    LOG(INFO) << ">> myMosq - Message(" << message->mid << ") on Topic(" << message->topic << ") with payload <" << (char*)message->payload << ">";
+
+    char *msg = NULL;
+    int rc;
+
+    msg = (char*)generate_onbording_msg();
+
+
+    if (msg != NULL)
+    {
+        rc = do_publish(MQTT_TOIPIC_UNIT_PUBL_UNIT_ON_BOARD, msg, 1);
+    }
+
+    msg = (char*)generate_response_msg();
+    if (msg != NULL)
+    {
+        rc = do_publish(MQTT_TOIPIC_UNIT_PUBL_CMD_RESPONSE, msg, 1);
+    }
+
+
+    msg = (char*)generate_response_msg();
+
+
 }
 
 void mqttclient::on_publish(int mid){
