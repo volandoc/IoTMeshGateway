@@ -12,7 +12,7 @@ namespace plugins {
     UCL_PLUGINS_API_VERSION,     \
     __FILE__
 
-#ifdef WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__)
 #  ifdef UCL_PLUGINS_EXPORTS
 #    define UCL_PLUGIN_EXPORT __declspec(dllexport)
 #  else
@@ -22,7 +22,7 @@ namespace plugins {
 #   define UCL_PLUGIN_EXPORT // empty
 #endif
 
-class NotificationListenerIF{
+class NotificationListenerIF {
 public :
     virtual int sendToCloud()=0;
     virtual int notificationArived(std::string message)=0;
@@ -30,15 +30,16 @@ public :
     virtual int commandResult()=0;
 };
 
-class UCLPluginIf{
+class UCLPluginIf {
 private:
     NotificationListenerIF* pluginsListener;
 public:
-    virtual void setListener(NotificationListenerIF* mngrListener){
+    virtual void setListener(NotificationListenerIF* mngrListener) {
         this->pluginsListener=mngrListener;
+        this->pluginsListener->notificationArived("Listener Registered");
     }
 
-    virtual int notifyListener(std::string message){
+    virtual int notifyListener(std::string message) {
         this->pluginsListener->notificationArived(message);
         return 0;
     }

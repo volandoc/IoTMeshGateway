@@ -28,6 +28,7 @@ private:
     const char *routerId;
     const char *mqttHost;
     int mqttPort;
+    int gwId;
 };
 
 #endif // ROUTER_H
