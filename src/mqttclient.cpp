@@ -97,7 +97,7 @@ void mqttclient::on_connect(int rc){
     if( rc == 0 ){
         LOG(INFO) << ">> myMosq - connected with server";
 
-        const char *topics[]={MQTT_TOIPIC_SERV_PUBL_COMMAND};
+        const char *topics[]={MQTT_TOPIC_SERV_PUBL_COMMAND};
         int topics_count=1;
 
         do_subscribe(topics_count, topics, 1);

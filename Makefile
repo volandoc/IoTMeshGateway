@@ -13,7 +13,7 @@ DEFINES       =
 CFLAGS        = -c -pipe -O2 -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -c -pipe -O2 -std=gnu++11 -Wall -W -fPIC $(DEFINES)
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) -lmosquittopp -ldl -lpthread
+LIBS          = $(SUBLIBS) -lmosquittopp -ldl -lpthread -lPocoFoundation -lPocoJSON
 INCPATH       = -I../EmbGateway/include -I./include -I./plugins/include
 DESTDIR       = bin
 SOURCES       = main.cpp plugincontainer.cpp route.cpp mqttclient.cpp JSON_messages.cpp rest.cpp
