@@ -1,40 +1,56 @@
 #ifndef REST_CLASS_H
 #define REST_CLASS_H
 
+#include <string>
+#include "restconfig.h"
+
+using namespace std;
+
+#define REST_METHOD_PUT     "PUT"
+#define REST_METHOD_GET     "GET"
+
+
 class rest
 {
 public:
     rest();
     ~rest();
 
-    bool set_method(char* method);
-    void unset_method();
-    bool set_certificate(char* certfile);
-    void unset_certificate();
-    bool set_privatekey(char* keyfile);
-    void unset_privatekey();
-    bool set_nocheck_cert(bool is_no_check);
-    bool set_data_body(char* data);
-    void unset_data_body();
-    bool set_header(char* header);
-    void unset_header();
-    bool set_url(char* url);
-    void unset_url();
+    bool setMethod(string method);
+    void unsetMethod();
+    bool setCertificate(string certfile);
+    void unsetCertificate();
+    bool setPrivatekey(string keyfile);
+    void unsetPrivatekey();
+    bool setNocheckCert(bool is_no_check);
+    bool setDataBody(string data);
+    void unsetDataBody();
+    bool setHeader(string header);
+    void unsetHeader();
+    bool setConsoleOutputFile(string outputFile);
+    void unsetConsoleOutputFile();
+    bool setCloudResponseFile(string cloudResFile);
+    void unsetCloudResponseFile();
+    bool setUrl(string url);
+    void unsetUrl();
 
-    char* build_rest();
+    string buildRest();
 
 private:
-    char* rest_cmd;
-    char* method;
-    char* certificate;
-    char* privatekey;
+    string rest_cmd;
+    string method;
+    string certificate;
+    string privatekey;
     bool nocheck_cert;
-    char* data_body;
-    char* header;
-    char* url;
+    string data_body;
+    string header;
+    string outputFile;
+    string cloudResFile;
+    string url;
 
-    void clean(char*& value);
-    bool set(char*& dest, char* value);
+    void clean(string& value);
+    bool set(string& dest, string value);
+    bool addStrOption(string value, string header);
 };
 
 #endif //REST_CLASS_H
