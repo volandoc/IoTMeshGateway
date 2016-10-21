@@ -20,6 +20,7 @@ public:
     virtual int startPlugin()=0;
     virtual int setIBusClient(InnerBusClientIF* client) = 0;
     virtual int executeCommand()=0;
+    virtual int sendOccurrence(std::string message)=0;
     virtual int getCommandSet()=0;
     virtual int getCapabilitiesSet()=0;
     virtual int stopPlugin()=0;

@@ -47,6 +47,10 @@ int NetworkingPlugin::executeCommand(){
     return 0;
 }
 
+int NetworkingPlugin::sendOccurrence(std::string message) {
+      return 0;
+}
+
 int NetworkingPlugin::getCommandSet(){
     Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
     logger.debug("getCommandSet");

@@ -46,6 +46,10 @@ int LifXBulbPlugin::executeCommand(){
     return 0;
 }
 
+int LifXBulbPlugin::sendOccurrence(std::string message) {
+      return 0;
+}
+
 int LifXBulbPlugin::getCommandSet(){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
     logger.debug("getCommandSet");
