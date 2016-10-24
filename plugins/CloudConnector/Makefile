@@ -14,10 +14,10 @@ CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,CloudConnector.so.1
 INCPATH       = -I../include -I./include -I../../core/include
-LIBS          = $(SUBLIBS) -lpthread -lPocoFoundation
+LIBS          = $(SUBLIBS) -lmosquittopp -ldl -lpthread -lPocoFoundation -lPocoJSON
 DESTDIR       = 
-SOURCES       = src/CloudConnector.cpp 
-OBJECTS       = CloudConnector.o
+SOURCES       = src/CloudConnector.cpp mqttclient.cpp rest.cpp JSON_messages.cpp
+OBJECTS       = CloudConnector.o mqttclient.o rest.o JSON_messages.o
 
 ###
 # Define system commands
@@ -58,6 +58,15 @@ $(TARGETA):  $(OBJECTS)
 CloudConnector.o: src/CloudConnector.cpp include/CloudConnector.h \
 		../include/pluginsapi.h ../../core/include/innerbusclientapi.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o CloudConnector.o src/CloudConnector.cpp
+
+mqttclient.o: src/mqttclient.cpp include/mqttclient.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mqttclient.o src/mqttclient.cpp
+
+rest.o: src/rest.cpp include/rest.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rest.o src/rest.cpp
+
+JSON_messages.o: src/JSON_messages.cpp include/JSON_messages.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o JSON_messages.o src/JSON_messages.cpp
 
 clean:
 	-$(DEL_FILE) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2) $(TARGETA) $(OBJECTS)
