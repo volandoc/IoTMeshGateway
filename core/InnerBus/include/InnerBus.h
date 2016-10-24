@@ -89,13 +89,11 @@ public:
 };
 
 class InnerBus: public InnerBusIF {
-    std::string coreLibPath;
     mosquitto_config defaultConf;
 public:
     InnerBus();
-    InnerBus(std::string path);
     virtual ~InnerBus();
-    virtual int loadConfig();
+    virtual int loadConfig(std::string libpath = "../core/InnerBus");
     virtual bool isAvailable();
     virtual InnerBusClientIF* createIBusClient();
     virtual int getConnectionsCount();

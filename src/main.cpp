@@ -9,6 +9,10 @@
 #include <Poco/AutoPtr.h>
 #include <Poco/Util/LoggingConfigurator.h>
 #include <Poco/Util/PropertyFileConfiguration.h>
+#include "Poco/Util/ServerApplication.h"
+#include "Poco/Util/Option.h"
+#include "Poco/Util/OptionSet.h"
+#include "Poco/Util/HelpFormatter.h"
 
 #include "pluginsapi.h"
 #include "plugincontainer.h"
@@ -17,89 +21,126 @@
 typedef Poco::ClassLoader<InnerBusIF> BusLoader;
 typedef Poco::Manifest<InnerBusIF> BusManifest;
 
-PluginContainer pluginContainer;
-BusLoader busLoader;
-InnerBusClientIF* busClient = NULL;
-Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> pConfig = new Poco::Util::PropertyFileConfiguration("../conf/loggerconf.properties");
-Poco::Util::LoggingConfigurator configurator;
+class SampleServer: public Poco::Util::ServerApplication {
+private:
+    bool _helpRequested;
+    std::string plugins_dir;
+    std::string core_dir;
+    std::string path;
 
-void sleep(unsigned msec) {
-    struct timespec req, rem;
-    int err;
-    req.tv_sec = msec / 1000;
-    req.tv_nsec = (msec % 1000) * 1000000;
-    while ((req.tv_sec != 0) || (req.tv_nsec != 0)) {
-        if (nanosleep(&req, &rem) == 0)
-            break;
-        err = errno;
-        // Interrupted; continue
-        if (err == EINTR) {
-            req.tv_sec = rem.tv_sec;
-            req.tv_nsec = rem.tv_nsec;
+protected:
+    void initialize(Application& self) {
+        path = Application::config().getString("application.dir");
+        logger().information(path + "../conf/embgateway.properties");
+        Poco::Util::Application::loadConfiguration(path +"../conf/embgateway.properties"); // load default configuration files, if present
+        ServerApplication::initialize(self);
+        plugins_dir = Application::config().getString("application.pluginsdir");
+        core_dir = Application::config().getString("application.coredir");
+    }
+
+    void uninitialize()	{
+        ServerApplication::uninitialize();
+    }
+
+    void defineOptions(Poco::Util::OptionSet& options)	{
+        ServerApplication::defineOptions(options);
+
+        options.addOption(
+            Poco::Util::Option("help", "h", "display help information on command line arguments")
+                .required(false)
+                .repeatable(false)
+                .callback(Poco::Util::OptionCallback<SampleServer>(this, &SampleServer::handleHelp)));
+        options.addOption(
+            Poco::Util::Option("conf", "c", "with configuration file")
+                .required(false)
+                .repeatable(false)
+                .callback(Poco::Util::OptionCallback<SampleServer>(this, &SampleServer::handleConfig)));
+        options.addOption(
+            Poco::Util::Option("plugins", "p", "with plugins folder")
+                .required(false)
+                .repeatable(false)
+                .callback(Poco::Util::OptionCallback<SampleServer>(this, &SampleServer::handleHelp)));
+        options.addOption(
+            Poco::Util::Option("verbose", "v", "log everything")
+                .required(false)
+                .repeatable(false)
+                .callback(Poco::Util::OptionCallback<SampleServer>(this, &SampleServer::handleVerbose)));
+    }
+
+    void handleHelp(const std::string& name, const std::string& value)	{
+        _helpRequested = true;
+        displayHelp();
+        stopOptionsProcessing();
+    }
+
+    void handleConfig(const std::string& name, const std::string& value) {
+        loadConfiguration(value);
+    }
+
+    void handleVerbose(const std::string& name, const std::string& value)	{
+        logger().setLevel("debug");
+    }
+
+    void displayHelp()
+    {
+        Poco::Util::HelpFormatter helpFormatter(options());
+        helpFormatter.setCommand(commandName());
+        helpFormatter.setUsage("OPTIONS");
+        helpFormatter.setHeader("A sample server application that demonstrates some of the features.");
+        helpFormatter.format(std::cout);
+    }
+
+    int main(const ArgVec& args) {
+        if (!_helpRequested) {
+            logger().information("Start Embedded IoT Gateway version emb-0.0.1");
+            BusLoader busLoader;
+            PluginContainer pluginContainer(path + "../" + plugins_dir);
+
+            std::string coreBusPath(path + "../" + core_dir + "/InnerBus/InnerBus");
+            coreBusPath.append(Poco::SharedLibrary::suffix());
+            try {
+                busLoader.loadLibrary(coreBusPath);
+                logger().information((busLoader.isLibraryLoaded(coreBusPath)? "Loaded" : "Failed"));
+            } catch(Poco::Exception excp) {
+                logger().log(excp, __FILE__ , 83);
+            }
+
+            InnerBusIF& innerBus = busLoader.instance("InnerBus");
+
+            innerBus.loadConfig(path + "../" + core_dir + "/InnerBus");
+
+            InnerBusClientIF* busClient = innerBus.createIBusClient();
+            busClient->getInfo();
+            busClient->init();
+            busClient->connect_async();
+
+            pluginContainer.LoadPlugins();
+            pluginContainer.addIBusClients(innerBus);
+            pluginContainer.startPlugins();
+
+
+            waitForTerminationRequest();
+
+            logger().information("shutting down");
+            busClient->disconnect();
+            delete busClient;
+            busClient=NULL;
+
+            pluginContainer.stopPlugins();
+
+            busLoader.unloadLibrary(coreBusPath);
         }
-        // Unhandleable error (EFAULT (bad pointer), EINVAL (bad timeval in tv_nsec), or ENOSYS (function not supported))
-        break;
-    }
-}
-
-void signalHandler( int signum ) {
-    Poco::Logger& logger = Poco::Logger::get("Main");
-
-
-    logger.information("Interrupt signal (%d) received.\n", signum);
-    logger.information("Stop Gateway-Picaso version emb-0.0.1");
-    // cleanup and close up stuff here
-    // terminate program
-    pluginContainer.unloadPlugins();
-
-    busClient->disconnect();
-    delete busClient;
-    busClient=NULL;
-
-    busLoader.unloadLibrary("../core/InnerBus/InnerBus.so");
-
-    exit(signum);
-}
-
-void registerSignalHandler( void ) {
-    signal(SIGINT, signalHandler);
-    signal(SIGTERM, signalHandler);
-}
-
-
-int main(int argv, char* argc[]) {
-    configurator.configure(pConfig);
-
-    Poco::Logger& logger = Poco::Logger::get("Main");
-
-    registerSignalHandler();
-
-    std::string path("../core/InnerBus/InnerBus");
-    path.append(Poco::SharedLibrary::suffix());
-    try {
-        busLoader.loadLibrary(path);
-        logger.information((busLoader.isLibraryLoaded(path)? "Loaded" : "Failed"));
-    } catch(Poco::Exception excp) {
-        logger.log(excp, __FILE__ , 83);
+        return Application::EXIT_OK;
     }
 
-    InnerBusIF& innerBus = busLoader.instance("InnerBus");
-
-    innerBus.loadConfig();
-    busClient = innerBus.createIBusClient();
-    busClient->getInfo();
-    busClient->init();
-    busClient->connect_async();
-
-    logger.information("Start Embedded IoT Gateway version emb-0.0.1");
-
-    logger.information("Hello World!");
-    pluginContainer.LoadPlugins();
-    pluginContainer.addIBusClients(innerBus);
-    pluginContainer.startPlugins();
-
-    while(true){
-        sleep(1000);
+public:
+    SampleServer(): _helpRequested(false) {
     }
-    return 0;
-}
+
+    ~SampleServer()	{
+    }
+
+};
+
+
+POCO_SERVER_MAIN(SampleServer)
