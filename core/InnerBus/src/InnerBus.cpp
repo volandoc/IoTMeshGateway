@@ -340,15 +340,6 @@ void InnerBusClient::on_error() {
 InnerBus::InnerBus() {
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
     logger.debug("InnerBus default Created");
-    this->coreLibPath="../core/InnerBus";
-    loadConfig();
-}
-
-InnerBus::InnerBus(std::string path) {
-    Poco::Logger& logger = Poco::Logger::get("InnerBus");
-    logger.debug("InnerBus Created with workdir <%s>", path);
-    this->coreLibPath = path;
-    loadConfig();
 }
 
 InnerBus::~InnerBus() {
@@ -356,10 +347,10 @@ InnerBus::~InnerBus() {
     logger.debug("InnerBus Destroyed");
 }
 
-int InnerBus::loadConfig() {
+int InnerBus::loadConfig(std::string libpath) {
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
 
-    std::string confPath = this->coreLibPath + "/" + "config.properties";
+    std::string confPath = libpath + "/" + "config.properties";
 
     Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> pConf;
     pConf = new Poco::Util::PropertyFileConfiguration(confPath);
