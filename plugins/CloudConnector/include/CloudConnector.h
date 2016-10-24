@@ -1,9 +1,13 @@
 #ifndef CLOUD_CONNECTOR_PLUGIN_H
 #define CLOUD_CONNECTOR_PLUGIN_H
 
+#include <string>
+#include "mqttclient.h"
 #include <Poco/ClassLibrary.h>
 #include <Poco/Logger.h>
 #include "pluginsapi.h"
+
+using namespace std;
 
 class CloudConnector: public UCLPluginIf {
 private:
@@ -16,10 +20,23 @@ public:
     virtual int startPlugin();
     virtual int setIBusClient(InnerBusClientIF* client);
     virtual int executeCommand();
+    virtual int sendOccurrence(string message);
     virtual int getCommandSet();
     virtual int getCapabilitiesSet();
     virtual int stopPlugin();
     virtual PluginDetails* getPluginDetails();
+
+private:
+    mqttclient *mqttClient;
+    int gatewayId;
+    int homeId;
+
+    bool provision();
+    bool sendProvision(string serial, string version, string mdn, string cloudResFile);
+    bool readFileContent(string fileName, string& fileContent);
+    bool getGwId(string strJson, int& gwId);
+    bool getIsOnboarded(string strJson, bool& isOnboarded);
+    int sendGetDataSync(int gwId, string gwDataSyncFile);
 };
 
 POCO_BEGIN_MANIFEST(UCLPluginIf)
