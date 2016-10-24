@@ -15,9 +15,17 @@ INCLUDEPATH += $$PWD/include \
 
 DEFINES += UCL_PLUGINS_EXPORTS
 
-SOURCES += src/CloudConnector.cpp
+SOURCES += src/CloudConnector.cpp \
+    src/JSON_messages.cpp \
+    src/mqttclient.cpp \
+    src/rest.cpp
 
 HEADERS += include/CloudConnector.h \
+    include/JSON_messages.h \
+    include/mqttclient.h \
+    include/mqttclientconfig.h \
+    include/rest.h \
+    include/restconfig.h \
     ../include/pluginsapi.h \
     ../../core/include/innerbusclientapi.h
 
