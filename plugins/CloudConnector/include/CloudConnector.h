@@ -34,8 +34,9 @@ private:
     bool provision();
     bool sendProvision(string serial, string version, string mdn, string cloudResFile);
     bool readFileContent(string fileName, string& fileContent);
-    bool getGwId(string strJson, int& gwId);
-    bool getIsOnboarded(string strJson, bool& isOnboarded);
+    bool getGwId(string provisionJson, int& gwId);
+    bool getIsOnboarded(string provisionJson, bool& isOnboarded);
+    bool getHomeId(string datasyncJson, int& homeId);
     int sendGetDataSync(int gwId, string gwDataSyncFile);
 };
 

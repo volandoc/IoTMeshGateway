@@ -5,6 +5,8 @@
 #include "mqttclientconfig.h"
 #include "JSON_messages.h"
 
+#define BUFFER_SIZE     1024
+
 mqttclient::mqttclient(const char *id, const char *host, int port, int keepalive, bool clean_session, int max_inflight, bool eol, int protocol_version)
     : mosquittopp(id, clean_session)
     , is_onboarded(false)
@@ -42,6 +44,30 @@ int mqttclient::config_load(){
 
 void mqttclient::config_cleanup(){
 
+}
+
+void mqttclient::topics_init(int gwId, int homeId){
+    char buffer[BUFFER_SIZE];
+
+    // init subscribe topics
+    snprintf(buffer, BUFFER_SIZE, MQTT_TOPIC_SUB_SENSOR_ACTUATOR_CMD, homeId, gwId);
+    this->subTopicSensorActuartorCmd = buffer;
+    memset(buffer, 0, BUFFER_SIZE);
+
+    this->subTopicScenarioExecCmnd = MQTT_TOPIC_SUB_SCENARIO_EXEC_CMD;
+
+    snprintf(buffer, BUFFER_SIZE, MQTT_TOPIC_SUB_GW_CMD, gwId);
+    this->subTopicGwCmd = buffer;
+    memset(buffer, 0, BUFFER_SIZE);
+
+    // init publish topics
+    snprintf(buffer, BUFFER_SIZE, MQTT_TOPIC_PUB_SENSOR_ACTUATOR_OCCUR, homeId, gwId);
+    this->pubTopicSensorActuartorOccur = buffer;
+    memset(buffer, 0, BUFFER_SIZE);
+
+    snprintf(buffer, BUFFER_SIZE, MQTT_TOPIC_PUB_SENSOR_ACTUATOR_ERROR, homeId, gwId);
+    this->pubTopicSensorActuartorError = buffer;
+    memset(buffer, 0, BUFFER_SIZE);
 }
 
 int mqttclient::do_connect_async(){
@@ -96,8 +122,11 @@ void mqttclient::on_connect(int rc){
     if( rc == 0 ){
         std::cout << ">> myMosq - connected with server";
 
-        const char *topics[]={MQTT_TOPIC_SERV_PUBL_COMMAND};
-        int topics_count=1;
+        const char *topics[]={
+            this->subTopicSensorActuartorCmd.c_str(),
+            this->subTopicScenarioExecCmnd.c_str(),
+            this->subTopicGwCmd.c_str()};
+        int topics_count = 3;
 
         do_subscribe(topics_count, topics, 1);
     } else {

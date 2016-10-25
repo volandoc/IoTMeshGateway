@@ -19,12 +19,12 @@
 #define MQTT_TOIPIC_UNIT_PUBL_CMD_RESPONSE      "ThingspaceSDK/0800272F0000/UNITCmdResponse"
 
 
-#define MQTT_TOPIC_SUB_SENSOR_ACTUATOR_CMD      "SensorActuator/Command/VerizonGateway/%s/%s/"      //SensorActuator/Command/VerizonGateway/{homeId}/{gatewayId}
+#define MQTT_TOPIC_SUB_SENSOR_ACTUATOR_CMD      "SensorActuator/Command/VerizonGateway/%u/%u/"      //SensorActuator/Command/VerizonGateway/{homeId}/{gatewayId}
 #define MQTT_TOPIC_SUB_SCENARIO_EXEC_CMD        "ScenarioExecCommand/"
-#define MQTT_TOPIC_SUB_GW_CMD                   "GW/Command/%s"                                     //"GW/Command/${gateway_serial}"
+#define MQTT_TOPIC_SUB_GW_CMD                   "GW/Command/%u"                                     //"GW/Command/{gatewayId}"
 
-#define MQTT_TOPIC_PUB_SENSOR_ACTUATOR_OCCUR    "SensorActuator/Occurrence/VerizonGateway/%s/%s/"   //SensorActuator/Occurrence/VerizonGateway/{homeId}/{gateway_serial}/
-#define MQTT_TOPIC_PUB_SENSOR_ACTUATOR_ERROR    "SensorActuator/Error/VerizonGateway/%s/%s/"        // SensorActuator/Error/VerizonGateway/{homeId}/{gateway_serial}/
+#define MQTT_TOPIC_PUB_SENSOR_ACTUATOR_OCCUR    "SensorActuator/Occurrence/VerizonGateway/%u/%u/"   //SensorActuator/Occurrence/VerizonGateway/{homeId}/{gatewayId}/
+#define MQTT_TOPIC_PUB_SENSOR_ACTUATOR_ERROR    "SensorActuator/Error/VerizonGateway/%u/%u/"        // SensorActuator/Error/VerizonGateway/{homeId}/{gatewayId}/
 
 
 #endif // MQTTCLIENT_CONGIG_H

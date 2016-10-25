@@ -2,7 +2,7 @@
 #define MQTTCLIENT_H
 
 #include <mosquittopp.h>
-#include <string>
+#include <iostream>
 #include "mqttclientconfig.h"
 
 struct mosquittoConfig {
@@ -62,7 +62,7 @@ struct mosquittoConfig {
 class mqttclient : public mosqpp::mosquittopp
 {
 public:
-    mqttclient(const char * id, const char * host, int port=1883, int keepalive=60, bool clean_session=true, int max_inflight=20, bool eol=true, int protocol_version=MQTT_PROTOCOL_V31);
+    mqttclient(const char * id, const char * host, int port=MQTT_PORT, int keepalive=MQTT_KEEPALIVE, bool clean_session=true, int max_inflight=0, bool eol=true, int protocol_version=MQTT_PROTOCOL_V311);
     ~mqttclient();
 
     int do_connect_async();
@@ -74,6 +74,7 @@ public:
     int clean_will();
     int config_load();
     int config_load_from_file();
+    void topics_init(int gwId, int homeId);
 
     void on_connect(int rc);
     void on_message(const struct mosquitto_message *message);
@@ -92,6 +93,12 @@ private:
     bool disconnected_by_user;
     struct mosquittoConfig config;
 
+    std::string subTopicSensorActuartorCmd;
+    std::string subTopicScenarioExecCmnd;
+    std::string subTopicGwCmd;
+
+    std::string pubTopicSensorActuartorOccur;
+    std::string pubTopicSensorActuartorError;
 };
 
 #endif // MQTTCLIENT_H
