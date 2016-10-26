@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">GL-Smart</string>
+    <string name="action_settings">Settings</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connected">Connected</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="enter_address">Server address:</string>
+    <string name="test_address_placeholder">test.mosquitto.org</string>
+    <string name="status">Status:</string>
+    <string name="log">Log:</string>
+</resources>
