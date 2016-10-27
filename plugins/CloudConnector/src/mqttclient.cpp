@@ -4,12 +4,13 @@
 #include "mqttclient.h"
 #include "mqttclientconfig.h"
 #include "JSON_messages.h"
+#include "gwCommand.h"
 
 #define BUFFER_SIZE     1024
 
 mqttclient::mqttclient(const char *id, const char *host, int port, int keepalive, bool clean_session, int max_inflight, bool eol, int protocol_version)
     : mosquittopp(id, clean_session)
-    , is_onboarded(false)
+    , is_onboarded(true)
 {
     config.id = id;
     config.host = host;
@@ -89,8 +90,9 @@ int mqttclient::do_subscribe(const int count, const char *topics[], int qos){
     int sub_qos = (qos >= 0 && qos <= 3)? qos : config.qos;
     int rc = MOSQ_ERR_SUCCESS;
     for(int i=0; i<count; i++){
-        config.pub_msg_count++;
-        rc = subscribe(&(config.pub_msg_count), topics[i], sub_qos);
+        config.sub_msg_count++;
+        std::cout << ">> myMosq - try subscribe to Topic: \"" << topics[i] << "\"\n";
+        rc = subscribe(&(config.sub_msg_count), topics[i], sub_qos);
         if(rc != MOSQ_ERR_SUCCESS){
             break;
         }
@@ -101,8 +103,8 @@ int mqttclient::do_subscribe(const int count, const char *topics[], int qos){
 int mqttclient::do_unsubscribe(const int count, const char *topics[]){
     int rc = MOSQ_ERR_SUCCESS;
     for(int i=0; i<count; i++){
-        config.pub_msg_count++;
-         rc = unsubscribe(&(config.pub_msg_count), topics[count]);
+        config.sub_msg_count++;
+         rc = unsubscribe(&(config.sub_msg_count), topics[count]);
         if(rc!=MOSQ_ERR_SUCCESS){
             break;
         }
@@ -120,7 +122,7 @@ int mqttclient::do_publish(const char *topic, const char *message, int qos){
 
 void mqttclient::on_connect(int rc){
     if( rc == 0 ){
-        std::cout << ">> myMosq - connected with server";
+        std::cout << ">> myMosq - connected with server\n";
 
         const char *topics[]={
             this->subTopicSensorActuartorCmd.c_str(),
@@ -148,30 +150,7 @@ void mqttclient::on_subscribe(int mid, int qos_count, const int *granted_qos){
 
     int rc;
     char *msg = NULL;
-
-    if(false == is_onboarded)
-    {
-        is_onboarded = true;
-
-        msg = (char*)generate_onbording_msg();
-
-        if (msg != NULL)
-        {
-            rc = do_publish(MQTT_TOIPIC_UNIT_PUBL_UNIT_ON_BOARD, msg, 1);
-
-            if(MOSQ_ERR_SUCCESS != rc)
-            {
-                std::cout << "on_subscribe -> Error: Publish returned " << rc << ", disconnecting.\n";
-                do_disconnect();
-            }
-            else
-            {
-                std::cout << "on_subscribe -> publish success on topic " << MQTT_TOIPIC_UNIT_PUBL_UNIT_ON_BOARD;
-            }
-        }
-    }
-
-    for(i=1; i<qos_count; i++){
+    for(i = 0; i < qos_count; i++){
         std::cout << ", granted_qos " << granted_qos[i];
     }
     std::cout << "\n";
@@ -182,29 +161,55 @@ void mqttclient::on_unsubscribe(int mid){
 }
 
 void mqttclient::on_message(const struct mosquitto_message *message){
-    std::cout << ">> myMosq - Message(" << message->mid << ") on Topic(" << message->topic << ") with payload <" << (char*)message->payload << ">";
+    std::cout << ">> myMosq - Message(" << message->mid << ") on Topic(" << message->topic << ") with payload <" << (char*)message->payload << ">\n";
 
-    char *msg = NULL;
-    int rc;
+    if (!strcmp(message->topic, subTopicGwCmd.c_str())){
+        std::string json = (char*)message->payload;
+        gwCommand gwCmd(json);
 
-    msg = (char*)generate_onbording_msg();
-
-
-    if (msg != NULL)
-    {
-        rc = do_publish(MQTT_TOIPIC_UNIT_PUBL_UNIT_ON_BOARD, msg, 1);
+        std::string eventType = gwCmd.getEventType();
+        if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_SYNCDATA))
+        {
+            std::cout << "command " << GW_COMMAND_EVENT_SYNCDATA << " received\n";
+        }
+        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_DISCOVERSENSORS))
+        {
+            std::cout << "command " << GW_COMMAND_EVENT_DISCOVERSENSORS << " received\n";
+        }
+        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_CONNECTSENSORS))
+        {
+            std::cout << "command " << GW_COMMAND_EVENT_CONNECTSENSORS << " received\n";
+        }
+        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_UPDATEPLUGINS))
+        {
+            std::cout << "command " << GW_COMMAND_EVENT_UPDATEPLUGINS << " received\n";
+        }
+        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_UPDATEFIRMWARE))
+        {
+            std::cout << "command " << GW_COMMAND_EVENT_UPDATEFIRMWARE << " received\n";
+        }
+        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_REBOOT))
+        {
+            std::cout << "command " << GW_COMMAND_EVENT_REBOOT << " received\n";
+        }
+        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_RESET))
+        {
+            std::cout << "command " << GW_COMMAND_EVENT_RESET << " received\n";
+            this->is_onboarded = false;
+        }
+        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_BACKUP))
+        {
+            std::cout << "command " << GW_COMMAND_EVENT_BACKUP << " received\n";
+        }
+        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_RESTORE))
+        {
+            std::cout << "command " << GW_COMMAND_EVENT_RESTORE << " received\n";
+        }
+        else
+        {
+            std::cout << "Unknown command " << gwCmd.getEventType() << " received\n";
+        }
     }
-
-    msg = (char*)generate_response_msg();
-    if (msg != NULL)
-    {
-        rc = do_publish(MQTT_TOIPIC_UNIT_PUBL_CMD_RESPONSE, msg, 1);
-    }
-
-
-    msg = (char*)generate_response_msg();
-
-
 }
 
 void mqttclient::on_publish(int mid){
