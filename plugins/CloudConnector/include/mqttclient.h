@@ -84,9 +84,9 @@ public:
     void on_error();
     void on_disconnect(int rc);
 
-private:
     bool is_onboarded;
 
+private:
     void config_init(struct mosquittoConfig *cfg);
     void config_cleanup();
 

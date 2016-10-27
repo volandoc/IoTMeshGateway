@@ -7,6 +7,7 @@
 #include <Poco/JSON/JSON.h>
 #include <Poco/JSON/Parser.h>
 #include <Poco/Dynamic/Var.h>
+#include <pthread.h>
 
 #define GW_SERIAL                       "987654321"
 #define GW_VERSION                      "2"
@@ -20,10 +21,12 @@ using namespace Poco::JSON;
 using namespace Poco::Dynamic;
 using namespace Poco;
 
+static void runConnectionThread(void *pArg);
+static void* connectionMain(void *pArg);
+
 
 CloudConnector::CloudConnector()
-    : mqttClient(nullptr)
-    , gatewayId(0)
+    : gatewayId(0)
     , homeId(0)
 {
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
@@ -31,15 +34,25 @@ CloudConnector::CloudConnector()
     this->pluginDetails.className = "CloudConnector";
     this->pluginDetails.pluginName ="CloudConnector Plugin";
     this->pluginDetails.pluginVersion = "0.0.1";
+
+    initMqttClient();
+
     logger.debug("Plugin Created");
 }
 
 CloudConnector::~CloudConnector(){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    if( busClient != NULL ) {
+    if( NULL != this->busClient ) {
         delete busClient;
         busClient = NULL;
     }
+
+    if( this->mqttClient != NULL ) {
+        this->mqttClient->do_disconnect();
+        delete this->mqttClient;
+        this->mqttClient = nullptr;
+    }
+
     logger.debug("Plugin Removed");
 }
 
@@ -50,71 +63,7 @@ int CloudConnector::startPlugin(){
         this->busClient->connect_async();
         logger.debug("Started");
 
-        int protocolVersion = MQTT_PROTOCOL_V311;
-
-        while (false == provision()) {
-            logger.debug("Gateway provision failed, retrying in 1 s...");
-            sleep(1);
-        }
-        logger.debug("Gateway provision SUCCESS");
-
-        sendGetDataSync(this->gatewayId, REST_DATASYNC_FILE);
-
-        string datasyncJson;
-        if (true == readFileContent(REST_DATASYNC_FILE, datasyncJson) &&
-            true == getHomeId(datasyncJson, this->homeId))
-        {
-            this->mqttClient = new mqttclient(  MQTT_ID,
-                                                MQTT_HOST,
-                                                MQTT_PORT,
-                                                MQTT_KEEPALIVE,
-                                                true,
-                                                0,
-                                                0,
-                                                protocolVersion);
-
-            if(this->mqttClient->tls_set(   MQTT_ROOT_CA_FILENAME,
-                                            MQTT_CERT_DIR,
-                                            MQTT_CERTIFICATE_FILENAME,
-                                            MQTT_PRIVATE_KEY_FILENAME,
-                                            NULL))
-            {
-                logger.error("Error: Problem setting TLS options.");
-                return 1;
-            }
-
-            if(this->mqttClient->tls_insecure_set(true))
-            {
-                logger.error("Error: Problem setting TLS insecure option.");
-                return 1;
-            }
-
-            if(this->mqttClient->tls_opts_set( 1, MQTT_TLS_VER, NULL)){
-                logger.error("Error: Problem setting TLS options");
-                return 1;
-            }
-
-            if(this->mqttClient->max_inflight_messages_set(20))
-            {
-                logger.error("Error: Problem setting max inflight messages option.");
-                return 1;
-            }
-            if(this->mqttClient->opts_set(MOSQ_OPT_PROTOCOL_VERSION, (void*)(&protocolVersion)))
-            {
-                logger.error("Error: Problem setting protocol version.");
-                return 1;
-            }
-
-            mqttClient->topics_init(this->gatewayId, this->homeId);
-            mqttClient->do_connect_async();
-
-            return 0;
-        }
-        else
-        {
-            logger.error("Error: Failed to get Home ID.");
-            return 1;
-        }
+        runConnectionThread((void*)this);
     } else {
         logger.error("No IBus Client found: can't start", __FILE__, 26);
         return -1;
@@ -161,12 +110,64 @@ int CloudConnector::stopPlugin(){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
 
     this->mqttClient->do_disconnect();
-    delete this->mqttClient;
-    this->mqttClient = nullptr;
 
     logger.debug("Stopped");
     return 0;
 }
+
+bool CloudConnector::initMqttClient()
+{
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+
+    int protocolVersion = MQTT_PROTOCOL_V311;
+    try {
+        this->mqttClient = new mqttclient(  MQTT_ID,
+                                            MQTT_HOST,
+                                            MQTT_PORT,
+                                            MQTT_KEEPALIVE,
+                                            true,
+                                            0,
+                                            0,
+                                            protocolVersion);
+
+        if(this->mqttClient->tls_set(   MQTT_ROOT_CA_FILENAME,
+                                        MQTT_CERT_DIR,
+                                        MQTT_CERTIFICATE_FILENAME,
+                                        MQTT_PRIVATE_KEY_FILENAME,
+                                        NULL)) {
+            logger.error("Error: Problem setting TLS options.");
+            return false;
+        }
+
+
+        if(this->mqttClient->tls_insecure_set(true)) {
+            logger.error("Error: Problem setting TLS insecure option.");
+            return false;
+        }
+
+        if(this->mqttClient->tls_opts_set( 1, MQTT_TLS_VER, NULL)){
+            logger.error("Error: Problem setting TLS options");
+            return false;
+        }
+
+        if(this->mqttClient->max_inflight_messages_set(20)) {
+            logger.error("Error: Problem setting max inflight messages option.");
+            return false;
+        }
+        if(this->mqttClient->opts_set(MOSQ_OPT_PROTOCOL_VERSION, (void*)(&protocolVersion)))  {
+            logger.error("Error: Problem setting protocol version.");
+            return false;
+        }
+    }
+    catch (std::bad_alloc) {
+        this->mqttClient = nullptr;
+        logger.error("Error: Failed to alloc memory for Mqtt Client");
+        return false;
+    }
+
+    return true;
+}
+
 
 bool CloudConnector::provision()
 {
@@ -223,12 +224,6 @@ bool CloudConnector::sendProvision(string serial, string version, string mdn, st
     rst.setUrl(buffer.c_str());
 
     string built_rest = rst.buildRest();
-
-    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("built rest");
-
-    logger.debug(built_rest);
-
 
     int retVal = system(built_rest.c_str());
 
@@ -371,3 +366,60 @@ int CloudConnector::sendGetDataSync(int gwId, string gwDataSyncFile)
     return ret_val;
 }
 
+static void* connectionMain(void *pArg)
+{
+    CloudConnector* clonector = (CloudConnector*)pArg;
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    bool status = true;
+
+    if (true == clonector->initMqttClient())
+    {
+        while (status)
+        {
+            while (false == clonector->provision()) {
+                logger.debug("Gateway provision failed, retrying in 1 s...");
+                sleep(1);
+            }
+            logger.debug("Gateway provision SUCCESS");
+
+            clonector->sendGetDataSync(clonector->gatewayId, REST_DATASYNC_FILE);
+
+            string datasyncJson;
+            if (true == clonector->readFileContent(REST_DATASYNC_FILE, datasyncJson) &&
+                true == clonector->getHomeId(datasyncJson, clonector->homeId))
+            {
+                //TODO store dataSync from REST_DATASYNC_FILE flie
+                cout << "######## GatewayID = " << clonector->gatewayId << " HomeID = " << clonector->homeId << "\n";
+
+                clonector->mqttClient->topics_init(clonector->gatewayId, clonector->homeId);
+                clonector->mqttClient->do_connect_async();
+            }
+            else
+            {
+                logger.error("Error: Failed to get Home ID.");
+                status = false;
+            }
+
+            while (status && true == clonector->mqttClient->is_onboarded)
+            {
+                sleep(1);
+            }
+            clonector->mqttClient->is_onboarded = true;
+            logger.debug("Gateway detached");
+            clonector->mqttClient->do_disconnect();
+        }
+    }
+
+	return 0;
+}
+
+static void runConnectionThread(void *pArg)
+{
+    pthread_t thConnector = 0;
+
+    pthread_attr_t threadAttr;
+    pthread_attr_init(&threadAttr);
+    pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
+
+    pthread_create(&thConnector, &threadAttr, connectionMain, pArg);
+}

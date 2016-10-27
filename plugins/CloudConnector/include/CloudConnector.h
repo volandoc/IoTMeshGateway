@@ -26,11 +26,12 @@ public:
     virtual int stopPlugin();
     virtual PluginDetails* getPluginDetails();
 
-private:
+
     mqttclient *mqttClient;
     int gatewayId;
     int homeId;
 
+    bool initMqttClient();
     bool provision();
     bool sendProvision(string serial, string version, string mdn, string cloudResFile);
     bool readFileContent(string fileName, string& fileContent);
