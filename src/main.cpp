@@ -17,25 +17,34 @@
 #include "pluginsapi.h"
 #include "plugincontainer.h"
 #include "innerbusapi.h"
+#include "sysdefs.h"
 
 typedef Poco::ClassLoader<InnerBusIF> BusLoader;
 typedef Poco::Manifest<InnerBusIF> BusManifest;
 
-class SampleServer: public Poco::Util::ServerApplication {
+class EmbGateway: public Poco::Util::ServerApplication {
 private:
     bool _helpRequested;
+    std::string conf_dir = "/conf/";
     std::string plugins_dir;
     std::string core_dir;
-    std::string path;
+    std::string work_dir;
 
 protected:
     void initialize(Application& self) {
-        path = Application::config().getString("application.dir");
-        logger().information(path + "../conf/embgateway.properties");
-        Poco::Util::Application::loadConfiguration(path +"../conf/embgateway.properties"); // load default configuration files, if present
+
+        std::string appdir = Application::config().getString("application.dir");
+        work_dir = appdir.substr(0, appdir.find_last_of("bin")-2);
+
+        conf_dir = work_dir + conf_dir;
+        logger().information(work_dir);
+
+        Poco::Util::Application::loadConfiguration(conf_dir + "embgateway.properties"); // load default configuration files, if present
+
+        plugins_dir = work_dir +  Application::config().getString("application.pluginsdir");
+        core_dir = work_dir + Application::config().getString("application.coredir");
+
         ServerApplication::initialize(self);
-        plugins_dir = Application::config().getString("application.pluginsdir");
-        core_dir = Application::config().getString("application.coredir");
     }
 
     void uninitialize()	{
@@ -49,25 +58,25 @@ protected:
             Poco::Util::Option("help", "h", "display help information on command line arguments")
                 .required(false)
                 .repeatable(false)
-                .callback(Poco::Util::OptionCallback<SampleServer>(this, &SampleServer::handleHelp)));
+                .callback(Poco::Util::OptionCallback<EmbGateway>(this, &EmbGateway::handleHelp)));
         options.addOption(
             Poco::Util::Option("conf", "c", "with configuration file")
                 .required(false)
                 .repeatable(false)
-                .callback(Poco::Util::OptionCallback<SampleServer>(this, &SampleServer::handleConfig)));
+                .callback(Poco::Util::OptionCallback<EmbGateway>(this, &EmbGateway::handleConfig)));
         options.addOption(
             Poco::Util::Option("plugins", "p", "with plugins folder")
                 .required(false)
                 .repeatable(false)
-                .callback(Poco::Util::OptionCallback<SampleServer>(this, &SampleServer::handleHelp)));
+                .callback(Poco::Util::OptionCallback<EmbGateway>(this, &EmbGateway::handleHelp)));
         options.addOption(
             Poco::Util::Option("verbose", "v", "log everything")
                 .required(false)
                 .repeatable(false)
-                .callback(Poco::Util::OptionCallback<SampleServer>(this, &SampleServer::handleVerbose)));
+                .callback(Poco::Util::OptionCallback<EmbGateway>(this, &EmbGateway::handleVerbose)));
     }
 
-    void handleHelp(const std::string& name, const std::string& value)	{
+    void handleHelp(const std::string& name, const std::string& value) {
         _helpRequested = true;
         displayHelp();
         stopOptionsProcessing();
@@ -77,8 +86,9 @@ protected:
         loadConfiguration(value);
     }
 
-    void handleVerbose(const std::string& name, const std::string& value)	{
+    void handleVerbose(const std::string& name, const std::string& value) {
         logger().setLevel("debug");
+        logger().information("%s:%s", name, value);
     }
 
     void displayHelp()
@@ -94,20 +104,20 @@ protected:
         if (!_helpRequested) {
             logger().information("Start Embedded IoT Gateway version emb-0.0.1");
             BusLoader busLoader;
-            PluginContainer pluginContainer(path + "../" + plugins_dir);
+            PluginContainer pluginContainer(plugins_dir);
 
-            std::string coreBusPath(path + "../" + core_dir + "/InnerBus/InnerBus");
+            std::string coreBusPath(core_dir + "/InnerBus/InnerBus");
             coreBusPath.append(Poco::SharedLibrary::suffix());
             try {
                 busLoader.loadLibrary(coreBusPath);
-                logger().information((busLoader.isLibraryLoaded(coreBusPath)? "Loaded" : "Failed"));
+                logger().information("InnerBus library %s", std::string((busLoader.isLibraryLoaded(coreBusPath)? "Loaded" : "Failed")));
             } catch(Poco::Exception excp) {
                 logger().log(excp, __FILE__ , 83);
             }
 
             InnerBusIF& innerBus = busLoader.instance("InnerBus");
 
-            innerBus.loadConfig(path + "../" + core_dir + "/InnerBus");
+            innerBus.loadConfig(core_dir + "/InnerBus");
 
             InnerBusClientIF* busClient = innerBus.createIBusClient();
             busClient->getInfo();
@@ -118,7 +128,6 @@ protected:
             pluginContainer.addIBusClients(innerBus);
             pluginContainer.startPlugins();
 
-
             waitForTerminationRequest();
 
             logger().information("shutting down");
@@ -126,7 +135,7 @@ protected:
             delete busClient;
             busClient=NULL;
 
-            pluginContainer.stopPlugins();
+            pluginContainer.unloadPlugins();
 
             busLoader.unloadLibrary(coreBusPath);
         }
@@ -134,13 +143,13 @@ protected:
     }
 
 public:
-    SampleServer(): _helpRequested(false) {
+    EmbGateway(): _helpRequested(false) {
     }
 
-    ~SampleServer()	{
+    ~EmbGateway()	{
     }
 
 };
 
 
-POCO_SERVER_MAIN(SampleServer)
+POCO_SERVER_MAIN(EmbGateway)

@@ -18,6 +18,8 @@ DEFINES += UCL_PLUGINS_EXPORTS
 SOURCES += src/CloudConnector.cpp \
     src/JSON_messages.cpp \
     src/mqttclient.cpp \
+    src/gwCommand.cpp \
+    src/parseCommand.cpp \
     src/rest.cpp
 
 HEADERS += include/CloudConnector.h \
@@ -26,6 +28,8 @@ HEADERS += include/CloudConnector.h \
     include/mqttclientconfig.h \
     include/rest.h \
     include/restconfig.h \
+    include/gwCommand.h \
+    include/parseCommand.h \
     ../include/pluginsapi.h \
     ../../core/include/innerbusclientapi.h
 

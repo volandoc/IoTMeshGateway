@@ -2,9 +2,7 @@
 #include <iostream>
 #include <string.h>
 #include "mqttclient.h"
-#include "mqttclientconfig.h"
 #include "JSON_messages.h"
-#include "gwCommand.h"
 
 #define BUFFER_SIZE     1024
 
@@ -45,6 +43,10 @@ int mqttclient::config_load(){
 
 void mqttclient::config_cleanup(){
 
+}
+
+void mqttclient::setCallback(UCLPluginIf *callbackObj){
+    this->callbackObj = callbackObj;
 }
 
 void mqttclient::topics_init(int gwId, int homeId){
@@ -161,54 +163,17 @@ void mqttclient::on_unsubscribe(int mid){
 }
 
 void mqttclient::on_message(const struct mosquitto_message *message){
-    std::cout << ">> myMosq - Message(" << message->mid << ") on Topic(" << message->topic << ") with payload <" << (char*)message->payload << ">\n";
+
+    int msize=message->payloadlen/sizeof(char);
+    char messagearr[msize];
+    strcpy(messagearr , (char*)message->payload);
+
+    std::string messagestr(messagearr);
+
+    std::cout << ">> myMosq - Message(" << message->mid << ") on Topic(" << message->topic << ") with payload <" << messagestr << ">\n";
 
     if (!strcmp(message->topic, subTopicGwCmd.c_str())){
-        std::string json = (char*)message->payload;
-        gwCommand gwCmd(json);
-
-        std::string eventType = gwCmd.getEventType();
-        if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_SYNCDATA))
-        {
-            std::cout << "command " << GW_COMMAND_EVENT_SYNCDATA << " received\n";
-        }
-        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_DISCOVERSENSORS))
-        {
-            std::cout << "command " << GW_COMMAND_EVENT_DISCOVERSENSORS << " received\n";
-        }
-        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_CONNECTSENSORS))
-        {
-            std::cout << "command " << GW_COMMAND_EVENT_CONNECTSENSORS << " received\n";
-        }
-        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_UPDATEPLUGINS))
-        {
-            std::cout << "command " << GW_COMMAND_EVENT_UPDATEPLUGINS << " received\n";
-        }
-        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_UPDATEFIRMWARE))
-        {
-            std::cout << "command " << GW_COMMAND_EVENT_UPDATEFIRMWARE << " received\n";
-        }
-        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_REBOOT))
-        {
-            std::cout << "command " << GW_COMMAND_EVENT_REBOOT << " received\n";
-        }
-        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_RESET))
-        {
-            std::cout << "command " << GW_COMMAND_EVENT_RESET << " received\n";
-            this->is_onboarded = false;
-        }
-        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_BACKUP))
-        {
-            std::cout << "command " << GW_COMMAND_EVENT_BACKUP << " received\n";
-        }
-        else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_RESTORE))
-        {
-            std::cout << "command " << GW_COMMAND_EVENT_RESTORE << " received\n";
-        }
-        else
-        {
-            std::cout << "Unknown command " << gwCmd.getEventType() << " received\n";
-        }
+        this->callbackObj->executeCommand(messagestr);
     }
 }
 

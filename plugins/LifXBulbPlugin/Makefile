@@ -24,7 +24,6 @@ OBJECTS       = LifXBulbPlugin.o
 ###
 DEL_FILE      = rm -f
 AR            = ar cqs
-SYMLINK       = ln -f -s
 
 ###
 # Define target file names
@@ -45,9 +44,9 @@ all: $(TARGET) staticlib
 $(TARGET):  $(OBJECTS)  
 	-$(DEL_FILE) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
-	$(SYMLINK) $(TARGET) $(TARGET0)
-	$(SYMLINK) $(TARGET) $(TARGET1)
-	$(SYMLINK) $(TARGET) $(TARGET2)
+	-ln -s $(TARGET) $(TARGET0)
+	-ln -s $(TARGET) $(TARGET1)
+	-ln -s $(TARGET) $(TARGET2)
 
 staticlib: $(TARGETA)
 
