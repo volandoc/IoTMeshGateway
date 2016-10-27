@@ -1,11 +1,12 @@
 #include "LifXBulbPlugin.h"
 #include <iostream>
 
-LifXBulbPlugin::LifXBulbPlugin(){
+LifXBulbPlugin::LifXBulbPlugin() {
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+    this->pluginDetails.type = _PD_T_DEVICE;
     this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
     this->pluginDetails.className = "LifXBulbPlugin";
-    this->pluginDetails.pluginName ="LifX Bulb Plugin";
+    this->pluginDetails.pluginName ="LifXBulb Plugin";
     this->pluginDetails.pluginVersion = "0.0.1";
     logger.debug("Plugin Created");
 }
@@ -40,9 +41,16 @@ int LifXBulbPlugin::setIBusClient(InnerBusClientIF* client){
     return 0;
 }
 
-int LifXBulbPlugin::executeCommand(){
+int LifXBulbPlugin::setWorkDir(std::string path){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
-    logger.debug("executeCommand");
+    logger.debug("Running from %s", path);
+    this->work_dir = path;
+    return 0;
+}
+
+int LifXBulbPlugin::executeCommand(std::string message){
+    Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+    logger.debug("executeCommand %s: ", message);
     return 0;
 }
 

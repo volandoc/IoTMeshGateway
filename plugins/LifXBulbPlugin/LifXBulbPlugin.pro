@@ -20,7 +20,9 @@ SOURCES += src/LifXBulbPlugin.cpp
 
 HEADERS += include/LifXBulbPlugin.h \
     ../include/pluginsapi.h \
-    ../../core/include/innerbusclientapi.h
+    ../include/deviceapi.h \
+    ../../core/include/innerbusclientapi.h \
+    include/device_types.h
 
 LIBS += -lPocoFoundation
 

@@ -7,11 +7,11 @@
 #include <Poco/JSON/JSON.h>
 #include <Poco/JSON/Parser.h>
 #include <Poco/Dynamic/Var.h>
-#include <pthread.h>
+#include "gwCommand.h"
 
-#define GW_SERIAL                       "987654321"
+#define GW_SERIAL                       "9876543210"
 #define GW_VERSION                      "2"
-#define GW_MDN                          "123456789"
+#define GW_MDN                          "1234567890"
 
 #define GW_ID_FILE_PARAMETER_GW_ID      "gatewayId"
 #define GW_ID_FILE_PARAMETER_IS_ONBOARD "isOnboarded"
@@ -21,12 +21,10 @@ using namespace Poco::JSON;
 using namespace Poco::Dynamic;
 using namespace Poco;
 
-static void runConnectionThread(void *pArg);
-static void* connectionMain(void *pArg);
-
 
 CloudConnector::CloudConnector()
-    : gatewayId(0)
+    : mqttClient(nullptr)
+    , gatewayId(0)
     , homeId(0)
 {
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
@@ -34,21 +32,22 @@ CloudConnector::CloudConnector()
     this->pluginDetails.className = "CloudConnector";
     this->pluginDetails.pluginName ="CloudConnector Plugin";
     this->pluginDetails.pluginVersion = "0.0.1";
+    this->timer.setStartInterval(0);
+    this->timer.setPeriodicInterval(5000);
 
     initMqttClient();
 
     logger.debug("Plugin Created");
 }
 
-CloudConnector::~CloudConnector(){
+CloudConnector::~CloudConnector() {
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    if( NULL != this->busClient ) {
+    if( busClient != NULL ) {
         delete busClient;
         busClient = NULL;
     }
 
     if( this->mqttClient != NULL ) {
-        this->mqttClient->do_disconnect();
         delete this->mqttClient;
         this->mqttClient = nullptr;
     }
@@ -56,17 +55,50 @@ CloudConnector::~CloudConnector(){
     logger.debug("Plugin Removed");
 }
 
-int CloudConnector::startPlugin(){
+int CloudConnector::startPlugin() {
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     if(this->busClient!=NULL){
         this->busClient->init();
         this->busClient->connect_async();
         logger.debug("Started");
 
-        runConnectionThread((void*)this);
+        timer.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::doProvision));
+
+
     } else {
         logger.error("No IBus Client found: can't start", __FILE__, 26);
         return -1;
+    }
+}
+
+void CloudConnector::doProvision(Timer& timer){
+    if(provision()) {
+        this->onProvision();
+        timer.restart(0);
+    }
+}
+
+void CloudConnector::onProvision() {
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug("Gateway provision SUCCESS");
+
+    sendGetDataSync(this->gatewayId, REST_DATASYNC_FILE);
+
+    string datasyncJson;
+    if (true == readFileContent(REST_DATASYNC_FILE, datasyncJson) &&
+            true == getHomeId(datasyncJson)) {
+
+        mqttClient->topics_init(this->gatewayId, this->homeId);
+        mqttClient->do_connect_async();
+
+        logger.debug("all done");
+
+        return;
+    }
+    else
+    {
+        logger.error("Error: Failed to get Home ID.");
+        return;
     }
 }
 
@@ -79,9 +111,69 @@ int CloudConnector::setIBusClient(InnerBusClientIF* client){
     return 0;
 }
 
-int CloudConnector::executeCommand(){
+int CloudConnector::setWorkDir(std::string path){
+    return 0;
+}
+
+int CloudConnector::executeCommand(std::string message){
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug("executeCommand %s", message);
+
+    return 0;
+}
+
+int CloudConnector::executeCloudCommand(std::string message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     logger.debug("executeCommand");
+
+    std::string json = message;
+    gwCommand gwCmd(json);
+
+    std::string eventType = gwCmd.getEventType();
+    if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_SYNCDATA))
+    {
+        std::cout << "command " << GW_COMMAND_EVENT_SYNCDATA << " received\n";
+    }
+    else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_DISCOVERSENSORS))
+    {
+        std::cout << "command " << GW_COMMAND_EVENT_DISCOVERSENSORS << " received\n";
+    }
+    else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_CONNECTSENSORS))
+    {
+        std::cout << "command " << GW_COMMAND_EVENT_CONNECTSENSORS << " received\n";
+    }
+    else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_UPDATEPLUGINS))
+    {
+        std::cout << "command " << GW_COMMAND_EVENT_UPDATEPLUGINS << " received\n";
+    }
+    else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_UPDATEFIRMWARE))
+    {
+        std::cout << "command " << GW_COMMAND_EVENT_UPDATEFIRMWARE << " received\n";
+    }
+    else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_REBOOT))
+    {
+        std::cout << "command " << GW_COMMAND_EVENT_REBOOT << " received\n";
+    }
+    else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_RESET))
+    {
+        std::cout << "command " << GW_COMMAND_EVENT_RESET << " received\n";
+        this->isOnboarded = false;
+        this->mqttClient->do_disconnect();
+        timer.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::doProvision));
+    }
+    else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_BACKUP))
+    {
+        std::cout << "command " << GW_COMMAND_EVENT_BACKUP << " received\n";
+    }
+    else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_RESTORE))
+    {
+        std::cout << "command " << GW_COMMAND_EVENT_RESTORE << " received\n";
+    }
+    else
+    {
+        std::cout << "Unknown command " << gwCmd.getEventType() << " received\n";
+    }
+
     return 0;
 }
 
@@ -109,6 +201,8 @@ PluginDetails* CloudConnector::getPluginDetails(){
 int CloudConnector::stopPlugin(){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
 
+    timer.stop();
+
     this->mqttClient->do_disconnect();
 
     logger.debug("Stopped");
@@ -129,6 +223,8 @@ bool CloudConnector::initMqttClient()
                                             0,
                                             0,
                                             protocolVersion);
+
+        this->mqttClient->setCallback(this);
 
         if(this->mqttClient->tls_set(   MQTT_ROOT_CA_FILENAME,
                                         MQTT_CERT_DIR,
@@ -168,11 +264,9 @@ bool CloudConnector::initMqttClient()
     return true;
 }
 
-
 bool CloudConnector::provision()
 {
     bool status = true;
-    bool isOnboarded;
     string cloudResponse;
 
     if (false == sendProvision(GW_SERIAL, GW_VERSION, GW_MDN, REST_PROVISION_FILE))
@@ -187,12 +281,12 @@ bool CloudConnector::provision()
 
     if (true == status)
     {
-        status = getGwId(cloudResponse, this->gatewayId);
+        status = getGwId(cloudResponse);
     }
 
     if (true == status)
     {
-        status = getIsOnboarded(cloudResponse, isOnboarded);
+        status = getIsOnboarded(cloudResponse);
     }
     if (true == status)
     {
@@ -225,6 +319,12 @@ bool CloudConnector::sendProvision(string serial, string version, string mdn, st
 
     string built_rest = rst.buildRest();
 
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug("built rest");
+
+    logger.debug(built_rest);
+
+
     int retVal = system(built_rest.c_str());
 
     if (0 == retVal)
@@ -254,7 +354,7 @@ bool CloudConnector::readFileContent(string fileName, string&  fileContent)
     return false;
 }
 
-bool CloudConnector::getGwId(string provisionJson, int& gwId)
+bool CloudConnector::getGwId(string provisionJson)
 {
     bool retVal = false;
     if (0 != provisionJson.length())
@@ -269,7 +369,7 @@ bool CloudConnector::getGwId(string provisionJson, int& gwId)
         try
         {
             temp = stoi(gatewayIdValue);
-            gwId = temp;
+            this->gatewayId = temp;
             retVal = true;
         }
         catch(...)
@@ -280,7 +380,7 @@ bool CloudConnector::getGwId(string provisionJson, int& gwId)
     return retVal;
 }
 
-bool CloudConnector::getIsOnboarded(string provisionJson, bool& isOnboarded)
+bool CloudConnector::getIsOnboarded(string provisionJson)
 {
     bool retVal = false;
     if (0 != provisionJson.length())
@@ -294,12 +394,12 @@ bool CloudConnector::getIsOnboarded(string provisionJson, bool& isOnboarded)
 
         if ("true" == isOnboardedValue)
         {
-            isOnboarded = true;
+            this->isOnboarded = true;
             retVal = true;
         }
         else if ("false" == isOnboardedValue)
         {
-            isOnboarded = false;
+            this->isOnboarded = false;
             retVal = true;
         }
         else
@@ -310,7 +410,7 @@ bool CloudConnector::getIsOnboarded(string provisionJson, bool& isOnboarded)
     return retVal;
 }
 
-bool CloudConnector::getHomeId(string datasyncJson, int& homeId)
+bool CloudConnector::getHomeId(string datasyncJson)
 {
     bool retVal = false;
 
@@ -331,7 +431,7 @@ bool CloudConnector::getHomeId(string datasyncJson, int& homeId)
         try
         {
             temp = stoi(homeIdValue);
-            homeId = temp;
+            this->homeId = temp;
             retVal = true;
         }
         catch(...)
@@ -366,60 +466,3 @@ int CloudConnector::sendGetDataSync(int gwId, string gwDataSyncFile)
     return ret_val;
 }
 
-static void* connectionMain(void *pArg)
-{
-    CloudConnector* clonector = (CloudConnector*)pArg;
-    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    bool status = true;
-
-    if (true == clonector->initMqttClient())
-    {
-        while (status)
-        {
-            while (false == clonector->provision()) {
-                logger.debug("Gateway provision failed, retrying in 1 s...");
-                sleep(1);
-            }
-            logger.debug("Gateway provision SUCCESS");
-
-            clonector->sendGetDataSync(clonector->gatewayId, REST_DATASYNC_FILE);
-
-            string datasyncJson;
-            if (true == clonector->readFileContent(REST_DATASYNC_FILE, datasyncJson) &&
-                true == clonector->getHomeId(datasyncJson, clonector->homeId))
-            {
-                //TODO store dataSync from REST_DATASYNC_FILE flie
-                cout << "######## GatewayID = " << clonector->gatewayId << " HomeID = " << clonector->homeId << "\n";
-
-                clonector->mqttClient->topics_init(clonector->gatewayId, clonector->homeId);
-                clonector->mqttClient->do_connect_async();
-            }
-            else
-            {
-                logger.error("Error: Failed to get Home ID.");
-                status = false;
-            }
-
-            while (status && true == clonector->mqttClient->is_onboarded)
-            {
-                sleep(1);
-            }
-            clonector->mqttClient->is_onboarded = true;
-            logger.debug("Gateway detached");
-            clonector->mqttClient->do_disconnect();
-        }
-    }
-
-	return 0;
-}
-
-static void runConnectionThread(void *pArg)
-{
-    pthread_t thConnector = 0;
-
-    pthread_attr_t threadAttr;
-    pthread_attr_init(&threadAttr);
-    pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
-
-    pthread_create(&thConnector, &threadAttr, connectionMain, pArg);
-}

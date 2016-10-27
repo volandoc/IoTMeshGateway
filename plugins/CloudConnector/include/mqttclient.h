@@ -4,6 +4,7 @@
 #include <mosquittopp.h>
 #include <iostream>
 #include "mqttclientconfig.h"
+#include "pluginsapi.h"
 
 struct mosquittoConfig {
     const char *id;
@@ -75,6 +76,7 @@ public:
     int config_load();
     int config_load_from_file();
     void topics_init(int gwId, int homeId);
+    void setCallback(UCLPluginIf *callbackObj);
 
     void on_connect(int rc);
     void on_message(const struct mosquitto_message *message);
@@ -92,6 +94,7 @@ private:
 
     bool disconnected_by_user;
     struct mosquittoConfig config;
+    UCLPluginIf *callbackObj;
 
     std::string subTopicSensorActuartorCmd;
     std::string subTopicScenarioExecCmnd;

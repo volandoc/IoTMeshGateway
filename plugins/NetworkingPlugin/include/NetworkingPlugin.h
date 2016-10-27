@@ -15,7 +15,8 @@ public:
 
     virtual int startPlugin();
     virtual int setIBusClient(InnerBusClientIF* client);
-    virtual int executeCommand();
+    virtual int setWorkDir(std::string path);
+    virtual int executeCommand(std::string message);
     virtual int sendOccurrence(std::string message);
     virtual int getCommandSet();
     virtual int getCapabilitiesSet();
