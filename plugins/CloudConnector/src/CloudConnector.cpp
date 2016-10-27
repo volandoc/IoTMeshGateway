@@ -76,6 +76,11 @@ void CloudConnector::doProvision(Timer& timer){
         this->onProvision();
         timer.restart(0);
     }
+    else {
+        Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+        logger.debug("Gateway provision failed, retrying in 5 s...");
+    }
+
 }
 
 void CloudConnector::onProvision() {
@@ -119,6 +124,8 @@ int CloudConnector::executeCommand(std::string message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     logger.debug("executeCommand %s", message);
 
+    executeCloudCommand(message);
+
     return 0;
 }
 
@@ -159,7 +166,10 @@ int CloudConnector::executeCloudCommand(std::string message){
         std::cout << "command " << GW_COMMAND_EVENT_RESET << " received\n";
         this->isOnboarded = false;
         this->mqttClient->do_disconnect();
-        timer.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::doProvision));
+
+        this->timer.stop();
+        this->timer.setPeriodicInterval(5000);
+        this->timer.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::doProvision));
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_BACKUP))
     {
@@ -320,10 +330,6 @@ bool CloudConnector::sendProvision(string serial, string version, string mdn, st
     string built_rest = rst.buildRest();
 
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("built rest");
-
-    logger.debug(built_rest);
-
 
     int retVal = system(built_rest.c_str());
 

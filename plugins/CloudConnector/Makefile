@@ -17,7 +17,7 @@ INCPATH       = -I../include -I./include -I../../core/include
 LIBS          = $(SUBLIBS) -lmosquittopp -ldl -lpthread -lPocoFoundation -lPocoJSON
 DESTDIR       = 
 SOURCES       = src/CloudConnector.cpp mqttclient.cpp rest.cpp JSON_messages.cpp
-OBJECTS       = CloudConnector.o mqttclient.o rest.o JSON_messages.o
+OBJECTS       = CloudConnector.o mqttclient.o rest.o JSON_messages.o parseCommand.o gwCommand.o
 
 ###
 # Define system commands
@@ -67,6 +67,12 @@ rest.o: src/rest.cpp include/rest.h
 
 JSON_messages.o: src/JSON_messages.cpp include/JSON_messages.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o JSON_messages.o src/JSON_messages.cpp
+
+parseCommand.o: src/parseCommand.cpp include/parseCommand.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o parseCommand.o src/parseCommand.cpp
+
+gwCommand.o: src/gwCommand.cpp include/gwCommand.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gwCommand.o src/gwCommand.cpp
 
 clean:
 	-$(DEL_FILE) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2) $(TARGETA) $(OBJECTS)
