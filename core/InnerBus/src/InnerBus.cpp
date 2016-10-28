@@ -338,7 +338,6 @@ void InnerBusClient::on_error() {
 //
 //
 
-
 InnerBus::InnerBus() {
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
     logger.debug("InnerBus default Created");
@@ -378,11 +377,8 @@ bool InnerBus::isAvailable(){
 }
 
 InnerBusClientIF* InnerBus::createIBusClient(){
-    Poco::Logger& logger = Poco::Logger::get("InnerBus");
-    logger.debug("InnerBus enter client creation");
     InnerBusClientIF* client = new InnerBusClient;
     client->setConfig(&defaultConf);
-    logger.debug("InnerBus leave client creation");
     return client;
 }
 

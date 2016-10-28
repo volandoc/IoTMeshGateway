@@ -23,8 +23,9 @@ mqttclient::mqttclient(const char *id, const char *host, int port, int keepalive
 }
 
 mqttclient::~mqttclient(){
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     if(is_connected) do_disconnect();
-    std::cout << ">> myMosq - destroyed" << std::endl;
+    logger.debug(">> myMosq - destroyed");
     mosqpp::lib_cleanup();    // Mosquitto library cleanup
 }
 
@@ -36,6 +37,8 @@ void mqttclient::config_init(struct mosquittoConfig *cfg){
     config.clean_session = cfg->clean_session;
     config.eol = cfg->eol;
     config.protocol_version = cfg->protocol_version;
+    mosqpp::lib_init();
+
 }
 
 int mqttclient::config_load(){
@@ -80,16 +83,15 @@ void mqttclient::topics_init(int gwId, int homeId){
 }
 
 int mqttclient::do_connect_async(){
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     int rc = 0;
 
     rc = set_will(this->pubTopicStatus.c_str(), GW_STATUS_OFFLINE, 1);
     if(MOSQ_ERR_SUCCESS != rc){
-        std::cout << ">> myMosq - last will: failed" << std::endl;
+        logger.debug(">> myMosq - last will: failed");
     } else {
-        std::cout << ">> myMosq - last will: setted" << std::endl;
+        logger.debug(">> myMosq - last will: setted");
     }
-
-    mosqpp::lib_init();
 
     rc = connect_async(config.host, config.port, config.keepalive);
     this->loop_start();
@@ -108,12 +110,14 @@ int mqttclient::do_disconnect(){
 }
 
 int mqttclient::do_subscribe(const int count, const char *topics[], int qos){
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     int sub_qos = (qos >= 0 && qos <= 3)? qos : config.qos;
     int rc = MOSQ_ERR_SUCCESS;
 
     for(int i=0; i<count; i++){
         config.sub_msg_count++;
-        std::cout << ">> myMosq - try subscribe to Topic: \"" << topics[i] << "\"\n";
+        std::string topic = topics[i];
+        logger.debug(">> myMosq - try subscribe to Topic: \"%s\"", topic);
         rc = subscribe(&(config.sub_msg_count), topics[i], sub_qos);
         if(rc != MOSQ_ERR_SUCCESS){
             break;
@@ -144,17 +148,16 @@ int mqttclient::do_publish(const char *topic, const char *message, int qos){
 
 int mqttclient::set_will(const char *topic, const char *message, int qos){
     int pub_qos = (qos >= 0 && qos <= 3)? qos : config.qos;
-    std::cout << ">> myMosq - last will: " << message << " : with length: " << strlen(message) << std::endl;
     return will_set(topic, strlen(message), message, pub_qos, false);
-
 }
 
 void mqttclient::on_connect(int rc){
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     if( rc == 0 ){
 
         do_publish(pubTopicStatus.c_str(), GW_STATUS_ONLINE);
 
-        std::cout << ">> myMosq - connected with server\n";
+        logger.debug(">> myMosq - connected with server");
 
         const char *topics[]={
             this->subTopicSensorActuartorCmd.c_str(),
@@ -165,13 +168,15 @@ void mqttclient::on_connect(int rc){
         do_subscribe(topics_count, topics, 1);
 
     } else {
-        std::cout << ">> myMosq - Impossible to connect with server(" << rc << ")";
+        logger.debug(">> myMosq - Impossible to connect with server(%d)", rc);
         is_connected = false;
     }
 }
 
 void mqttclient::on_disconnect(int rc){
-    std::cout << ">> myMosq - disconnection(" << rc << ")\n";
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+
+    logger.debug(">> myMosq - disconnection(%d)", rc);
     is_connected = false;
     if(!disconnected_by_user){
         this->reconnect_async();
@@ -179,21 +184,30 @@ void mqttclient::on_disconnect(int rc){
 }
 
 void mqttclient::on_subscribe(int mid, int qos_count, const int *granted_qos){
-    std::cout << ">> myMosq - Topic(" << mid << ")(" << qos_count << ")( ";
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+
+    std::string msg = ">> myMosq - Topic(";
+    msg += std::to_string(mid);
+    msg += ")(";
+    msg += std::to_string(qos_count);
+    msg += ")(";
 
     int i;
-
     for(i = 0; i < qos_count; i++){
-        std::cout << ", granted_qos " << granted_qos[i];
+        msg += ", granted_qos ";
+        msg += std::to_string(granted_qos[i]);
     }
-    std::cout << ") subscribed\n";
+    msg += ")";
+    logger.debug(msg);
 }
 
 void mqttclient::on_unsubscribe(int mid){
-    std::cout << ">> myMosq - Topic(" << mid << ") unsubscribed";
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug(">> myMosq - Topic(%d) unsubscribed", mid);
 }
 
 void mqttclient::on_message(const struct mosquitto_message *message){
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
 
     int msize = message->payloadlen/sizeof(char);
     char messagearr[msize];
@@ -205,7 +219,7 @@ void mqttclient::on_message(const struct mosquitto_message *message){
     strcpy(topicarr , message->topic);
     std::string topicstr(topicarr);
 
-    std::cout << ">> myMosq - Message(" << message->mid << ") on Topic(" << topicstr << ") with payload <" << messagestr << ">\n";
+    logger.debug(">> myMosq - Message(%d) on Topic(%s) with payload <%s>", message->mid, topicstr, messagestr);
 
     if (!strcmp(message->topic, subTopicGwCmd.c_str())){
         this->callbackObj->executeCommand(messagestr);
@@ -213,7 +227,8 @@ void mqttclient::on_message(const struct mosquitto_message *message){
 }
 
 void mqttclient::on_publish(int mid){
-    std::cout << ">> myMosq - Message(" << mid << ") succeed to be published\n";
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug(">> myMosq - Message(%d) succeed to be published", mid);
 }
 
 void mqttclient::on_error(){
