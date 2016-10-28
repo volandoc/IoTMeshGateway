@@ -9,9 +9,9 @@
 #include <Poco/Dynamic/Var.h>
 #include "gwCommand.h"
 
-#define GW_SERIAL                       "9876543210"
+#define GW_SERIAL                       "987654321"
 #define GW_VERSION                      "2"
-#define GW_MDN                          "1234567890"
+#define GW_MDN                          "123456789"
 
 #define GW_ID_FILE_PARAMETER_GW_ID      "gatewayId"
 #define GW_ID_FILE_PARAMETER_IS_ONBOARD "isOnboarded"
