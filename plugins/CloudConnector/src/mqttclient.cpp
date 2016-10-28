@@ -150,8 +150,6 @@ void mqttclient::on_subscribe(int mid, int qos_count, const int *granted_qos){
 
     int i;
 
-    int rc;
-    char *msg = NULL;
     for(i = 0; i < qos_count; i++){
         std::cout << ", granted_qos " << granted_qos[i];
     }
@@ -164,13 +162,17 @@ void mqttclient::on_unsubscribe(int mid){
 
 void mqttclient::on_message(const struct mosquitto_message *message){
 
-    int msize=message->payloadlen/sizeof(char);
+    int msize = message->payloadlen/sizeof(char);
     char messagearr[msize];
     strcpy(messagearr , (char*)message->payload);
-
     std::string messagestr(messagearr);
 
-    std::cout << ">> myMosq - Message(" << message->mid << ") on Topic(" << message->topic << ") with payload <" << messagestr << ">\n";
+    int topicsize = strlen(message->topic)/sizeof(char);
+    char topicarr[topicsize];
+    strcpy(topicarr , message->topic);
+    std::string topicstr(topicarr);
+
+    std::cout << ">> myMosq - Message(" << message->mid << ") on Topic(" << topicstr << ") with payload <" << messagestr << ">\n";
 
     if (!strcmp(message->topic, subTopicGwCmd.c_str())){
         this->callbackObj->executeCommand(messagestr);
