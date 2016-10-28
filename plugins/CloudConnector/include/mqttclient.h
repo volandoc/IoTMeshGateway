@@ -3,6 +3,7 @@
 
 #include <mosquittopp.h>
 #include <iostream>
+#include <Poco/Logger.h>
 #include "mqttclientconfig.h"
 #include "pluginsapi.h"
 
