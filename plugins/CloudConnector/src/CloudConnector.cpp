@@ -136,34 +136,36 @@ int CloudConnector::executeCloudCommand(std::string message){
     std::string json = message;
     gwCommand gwCmd(json);
 
+    /* TO-DO: after implementation of if-elseif-else logic place one logger.debug call
+        before if-elseif-else chain*/
     std::string eventType = gwCmd.getEventType();
     if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_SYNCDATA))
     {
-        std::cout << "command " << GW_COMMAND_EVENT_SYNCDATA << " received\n";
+        logger.debug("command %s received", eventType);
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_DISCOVERSENSORS))
     {
-        std::cout << "command " << GW_COMMAND_EVENT_DISCOVERSENSORS << " received\n";
+        logger.debug("command %s received", eventType);
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_CONNECTSENSORS))
     {
-        std::cout << "command " << GW_COMMAND_EVENT_CONNECTSENSORS << " received\n";
+        logger.debug("command %s received", eventType);
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_UPDATEPLUGINS))
     {
-        std::cout << "command " << GW_COMMAND_EVENT_UPDATEPLUGINS << " received\n";
+        logger.debug("command %s received", eventType);
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_UPDATEFIRMWARE))
     {
-        std::cout << "command " << GW_COMMAND_EVENT_UPDATEFIRMWARE << " received\n";
+        logger.debug("command %s received", eventType);
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_REBOOT))
     {
-        std::cout << "command " << GW_COMMAND_EVENT_REBOOT << " received\n";
+        logger.debug("command %s received", eventType);
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_RESET))
     {
-        std::cout << "command " << GW_COMMAND_EVENT_RESET << " received\n";
+        logger.debug("command %s received", eventType);
         this->isOnboarded = false;
         this->mqttClient->do_disconnect();
 
@@ -173,15 +175,15 @@ int CloudConnector::executeCloudCommand(std::string message){
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_BACKUP))
     {
-        std::cout << "command " << GW_COMMAND_EVENT_BACKUP << " received\n";
+        logger.debug("command %s received", eventType);
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_RESTORE))
     {
-        std::cout << "command " << GW_COMMAND_EVENT_RESTORE << " received\n";
+        logger.debug("command %s received", eventType);
     }
     else
     {
-        std::cout << "Unknown command " << gwCmd.getEventType() << " received\n";
+        logger.debug("command %s received", eventType);
     }
 
     return 0;
