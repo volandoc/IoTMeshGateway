@@ -23,8 +23,8 @@
 #define MQTT_TOPIC_SUB_SCENARIO_EXEC_CMD        "ScenarioExecCommand/"
 #define MQTT_TOPIC_SUB_GW_CMD                   "GW/Command/%u"                                     //"GW/Command/{gatewayId}"
 
+#define MQTT_TOPIC_PUB_GW_STATUS                "GW/Status/%u"                                      //"GW/Status/{gatewayId}"
 #define MQTT_TOPIC_PUB_SENSOR_ACTUATOR_OCCUR    "SensorActuator/Occurrence/VerizonGateway/%u/%u/"   //SensorActuator/Occurrence/VerizonGateway/{homeId}/{gatewayId}/
 #define MQTT_TOPIC_PUB_SENSOR_ACTUATOR_ERROR    "SensorActuator/Error/VerizonGateway/%u/%u/"        // SensorActuator/Error/VerizonGateway/{homeId}/{gatewayId}/
-
 
 #endif // MQTTCLIENT_CONGIG_H
