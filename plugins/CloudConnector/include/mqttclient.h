@@ -86,12 +86,12 @@ public:
     void on_error();
     void on_disconnect(int rc);
 
-    bool is_onboarded;
 
 private:
     void config_init(struct mosquittoConfig *cfg);
     void config_cleanup();
 
+    bool is_connected;
     bool disconnected_by_user;
     struct mosquittoConfig config;
     UCLPluginIf *callbackObj;
@@ -100,6 +100,7 @@ private:
     std::string subTopicScenarioExecCmnd;
     std::string subTopicGwCmd;
 
+    std::string pubTopicStatus;
     std::string pubTopicSensorActuartorOccur;
     std::string pubTopicSensorActuartorError;
 };
