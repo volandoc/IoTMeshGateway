@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
     private static final String PORT = ":1883";
     private static final String SUFFIX_SUB = "-sub";
 
-    private static final String TOPIC = "/test";
+    private static final String TOPIC = "#";
     private static final String NEW_LINE = "\n";
 
     private MqttAndroidClient mMqttAndroidClient;
@@ -83,10 +83,10 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
                     Log.d(TAG, "Subscribing to topic...");
                     try {
                         mMqttAndroidClient.subscribe(TOPIC, 0);
+                        Log.d(TAG, "Subscribed to topic!");
                     } catch (MqttException e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "Not subscribed: " + e.getLocalizedMessage());
                     }
-                    Log.d(TAG, "Subscribed to topic!");
                 }
 
                 @Override
