@@ -48,9 +48,15 @@ int LifXBulbPlugin::setWorkDir(std::string path){
     return 0;
 }
 
-int LifXBulbPlugin::executeCommand(std::string message){
+int LifXBulbPlugin::executeInternalCommand(std::string message){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
-    logger.debug("executeCommand %s: ", message);
+    logger.debug("executeInternalCommand %s: ", message);
+    return 0;
+}
+
+int LifXBulbPlugin::executeCloudCommand(std::string message){
+    Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+    logger.debug("executeCloudCommand %s: ", message);
     return 0;
 }
 

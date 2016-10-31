@@ -16,6 +16,7 @@
 #define GW_ID_FILE_PARAMETER_GW_ID      "gatewayId"
 #define GW_ID_FILE_PARAMETER_IS_ONBOARD "isOnboarded"
 
+#define GW_PROVISION_INTERVAL           5000
 
 using namespace Poco::JSON;
 using namespace Poco::Dynamic;
@@ -26,6 +27,7 @@ CloudConnector::CloudConnector()
     : mqttClient(nullptr)
     , gatewayId(0)
     , homeId(0)
+    , isDiscovering(false)
 {
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
@@ -33,7 +35,7 @@ CloudConnector::CloudConnector()
     this->pluginDetails.pluginName ="CloudConnector Plugin";
     this->pluginDetails.pluginVersion = "0.0.1";
     this->timer.setStartInterval(0);
-    this->timer.setPeriodicInterval(5000);
+    this->timer.setPeriodicInterval(GW_PROVISION_INTERVAL);
 
     initMqttClient();
 
@@ -120,18 +122,15 @@ int CloudConnector::setWorkDir(std::string path){
     return 0;
 }
 
-int CloudConnector::executeCommand(std::string message){
+int CloudConnector::executeInternalCommand(std::string message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("executeCommand %s", message);
-
-    executeCloudCommand(message);
-
+    logger.debug("executeInternalCommand %s", message);
     return 0;
 }
 
 int CloudConnector::executeCloudCommand(std::string message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("executeCommand");
+    logger.debug("executeCloudCommand %s", message);
 
     std::string json = message;
     gwCommand gwCmd(json);
@@ -146,6 +145,9 @@ int CloudConnector::executeCloudCommand(std::string message){
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_DISCOVERSENSORS))
     {
         logger.debug("command %s received", eventType);
+        logger.debug("Starting device discover");
+        isDiscovering = true;
+        this->busClient->sendMessage(GW_COMMAND_EVENT_DISCOVERSENSORS);
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_CONNECTSENSORS))
     {
@@ -170,7 +172,7 @@ int CloudConnector::executeCloudCommand(std::string message){
         this->mqttClient->do_disconnect();
 
         this->timer.stop();
-        this->timer.setPeriodicInterval(5000);
+        this->timer.setPeriodicInterval(GW_PROVISION_INTERVAL);
         this->timer.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::doProvision));
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_BACKUP))

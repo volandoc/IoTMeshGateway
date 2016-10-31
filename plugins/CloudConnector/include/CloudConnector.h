@@ -16,6 +16,7 @@ private:
     InnerBusClientIF* busClient = NULL;
     Poco::Timer timer;
     bool isOnboarded;
+    bool isDiscovering;
 public:
     CloudConnector();
     virtual ~CloudConnector();
@@ -23,14 +24,13 @@ public:
     virtual int startPlugin();
     virtual int setIBusClient(InnerBusClientIF* client);
     virtual int setWorkDir(std::string path);
-    virtual int executeCommand(std::string message);
+    virtual int executeInternalCommand(std::string message);
+    virtual int executeCloudCommand(std::string message);
     virtual int sendOccurrence(string message);
     virtual int getCommandSet();
     virtual int getCapabilitiesSet();
     virtual int stopPlugin();
     virtual PluginDetails* getPluginDetails();
-
-    virtual int executeCloudCommand(std::string message);
 
     virtual void doProvision(Poco::Timer &timer);
     virtual void onProvision();
