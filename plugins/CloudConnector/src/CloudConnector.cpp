@@ -122,15 +122,18 @@ int CloudConnector::setWorkDir(std::string path){
     return 0;
 }
 
-int CloudConnector::executeInternalCommand(std::string message){
+int CloudConnector::executeCommand(std::string topic, std::string message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("executeInternalCommand %s", message);
+    logger.debug("executeCommand topic {%s} msg{%s}", topic, message);
+
+    // TODO add topic parsing before calling executeInternalCommand
+    executeInternalCommand(topic, message);
     return 0;
 }
 
-int CloudConnector::executeCloudCommand(std::string message){
+int CloudConnector::executeInternalCommand(std::string topic, std::string message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("executeCloudCommand %s", message);
+    logger.debug("executeInternalCommand topic {%s} msg{%s}", topic, message);
 
     std::string json = message;
     gwCommand gwCmd(json);
