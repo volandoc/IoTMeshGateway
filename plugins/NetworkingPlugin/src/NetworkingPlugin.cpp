@@ -45,15 +45,9 @@ int NetworkingPlugin::setWorkDir(std::string path){
     return 0;
 }
 
-int NetworkingPlugin::executeInternalCommand(std::string message){
+int NetworkingPlugin::executeCommand(std::string topic, std::string message){
     Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
-    logger.debug("executeInternalCommand %s", message);
-    return 0;
-}
-
-int NetworkingPlugin::executeCloudCommand(std::string message){
-    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
-    logger.debug("executeCloudCommand %s", message);
+    logger.debug("executeCommand topic {%s} msg{%s}", topic, message);
     return 0;
 }
 
