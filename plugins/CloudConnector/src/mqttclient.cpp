@@ -20,6 +20,7 @@ mqttclient::mqttclient(const char *id, const char *host, int port, int keepalive
     config.protocol_version = protocol_version;
     config.pub_msg_count=0;
     disconnected_by_user = false;
+    mosqpp::lib_init();
 }
 
 mqttclient::~mqttclient(){
@@ -37,7 +38,6 @@ void mqttclient::config_init(struct mosquittoConfig *cfg){
     config.clean_session = cfg->clean_session;
     config.eol = cfg->eol;
     config.protocol_version = cfg->protocol_version;
-    mosqpp::lib_init();
 
 }
 
