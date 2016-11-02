@@ -38,8 +38,8 @@ struct mosquitto_config {
 
 class InnerBusClient: public InnerBusClientIF {
 private:
-    UCLPluginIf* callbackObj=NULL;
-    mosquitto *m_mosq;
+    UCLPluginIf* callbackObj=nullptr;
+    mosquitto *m_mosq=nullptr;
     mosquitto_config cfg;
     bool disconnected_by_user = false;
     bool connected = false;
@@ -68,6 +68,7 @@ public:
     virtual~InnerBusClient();
 
     virtual void init();
+    virtual void free();
     virtual int connect();
     virtual int connect_async();
     virtual int disconnect();
