@@ -4,9 +4,6 @@
 #include <Poco/Logger.h>
 #include "device.h"
 
-typedef std::map<long, std::string> Properties;
-typedef std::map<long, std::string>::iterator PropertiesIterator;
-
 class FakeDevice: public Device{
 private:
     std::string name;
@@ -16,6 +13,7 @@ private:
     std::string connectionInfo;
     Properties properties;
 public:
+    FakeDevice(){}
     FakeDevice(std::string type, std::string name, std::string serial, std::string description);
     virtual ~FakeDevice();
 

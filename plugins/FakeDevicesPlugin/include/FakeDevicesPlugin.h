@@ -4,6 +4,8 @@
 #include <Poco/ClassLibrary.h>
 #include <Poco/Logger.h>
 #include <Poco/Task.h>
+#include <Poco/UUID.h>
+#include <Poco/UUIDGenerator.h>
 #include "pluginsapi.h"
 #include "FakeDeviceFactory.h"
 
