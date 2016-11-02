@@ -40,7 +40,7 @@ void FakeDevice::processDeviceCommand(std::string command){
     logger.debug("Fake device(%s) command received: %s", this->type, command);
 }
 
-Properties FakeDevice::getDeviceState(){
+Properties FakeDevice::getProperties(){
     return this->properties;
 }
 
