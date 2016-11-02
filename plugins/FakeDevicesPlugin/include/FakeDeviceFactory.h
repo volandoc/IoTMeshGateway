@@ -18,26 +18,25 @@
 
 #define DEVICE_TYPES_SIZE       9
 
-static const std::string FakeDeviceTypes[DEVICE_TYPES_SIZE] = { "Default_Fake_Device",
-                                           "LIFX_bulb_temperature",
-                                           "Home Security Sensor",
-                                           "Routing Alarm Sensor",
-                                           "Routing Binary Sensor",
-                                           "Secure Keypad Door Lock",
-                                           "Light Dimmer Switch",
-                                           "ZigBee_brightness_bulb",
-                                           "Binary Scene Switch" };
+//static const std::string FakeDeviceTypes[DEVICE_TYPES_SIZE] = {
+//                                           "Default_Fake_Device",
+//                                           "LIFX_bulb_temperature",
+//                                           "Home Security Sensor",
+//                                           "Routing Alarm Sensor",
+//                                           "Routing Binary Sensor",
+//                                           "Secure Keypad Door Lock",
+//                                           "Light Dimmer Switch",
+//                                           "ZigBee_brightness_bulb",
+//                                           "Binary Scene Switch" };
 
 
 class FakeDefaultDevice: public FakeDevice {
 private:
-    static const long CONNECTION_CAPABILITY_ID;
-    static const long STATE_CAPABILITY_ID;
-    static const std::string NAME;
-    static const std::string DESCRIPTION;
+    const long CONNECTION_CAPABILITY_ID        = 11001;
+    const long STATE_CAPABILITY_ID             = 11002;
 public:
-    FakeDefaultDevice(std::string serial): FakeDevice("Default_Fake_Device",
-                       FakeDefaultDevice::NAME, serial, FakeDefaultDevice::DESCRIPTION) {
+    FakeDefaultDevice(std::string serial):
+        FakeDevice("Default_Fake_Device", "Fake Device", serial, "Default Fake Device") {
 
     }
     virtual ~FakeDefaultDevice(){}
@@ -47,15 +46,13 @@ public:
 
 class FakeLifxTemperatureBulb: public FakeDevice {
 private:
-    long STATE_CAPABILITY_ID             = 10701;
-    long BRIGHTNESS_CAPABILITY_ID        = 10702;
-    long COLOR_TEMPERATURE_CAPABILITY_ID = 10703;
-    long CONNECTION_CAPABILITY_ID        = 10704;
-    std::string NAME        = "LIFX temperature bulb";
-    std::string DESCRIPTION = "Fake LIFX temperature bulb";
+    const long STATE_CAPABILITY_ID             = 10701;
+    const long BRIGHTNESS_CAPABILITY_ID        = 10702;
+    const long COLOR_TEMPERATURE_CAPABILITY_ID = 10703;
+    const long CONNECTION_CAPABILITY_ID        = 10704;
 public:
-    FakeLifxTemperatureBulb(std::string serial): FakeDevice("LIFX_bulb_temperature",
-                                                            NAME, serial, DESCRIPTION) {
+    FakeLifxTemperatureBulb(std::string serial):
+        FakeDevice("LIFX_bulb_temperature", "LIFX temperature bulb", serial, "Fake LIFX temperature bulb") {
 
     }
     virtual ~FakeLifxTemperatureBulb(){}
@@ -65,17 +62,15 @@ public:
 
 class FakeHomeSecuritySensor: public FakeDevice {
 private:
-    long CONNECTION_CAPABILITY_ID        = 11301;
-    long STATE_CAPABILITY_ID             = 11302;
-    long BATTERY_CAPABILITY_ID           = 11303;
-    long TEMPERATURE_CAPABILITY_ID       = 11304;
-    long LUMINANCE_CAPABILITY_ID         = 11305;
-    long SENSITIVITY_CAPABILITY_ID       = 11307;
-    std::string NAME        = "Home Security Sensor";
-    std::string DESCRIPTION = "Fake Home Security Sensor";
+    const long CONNECTION_CAPABILITY_ID        = 11301;
+    const long STATE_CAPABILITY_ID             = 11302;
+    const long BATTERY_CAPABILITY_ID           = 11303;
+    const long TEMPERATURE_CAPABILITY_ID       = 11304;
+    const long LUMINANCE_CAPABILITY_ID         = 11305;
+    const long SENSITIVITY_CAPABILITY_ID       = 11307;
 public:
-    FakeHomeSecuritySensor(std::string serial): FakeDevice(FakeDeviceTypes[HOME_SECURITY_SENSOR],
-                                                            NAME, serial, DESCRIPTION) {
+    FakeHomeSecuritySensor(std::string serial):
+        FakeDevice("Home Security Sensor", "Home Security Sensor", serial, "Fake Home Security Sensor") {
 
     }
     virtual ~FakeHomeSecuritySensor(){}
@@ -85,15 +80,13 @@ public:
 
 class FakeRoutingAlarmSensor: public FakeDevice {
 private:
-    long CONNECTION_CAPABILITY_ID        = 11101;
-    long STATE_CAPABILITY_ID             = 11102;
-    long BATTERY_CAPABILITY_ID           = 11103;
-    long TEMPERATURE_CAPABILITY_ID       = 11104;
-    std::string NAME        = "Routing Alarm Sensor";
-    std::string DESCRIPTION = "Fake Routing Alarm Sensor";
+    const long CONNECTION_CAPABILITY_ID        = 11101;
+    const long STATE_CAPABILITY_ID             = 11102;
+    const long BATTERY_CAPABILITY_ID           = 11103;
+    const long TEMPERATURE_CAPABILITY_ID       = 11104;
 public:
-    FakeRoutingAlarmSensor(std::string serial): FakeDevice(FakeDeviceTypes[ROUTING_ALARM_SENSOR],
-                                                            NAME, serial, DESCRIPTION) {
+    FakeRoutingAlarmSensor(std::string serial):
+        FakeDevice("Routing Alarm Sensor", "Routing Alarm Sensor", serial, "Fake Routing Alarm Sensor") {
 
     }
     virtual ~FakeRoutingAlarmSensor(){}
@@ -107,11 +100,9 @@ private:
     const long CONNECTION_CAPABILITY_ID        = 11201;
     const long STATE_CAPABILITY_ID             = 11202;
     const long BATTERY_CAPABILITY_ID           = 11203;
-    const std::string NAME        = "Routing Binary Sensor";
-    const std::string DESCRIPTION = "Fake Routing Binary Sensor";
 public:
-    FakeRoutingBinarySensor(std::string serial): FakeDevice(FakeDeviceTypes[ROUTING_BINARY_SENSOR],
-                                                            NAME, serial, DESCRIPTION) {
+    FakeRoutingBinarySensor(std::string serial):
+        FakeDevice("Routing Binary Sensor", "Routing Alarm Sensor", serial, "Fake Routing Alarm Sensor") {
 
     }
     virtual ~FakeRoutingBinarySensor(){}
@@ -122,15 +113,13 @@ public:
 
 class FakeKeypadDoorLock: public FakeDevice {
 private:
-    const long CONNECTION_CAPABILITY_ID        = 11601L;
-    const long STATE_CAPABILITY_ID             = 11602L;
-    const long BATTERY_CAPABILITY_ID           = 11603L;
-    const long LAST_UNLOCKED_USER_ID           = 11604L;
-    const std::string NAME        = "Secure Keypad Door Lock";
-    const std::string DESCRIPTION = "Fake Secure Keypad Door Lock";
+    const long CONNECTION_CAPABILITY_ID        = 11601;
+    const long STATE_CAPABILITY_ID             = 11602;
+    const long BATTERY_CAPABILITY_ID           = 11603;
+    const long LAST_UNLOCKED_USER_ID           = 11604;
 public:
-    FakeKeypadDoorLock(std::string serial): FakeDevice(FakeDeviceTypes[SECURE_KEYPAD_DOOR_LOCK],
-                                                            NAME, serial, DESCRIPTION) {
+    FakeKeypadDoorLock(std::string serial):
+        FakeDevice("Secure Keypad Door Lock", "Secure Keypad Door Lock", serial, "Fake Secure Keypad Door Lock") {
 
     }
     virtual ~FakeKeypadDoorLock(){}
@@ -140,14 +129,12 @@ public:
 
 class FakeLightDimmerSwitch: public FakeDevice {
 private:
-    const long CONNECTION_CAPABILITY_ID        = 11501L;
-    const long STATE_CAPABILITY_ID             = 11502L;
-    const long COLOR_CAPABILITY_ID             = 11503L;
-    const std::string NAME        = "Light Dimmer Switch";
-    const std::string DESCRIPTION = "Fake Light Dimmer Switch";
+    const long CONNECTION_CAPABILITY_ID        = 11501;
+    const long STATE_CAPABILITY_ID             = 11502;
+    const long COLOR_CAPABILITY_ID             = 11503;
 public:
-    FakeLightDimmerSwitch(std::string serial): FakeDevice(FakeDeviceTypes[LIGHT_DIMMER_SWITCH],
-                                                            NAME, serial, DESCRIPTION) {
+    FakeLightDimmerSwitch(std::string serial):
+        FakeDevice("Light Dimmer Switch", "Light Dimmer Switch", serial, "Fake Light Dimmer Switch") {
 
     }
     virtual ~FakeLightDimmerSwitch(){}
@@ -157,14 +144,12 @@ public:
 
 class FakeZigBeeBrightnessBulb: public FakeDevice {
 private:
-    const long STATE_CAPABILITY_ID             = 10901L;
-    const long BRIGHTNESS_CAPABILITY_ID        = 10902L;
-    const long CONNECTION_CAPABILITY_ID        = 10903L;
-    const std::string NAME        = "ZigBee Brightness Bulb";
-    const std::string DESCRIPTION = "Fake ZigBee Brightness Bulb";
+    const long STATE_CAPABILITY_ID             = 10901;
+    const long BRIGHTNESS_CAPABILITY_ID        = 10902;
+    const long CONNECTION_CAPABILITY_ID        = 10903;
 public:
-    FakeZigBeeBrightnessBulb(std::string serial): FakeDevice(FakeDeviceTypes[ZIGBEE_BRIGHTNESS_BULB],
-                                                            NAME, serial, DESCRIPTION) {
+    FakeZigBeeBrightnessBulb(std::string serial):
+        FakeDevice("ZigBee_brightness_bulb", "ZigBee Brightness Bulb", serial, "Fake ZigBee Brightness Bulb") {
 
     }
     virtual ~FakeZigBeeBrightnessBulb(){}
@@ -174,13 +159,11 @@ public:
 
 class FakeBinarySceneSwitch: public FakeDevice {
 private:
-    long CONNECTION_CAPABILITY_ID        = 11001L;
-    long STATE_CAPABILITY_ID             = 11002L;
-    std::string NAME        = "Binary Scene Switch";
-    std::string DESCRIPTION = "Fake Binary Scene Switch";
+    const long CONNECTION_CAPABILITY_ID        = 11001;
+    const long STATE_CAPABILITY_ID             = 11002;
 public:
-    FakeBinarySceneSwitch(std::string serial): FakeDevice(FakeDeviceTypes[BINARY_SCENE_SWITCH],
-                                                            NAME, serial, DESCRIPTION) {
+    FakeBinarySceneSwitch(std::string serial):
+        FakeDevice("Binary Scene Switch", "Binary Scene Switch", serial, "Fake Binary Scene Switch") {
 
     }
     virtual ~FakeBinarySceneSwitch(){}
@@ -191,27 +174,22 @@ public:
 class FakeDeviceFactory {
 public:
     static FakeDevice* buildFakeDevice(int typecnt, std::string serial){
-        //Poco::Logger& logger = Poco::Logger::get("FakeDevicesPlugin");
-        //logger.debug("Creating (%d) device with serial (%s)", type, serial);
+        Poco::Logger& logger = Poco::Logger::get("FakeDevicesPlugin");
+        logger.debug("Creating (%d) device with serial (%s)", typecnt, serial);
         FakeDevice* tmpDevice;
-        if ( DEFAULT_FAKE_DEVICE == typecnt) {
-            tmpDevice = new FakeDefaultDevice(serial);
-            tmpDevice->generateProperties();
-            delete tmpDevice;
-
-            //case 1: tmpDevice = new FakeLifxTemperatureBulb(serial);
-            //case 2: tmpDevice = new FakeHomeSecuritySensor(serial); break;
-            //case 3: tmpDevice = new FakeRoutingAlarmSensor(serial); break;
-            //case 4: tmpDevice = new FakeRoutingBinarySensor(serial); break;
-            //case 5: tmpDevice = new FakeKeypadDoorLock(serial); break;
-            //case 6: tmpDevice = new FakeLightDimmerSwitch(serial); break;
-            //case 7: tmpDevice = new FakeZigBeeBrightnessBulb(serial); break;
-            //case 8: tmpDevice = new FakeBinarySceneSwitch(serial); break;
-
-        } else {
-            tmpDevice = NULL;
+        switch(typecnt){
+            case DEFAULT_FAKE_DEVICE:     tmpDevice = new FakeDefaultDevice(serial); break;
+            case LIFX_TEMPERATURE_BULB:   tmpDevice = new FakeLifxTemperatureBulb(serial); break;
+            case HOME_SECURITY_SENSOR:    tmpDevice = new FakeHomeSecuritySensor(serial); break;
+            case ROUTING_ALARM_SENSOR:    tmpDevice = new FakeRoutingAlarmSensor(serial); break;
+            case ROUTING_BINARY_SENSOR:   tmpDevice = new FakeRoutingBinarySensor(serial); break;
+            case SECURE_KEYPAD_DOOR_LOCK: tmpDevice = new FakeKeypadDoorLock(serial); break;
+            case LIGHT_DIMMER_SWITCH:     tmpDevice = new FakeLightDimmerSwitch(serial); break;
+            case ZIGBEE_BRIGHTNESS_BULB:  tmpDevice = new FakeZigBeeBrightnessBulb(serial); break;
+            case BINARY_SCENE_SWITCH:     tmpDevice = new FakeBinarySceneSwitch(serial); break;
+            default: tmpDevice = NULL;
         }
-        return NULL;
+        return tmpDevice;
     }
 };
 

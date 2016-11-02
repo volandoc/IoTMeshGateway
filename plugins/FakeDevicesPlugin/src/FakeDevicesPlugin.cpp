@@ -30,9 +30,11 @@ int FakeDevicesPlugin::startPlugin(){
         return -1;
     }
 
+    Poco::UUIDGenerator& generator = Poco::UUIDGenerator::defaultGenerator();
+
     for(int typecount = 0; typecount < DEVICE_TYPES_SIZE; typecount++){
-        logger.debug("Create device: %d", typecount);
-        deviceList[typecount] = FakeDeviceFactory::buildFakeDevice(typecount, "123456789");
+        Poco::UUID dev_serial = generator.createRandom();
+        deviceList[typecount] = FakeDeviceFactory::buildFakeDevice(typecount, dev_serial.toString());
     }
 
     logger.debug("Started");

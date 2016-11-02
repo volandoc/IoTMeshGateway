@@ -1,15 +1,10 @@
 #include "FakeDeviceFactory.h"
 
-const long FakeDefaultDevice::CONNECTION_CAPABILITY_ID        = 11001;
-const long FakeDefaultDevice::STATE_CAPABILITY_ID             = 11002;
-const std::string FakeDefaultDevice::NAME        = "Fake Device";
-const std::string FakeDefaultDevice::DESCRIPTION = "A simple Fake device";
-
 void  FakeDefaultDevice::generateProperties(){
     Properties properties;
 
-    properties[FakeDefaultDevice::STATE_CAPABILITY_ID] = "true";
-    properties[FakeDefaultDevice::CONNECTION_CAPABILITY_ID] = "true";
+    properties[STATE_CAPABILITY_ID] = "true";
+    properties[CONNECTION_CAPABILITY_ID] = "true";
 
     FakeDevice::setProperties(properties);
 }
