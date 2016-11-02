@@ -33,5 +33,6 @@ struct Capability {
 
 typedef std::list<Capability> CapabilitiesList;
 typedef std::map<std::string, std::string> DeviceTypes;
+typedef std::map<std::string, std::string>::iterator DeviceType;
 
 #endif // DEVICEAPI_H
