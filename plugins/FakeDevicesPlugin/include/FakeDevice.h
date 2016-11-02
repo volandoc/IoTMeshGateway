@@ -23,7 +23,7 @@ public:
     std::string getDescription();
     std::string getConnectionInfo();
     void processDeviceCommand(std::string command);
-    Properties getDeviceState();
+    Properties getProperties();
     void connect();
     void setProperties(Properties properties);
     virtual void generateProperties() = 0;

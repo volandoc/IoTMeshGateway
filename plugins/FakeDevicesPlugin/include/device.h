@@ -63,7 +63,7 @@ public:
      *
      * @return device state
      */
-    virtual Properties getDeviceState() = 0;
+    virtual Properties getProperties() = 0;
 
     /**
      * Performs connection procedure.

@@ -6,29 +6,18 @@
 #include <Poco/Logger.h>
 #include "FakeDevice.h"
 
-#define DEFAULT_FAKE_DEVICE     0
-#define LIFX_TEMPERATURE_BULB   1
-#define HOME_SECURITY_SENSOR    2
-#define ROUTING_ALARM_SENSOR    3
-#define ROUTING_BINARY_SENSOR   4
-#define SECURE_KEYPAD_DOOR_LOCK 5
-#define LIGHT_DIMMER_SWITCH     6
-#define ZIGBEE_BRIGHTNESS_BULB  7
-#define BINARY_SCENE_SWITCH     8
-
-#define DEVICE_TYPES_SIZE       9
-
-//static const std::string FakeDeviceTypes[DEVICE_TYPES_SIZE] = {
-//                                           "Default_Fake_Device",
-//                                           "LIFX_bulb_temperature",
-//                                           "Home Security Sensor",
-//                                           "Routing Alarm Sensor",
-//                                           "Routing Binary Sensor",
-//                                           "Secure Keypad Door Lock",
-//                                           "Light Dimmer Switch",
-//                                           "ZigBee_brightness_bulb",
-//                                           "Binary Scene Switch" };
-
+enum {
+    DEFAULT_FAKE_DEVICE,
+    LIFX_TEMPERATURE_BULB,
+    HOME_SECURITY_SENSOR,
+    ROUTING_ALARM_SENSOR,
+    ROUTING_BINARY_SENSOR,
+    SECURE_KEYPAD_DOOR_LOCK,
+    LIGHT_DIMMER_SWITCH,
+    ZIGBEE_BRIGHTNESS_BULB,
+    BINARY_SCENE_SWITCH,
+    DEVICE_TYPES_SIZE
+};
 
 class FakeDefaultDevice: public FakeDevice {
 private:
