@@ -101,6 +101,13 @@ int FakeDevicesPlugin::stopPlugin(){
             deviceList[typecount] = NULL;
         }
     }
+
+    if(this->busClient!=NULL){
+        this->busClient->disconnect();
+        this->busClient->free();
+    } else {
+        logger.error("No IBus Client found: something went wrong", __FILE__, 26);
+    }
     logger.debug("Stopped");
     return 0;
 }
