@@ -30,7 +30,7 @@ void FakeHomeSecuritySensor::generateProperties(){
     properties[LUMINANCE_CAPABILITY_ID] = "0";
     properties[SENSITIVITY_CAPABILITY_ID] = "10";
 
-    //FakeDevice::setProperties(properties);
+    FakeDevice::setProperties(properties);
 }
 
 void FakeRoutingAlarmSensor::generateProperties(){
@@ -41,7 +41,7 @@ void FakeRoutingAlarmSensor::generateProperties(){
     properties[BATTERY_CAPABILITY_ID] = "100";
     properties[TEMPERATURE_CAPABILITY_ID] = "50";
 
-    //FakeDevice::setProperties(properties);
+    FakeDevice::setProperties(properties);
 }
 
 void FakeRoutingBinarySensor::generateProperties(){
@@ -51,7 +51,7 @@ void FakeRoutingBinarySensor::generateProperties(){
     properties[STATE_CAPABILITY_ID] = "true";
     properties[BATTERY_CAPABILITY_ID] = "100";
 
-    //FakeDevice::setProperties(properties);
+    FakeDevice::setProperties(properties);
 }
 
 void FakeKeypadDoorLock::generateProperties(){
@@ -62,7 +62,7 @@ void FakeKeypadDoorLock::generateProperties(){
     properties[BATTERY_CAPABILITY_ID] = "100";
     properties[LAST_UNLOCKED_USER_ID] = "25";
 
-    //FakeDevice::setProperties(properties);
+    FakeDevice::setProperties(properties);
 }
 
 void FakeLightDimmerSwitch::generateProperties(){
@@ -72,7 +72,7 @@ void FakeLightDimmerSwitch::generateProperties(){
     properties[STATE_CAPABILITY_ID] = "true";
     properties[COLOR_CAPABILITY_ID] = "#0000000000";
 
-    //FakeDevice::setProperties(properties);
+    FakeDevice::setProperties(properties);
 }
 
 void FakeZigBeeBrightnessBulb::generateProperties(){
@@ -82,7 +82,7 @@ void FakeZigBeeBrightnessBulb::generateProperties(){
     properties[STATE_CAPABILITY_ID] = "true";
     properties[BRIGHTNESS_CAPABILITY_ID] = "50";
 
-    //FakeDevice::setProperties(properties);
+    FakeDevice::setProperties(properties);
 }
 
 
@@ -92,5 +92,5 @@ void FakeBinarySceneSwitch::generateProperties(){
     properties[CONNECTION_CAPABILITY_ID] = "true";
     properties[STATE_CAPABILITY_ID] = "true";
 
-    //FakeDevice::setProperties(properties);
+    FakeDevice::setProperties(properties);
 }

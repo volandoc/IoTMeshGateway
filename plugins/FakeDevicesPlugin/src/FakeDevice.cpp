@@ -36,7 +36,8 @@ std::string FakeDevice::getConnectionInfo(){
 }
 
 void FakeDevice::processDeviceCommand(std::string command){
-
+    Poco::Logger& logger = Poco::Logger::get("FakeDevices");
+    logger.debug("Fake device(%s) command received: %s", this->type, command);
 }
 
 Properties FakeDevice::getDeviceState(){
@@ -48,5 +49,7 @@ void FakeDevice::connect(){
 }
 
 void FakeDevice::setProperties(Properties properties){
+    Poco::Logger& logger = Poco::Logger::get("FakeDevices");
     this->properties = properties;
+    logger.debug("Fake device(%s) properties setted, size %d", this->type, (int)properties.size());
 }

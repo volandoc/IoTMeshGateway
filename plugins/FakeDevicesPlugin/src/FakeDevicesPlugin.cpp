@@ -35,6 +35,7 @@ int FakeDevicesPlugin::startPlugin(){
     for(int typecount = 0; typecount < DEVICE_TYPES_SIZE; typecount++){
         Poco::UUID dev_serial = generator.createRandom();
         deviceList[typecount] = FakeDeviceFactory::buildFakeDevice(typecount, dev_serial.toString());
+        deviceList[typecount]->generateProperties();
     }
 
     logger.debug("Started");
