@@ -187,7 +187,7 @@ void mqttclient::on_disconnect(int rc){
 
 void mqttclient::on_subscribe(int mid, int qos_count, const int *granted_qos){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    std::map<char,int>::iterator it;
+    std::map<int, std::string>::iterator it;
 
     std::string msg = ">> myMosq - Topic(";
     msg += std::to_string(mid);
@@ -198,7 +198,7 @@ void mqttclient::on_subscribe(int mid, int qos_count, const int *granted_qos){
     it = this->pendingTopics.find(mid);
     if (it != this->pendingTopics.end())
     {
-        subscribedTopics.push_back(it->second)
+        subscribedTopics.push_back(it->second);
         this->pendingTopics.erase(it);
     }
 
