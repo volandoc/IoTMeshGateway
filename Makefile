@@ -55,7 +55,7 @@ pluginlibs:
 $(TARGET): $(OBJECTS)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
 
-main.o: src/main.cpp plugins/include/pluginsapi.h core/include/innerbusapi.h
+main.o: src/main.cpp plugins/include/pluginsapi.h core/include/innerbusapi.h include/sysdefs.h	
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o main.o src/main.cpp
 
 plugincontainer.o: src/plugincontainer.cpp include/plugincontainer.h include/plugincontainerif.h

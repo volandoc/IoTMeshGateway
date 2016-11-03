@@ -7,7 +7,7 @@
 QT     -= core gui
 CONFIG += c++11
 
-TARGET = LifXBulbPlugin
+TARGET = FakeDevicesPlugin
 TEMPLATE = lib
 
 INCLUDEPATH += $$PWD/include \
@@ -16,13 +16,16 @@ INCLUDEPATH += $$PWD/include \
 
 DEFINES += UCL_PLUGINS_EXPORTS
 
-SOURCES += src/LifXBulbPlugin.cpp
+SOURCES += src/FakeDevicesPlugin.cpp \
+    src/FakeDevice.cpp \
+    src/FakeDeviceFactory.cpp
 
-HEADERS += include/LifXBulbPlugin.h \
+HEADERS += include/FakeDevicesPlugin.h \
     ../include/pluginsapi.h \
-    ../include/deviceapi.h \
     ../../core/include/innerbusclientapi.h \
-    include/device_types.h
+    include/device.h \
+    include/FakeDevice.h \
+    include/FakeDeviceFactory.h
 
 LIBS += -lPocoFoundation
 

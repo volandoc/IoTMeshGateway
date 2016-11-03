@@ -38,8 +38,8 @@ struct mosquitto_config {
 
 class InnerBusClient: public InnerBusClientIF {
 private:
-    UCLPluginIf* callbackObj=NULL;
-    mosquitto *m_mosq;
+    UCLPluginIf* callbackObj=nullptr;
+    mosquitto *m_mosq=nullptr;
     mosquitto_config cfg;
     bool disconnected_by_user = false;
     bool connected = false;
@@ -68,6 +68,7 @@ public:
     virtual~InnerBusClient();
 
     virtual void init();
+    virtual void free();
     virtual int connect();
     virtual int connect_async();
     virtual int disconnect();
@@ -89,13 +90,11 @@ public:
 };
 
 class InnerBus: public InnerBusIF {
-    std::string coreLibPath;
     mosquitto_config defaultConf;
 public:
     InnerBus();
-    InnerBus(std::string path);
     virtual ~InnerBus();
-    virtual int loadConfig();
+    virtual int loadConfig(std::string libpath = "../core/InnerBus");
     virtual bool isAvailable();
     virtual InnerBusClientIF* createIBusClient();
     virtual int getConnectionsCount();

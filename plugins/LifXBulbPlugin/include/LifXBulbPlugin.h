@@ -3,19 +3,23 @@
 
 #include <Poco/ClassLibrary.h>
 #include <Poco/Logger.h>
+#include <Poco/Task.h>
 #include "pluginsapi.h"
 
-class LifXBulbPlugin: public UCLPluginIf{
+class LifXBulbPlugin: public UCLPluginIf {
 private:
     PluginDetails pluginDetails;
     InnerBusClientIF* busClient = NULL;
+    std::string work_dir;
 public:
     LifXBulbPlugin();
     virtual ~LifXBulbPlugin();
 
     virtual int startPlugin();
     virtual int setIBusClient(InnerBusClientIF* client);
-    virtual int executeCommand();
+    virtual int setWorkDir(std::string path);
+    virtual int executeCommand(std::string topic, std::string message);
+    virtual int sendOccurrence(std::string message);
     virtual int getCommandSet();
     virtual int getCapabilitiesSet();
     virtual int stopPlugin();

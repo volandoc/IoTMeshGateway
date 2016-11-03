@@ -1,22 +1,30 @@
-#ifndef NETWORKING_PLUGIN_H
-#define NETWORKING_PLUGIN_H
+#ifndef FAKE_DEVICES_PLUGIN_H
+#define FAKE_DEVICES_PLUGIN_H
 
 #include <Poco/ClassLibrary.h>
 #include <Poco/Logger.h>
+#include <Poco/Task.h>
+#include <Poco/UUID.h>
+#include <Poco/UUIDGenerator.h>
 #include "pluginsapi.h"
+#include "FakeDeviceFactory.h"
 
-class NetworkingPlugin: public UCLPluginIf {
+class FakeDevicesPlugin: public UCLPluginIf {
 private:
     PluginDetails pluginDetails;
     InnerBusClientIF* busClient = NULL;
+    std::string work_dir;
+    FakeDevice* deviceList[DEVICE_TYPES_SIZE];
+
 public:
-    NetworkingPlugin();
-    virtual ~NetworkingPlugin();
+    FakeDevicesPlugin();
+    virtual ~FakeDevicesPlugin();
 
     virtual int startPlugin();
     virtual int setIBusClient(InnerBusClientIF* client);
     virtual int setWorkDir(std::string path);
     virtual int executeCommand(std::string topic, std::string message);
+    virtual int executeInternalCommand(std::string message);
     virtual int sendOccurrence(std::string message);
     virtual int getCommandSet();
     virtual int getCapabilitiesSet();
@@ -25,7 +33,7 @@ public:
 };
 
 POCO_BEGIN_MANIFEST(UCLPluginIf)
-    POCO_EXPORT_SINGLETON(NetworkingPlugin)
+    POCO_EXPORT_SINGLETON(FakeDevicesPlugin)
 POCO_END_MANIFEST
 
-#endif // NETWORKING_PLUGIN_H
+#endif // FAKE_DEVICES_PLUGIN_H
