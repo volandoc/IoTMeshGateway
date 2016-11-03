@@ -4,6 +4,8 @@
 #include <mosquittopp.h>
 #include <iostream>
 #include <Poco/Logger.h>
+#include <map>
+#include <vector>
 #include "mqttclientconfig.h"
 #include "pluginsapi.h"
 
@@ -77,6 +79,7 @@ public:
     int config_load();
     int config_load_from_file();
     void topics_init(int gwId, int homeId);
+    bool is_topic_subscribed(std::string topic);
     void setCallback(UCLPluginIf *callbackObj);
 
     void on_connect(int rc);
@@ -96,6 +99,9 @@ private:
     bool disconnected_by_user;
     struct mosquittoConfig config;
     UCLPluginIf *callbackObj;
+
+    std::map<int, std::string> pendingTopics;
+    std::vector<std::string> subscribedTopics;
 
     std::string subTopicSensorActuartorCmd;
     std::string subTopicScenarioExecCmnd;

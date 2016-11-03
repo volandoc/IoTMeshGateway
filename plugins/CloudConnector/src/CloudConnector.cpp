@@ -17,6 +17,11 @@
 #define GW_ID_FILE_PARAMETER_IS_ONBOARD "isOnboarded"
 
 #define GW_PROVISION_INTERVAL           5000
+#define GW_PROVISION_START_INTERVAL     0
+
+//#define GW_DISCOVER_INTERVAL            0
+//#define GW_DISCOVER_START_INTERVAL      30000
+
 
 using namespace Poco::JSON;
 using namespace Poco::Dynamic;
@@ -34,8 +39,12 @@ CloudConnector::CloudConnector()
     this->pluginDetails.className = "CloudConnector";
     this->pluginDetails.pluginName ="CloudConnector Plugin";
     this->pluginDetails.pluginVersion = "0.0.1";
-    this->timer.setStartInterval(0);
+
+    this->timer.setStartInterval(GW_PROVISION_START_INTERVAL);
     this->timer.setPeriodicInterval(GW_PROVISION_INTERVAL);
+
+//    this->timerDiscoverSensors.setStartInterval(GW_DISCOVER_START_INTERVAL);
+//    this->timerDiscoverSensors.setPeriodicInterval(GW_DISCOVER_INTERVAL);
 
     initMqttClient();
 
@@ -126,8 +135,12 @@ int CloudConnector::executeCommand(std::string topic, std::string message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     logger.debug("executeCommand topic {%s} msg{%s}", topic, message);
 
-    // TODO add topic parsing before calling executeInternalCommand
-    executeInternalCommand(topic, message);
+    if (this->mqttClient->is_topic_subscribed(topic)) {
+        executeInternalCommand(topic, message);
+    }
+    else {
+        // parse messages from busClient here
+    }
     return 0;
 }
 
@@ -148,9 +161,7 @@ int CloudConnector::executeInternalCommand(std::string topic, std::string messag
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_DISCOVERSENSORS))
     {
         logger.debug("command %s received", eventType);
-        logger.debug("Starting device discover");
-        isDiscovering = true;
-        this->busClient->sendMessage(GW_COMMAND_EVENT_DISCOVERSENSORS);
+        discoverSensors();
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_CONNECTSENSORS))
     {
@@ -175,6 +186,7 @@ int CloudConnector::executeInternalCommand(std::string topic, std::string messag
         this->mqttClient->do_disconnect();
 
         this->timer.stop();
+        this->timer.setStartInterval(GW_PROVISION_START_INTERVAL);
         this->timer.setPeriodicInterval(GW_PROVISION_INTERVAL);
         this->timer.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::doProvision));
     }
@@ -473,6 +485,53 @@ int CloudConnector::sendGetDataSync(int gwId, string gwDataSyncFile)
     rst.setUrl(buffer.c_str());
 
     string built_rest = rst.buildRest();
+
+    int ret_val = system(built_rest.c_str());
+
+    return ret_val;
+}
+
+int CloudConnector::discoverSensors() {
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug("Starting Sensors Discovering");
+    isDiscovering = true;
+    this->busClient->sendMessage(GW_COMMAND_EVENT_DISCOVERSENSORS);
+
+    //timerDiscoverSensors.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::onDiscoverSensorsEnd));
+}
+
+/*
+void CloudConnector::onDiscoverSensorsEnd(Timer& timer) {
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug("Discover Sensors ended");
+    isDiscovering = false;
+}
+*/
+
+int CloudConnector::sendDiscoveredSensors(int gwId, string status, string sensors, string cloudResFile)
+{
+    string buffer;
+    rest rst;
+    rst.setMethod(REST_METHOD_PUT);
+    rst.setCertificate(REST_CERTIFICATE);
+    rst.setPrivatekey(REST_PRIVATEKEY);
+    rst.setNocheckCert(true);
+
+    buffer = "\"{\\\"status\\\":\\\"" + status + "\\\",\\\"sensors\\\":[" + sensors + "]}\"";
+    rst.setDataBody(buffer.c_str());
+
+    rst.setHeader("\"Content-Type:application/json\"");
+    rst.setConsoleOutputFile(REST_OUTPUT_FILE);
+    rst.setCloudResponseFile(cloudResFile);
+
+    buffer = REST_HOST;
+    buffer += REST_RESOURCE_DISCOVERED_SENSORS;
+    buffer += to_string(gwId);
+    rst.setUrl(buffer.c_str());
+
+    string built_rest = rst.buildRest();
+
+cout << "built rest = << " << built_rest << ">>\n";
 
     int ret_val = system(built_rest.c_str());
 

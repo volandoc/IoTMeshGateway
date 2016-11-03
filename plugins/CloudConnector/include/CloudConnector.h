@@ -15,6 +15,7 @@ private:
     PluginDetails pluginDetails;
     InnerBusClientIF* busClient = NULL;
     Poco::Timer timer;
+    //Poco::Timer timerDiscoverSensors;
     bool isOnboarded;
     bool isDiscovering;
 public:
@@ -35,6 +36,9 @@ public:
     virtual void doProvision(Poco::Timer &timer);
     virtual void onProvision();
 
+    virtual int discoverSensors();
+    //virtual void onDiscoverSensorsEnd(Poco::Timer& timer);
+
 private:
     mqttclient *mqttClient;
     int gatewayId;
@@ -48,6 +52,7 @@ private:
     bool getIsOnboarded(string provisionJson);
     bool getHomeId(string datasyncJson);
     int sendGetDataSync(int gwId, string gwDataSyncFile);
+    int sendDiscoveredSensors(int gwId, string status, string sensors, string cloudResFile);
 };
 
 POCO_BEGIN_MANIFEST(UCLPluginIf)

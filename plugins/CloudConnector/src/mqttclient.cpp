@@ -3,6 +3,7 @@
 #include <string.h>
 #include "mqttclient.h"
 #include "JSON_messages.h"
+#include <algorithm>
 
 #define BUFFER_SIZE     1024
 
@@ -114,10 +115,11 @@ int mqttclient::do_subscribe(const int count, const char *topics[], int qos){
     int sub_qos = (qos >= 0 && qos <= 3)? qos : config.qos;
     int rc = MOSQ_ERR_SUCCESS;
 
-    for(int i=0; i<count; i++){
-        config.sub_msg_count++;
+    for(int i=0; i<count; ++i){
+        ++config.sub_msg_count;
         std::string topic = topics[i];
         logger.debug(">> myMosq - try subscribe to Topic: \"%s\"", topic);
+        this->pendingTopics[config.sub_msg_count] = topics[i];
         rc = subscribe(&(config.sub_msg_count), topics[i], sub_qos);
         if(rc != MOSQ_ERR_SUCCESS){
             break;
@@ -185,12 +187,20 @@ void mqttclient::on_disconnect(int rc){
 
 void mqttclient::on_subscribe(int mid, int qos_count, const int *granted_qos){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    std::map<char,int>::iterator it;
 
     std::string msg = ">> myMosq - Topic(";
     msg += std::to_string(mid);
     msg += ")(";
     msg += std::to_string(qos_count);
     msg += ")(";
+
+    it = this->pendingTopics.find(mid);
+    if (it != this->pendingTopics.end())
+    {
+        subscribedTopics.push_back(it->second)
+        this->pendingTopics.erase(it);
+    }
 
     int i;
     for(i = 0; i < qos_count; i++){
@@ -233,4 +243,13 @@ void mqttclient::on_publish(int mid){
 
 void mqttclient::on_error(){
 
+}
+
+bool mqttclient::is_topic_subscribed(std::string topic)
+{
+    if (std::find(this->subscribedTopics.begin(), this->subscribedTopics.end(), topic) != this->subscribedTopics.end())
+    {
+        return true;
+    }
+    return false;
 }
