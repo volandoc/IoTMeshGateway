@@ -1,4 +1,5 @@
 #include "plugincontainer.h"
+#include "sysdefs.h"
 
 PluginContainer::PluginContainer(std::string path): pluginDirPath(path), lerror(false) {
     Poco::Logger& logger = Poco::Logger::get("PluginContainer");
@@ -86,6 +87,7 @@ void PluginContainer::startPlugins() {
 
 void PluginContainer::stopPlugins() {
     Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+    logger.debug("Enter stopPlugins");
 
     std::list<std::string>::iterator itCur = this->loadedPlugins.begin();
     std::list<std::string>::iterator itEnd = this->loadedPlugins.end();
@@ -117,7 +119,8 @@ void PluginContainer::generatePluginList() {
             logger.information(itMan->name());
             this->pluginsList[itMan->name()] = it->first;
             try {
-                pluginLoader.instance(itMan->name());
+                UCLPluginIf& tmpPlugin = pluginLoader.instance(itMan->name());
+                tmpPlugin.setWorkDir(it->first.substr(0, it->first.find_last_of(_FILE_SEPARATOR)));
             } catch(Poco::Exception excp) {
                 logger.log(excp, __FILE__, 48);
             }
@@ -170,7 +173,7 @@ bool PluginContainer::HasLoadErrors() {
 
 int PluginContainer::unloadPlugins(){
     Poco::Logger& logger = Poco::Logger::get("PluginContainer");
-
+    logger.debug("Enter unloadPlugins");
     stopPlugins();
 
     std::map<std::string,std::string>::iterator itCur = this->pluginsList.begin();

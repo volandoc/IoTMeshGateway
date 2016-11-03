@@ -5,6 +5,7 @@ class InnerBusClientIF {
 public:
     virtual ~InnerBusClientIF(){};
     virtual void init() = 0;
+    virtual void free() = 0;
     virtual int connect() = 0;
     virtual int connect_async() = 0;
     virtual int disconnect() = 0;

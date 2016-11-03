@@ -16,7 +16,9 @@ HEADERS += \
     include/plugincontainerif.h \
     core/include/innerbusapi.h \
     core/include/innerbusclientapi.h \
-    include/gwtemplates.h
+    include/gwtemplates.h \
+    plugins/include/deviceapi.h \
+    include/sysdefs.h
 
 LIBS += -lmosquittopp -ldl -lPocoFoundation
 

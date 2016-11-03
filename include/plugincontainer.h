@@ -16,7 +16,6 @@ typedef Poco::Manifest<UCLPluginIf> PluginManifest;
 
 class PluginContainer: public PluginContainerIF {
 private:
-
     PluginLoader pluginLoader;
     const std::string pluginDirPath;
     bool lerror;

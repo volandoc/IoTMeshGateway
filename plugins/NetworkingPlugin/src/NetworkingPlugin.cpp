@@ -41,10 +41,18 @@ int NetworkingPlugin::setIBusClient(InnerBusClientIF* client){
     return 0;
 }
 
-int NetworkingPlugin::executeCommand(){
-    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
-    logger.debug("executeCommand");
+int NetworkingPlugin::setWorkDir(std::string path){
     return 0;
+}
+
+int NetworkingPlugin::executeCommand(std::string topic, std::string message){
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    logger.debug("executeCommand topic {%s} msg{%s}", topic, message);
+    return 0;
+}
+
+int NetworkingPlugin::sendOccurrence(std::string message) {
+      return 0;
 }
 
 int NetworkingPlugin::getCommandSet(){

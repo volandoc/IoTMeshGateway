@@ -88,12 +88,9 @@ InnerBusClient::InnerBusClient(){
 
 InnerBusClient::~InnerBusClient(){
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
-    if(connected) disconnect();
-    this->loop_stop();
-    lib_cleanup();
-    //mosquitto_destroy(m_mosq);
-    logger.debug("InnerBus client destroyed");
+    this->free();
     callbackObj = NULL;
+    logger.debug("InnerBus client destroyed");
 }
 
 //
@@ -193,16 +190,31 @@ int InnerBusClient::unsubscribe() {
 //
 
 void InnerBusClient::init(){
+    Poco::Logger& logger = Poco::Logger::get("InnerBus");
     m_mosq = mosquitto_new(cfg.id.c_str(), cfg.clean_session, this);
-    mosquitto_connect_callback_set(m_mosq, on_connect_wrapper);
-    mosquitto_disconnect_callback_set(m_mosq, on_disconnect_wrapper);
-    mosquitto_publish_callback_set(m_mosq, on_publish_wrapper);
-    mosquitto_message_callback_set(m_mosq, on_message_wrapper);
-    mosquitto_subscribe_callback_set(m_mosq, on_subscribe_wrapper);
-    mosquitto_unsubscribe_callback_set(m_mosq, on_unsubscribe_wrapper);
-    mosquitto_log_callback_set(m_mosq, on_log_wrapper);
-    will_set();
-    lib_init();
+    if( nullptr != m_mosq){
+        mosquitto_connect_callback_set(m_mosq, on_connect_wrapper);
+        mosquitto_disconnect_callback_set(m_mosq, on_disconnect_wrapper);
+        mosquitto_publish_callback_set(m_mosq, on_publish_wrapper);
+        mosquitto_message_callback_set(m_mosq, on_message_wrapper);
+        mosquitto_subscribe_callback_set(m_mosq, on_subscribe_wrapper);
+        mosquitto_unsubscribe_callback_set(m_mosq, on_unsubscribe_wrapper);
+        mosquitto_log_callback_set(m_mosq, on_log_wrapper);
+        will_set();
+        lib_init();
+    }
+    logger.debug("InnerBus client initialized");
+}
+
+void InnerBusClient::free(){
+    Poco::Logger& logger = Poco::Logger::get("InnerBus");
+    if(connected) disconnect();
+    if( nullptr != m_mosq){
+        lib_cleanup();
+        mosquitto_destroy(m_mosq);
+        m_mosq = nullptr;
+    }
+    logger.debug("InnerBus client deinitialized");
 }
 
 void InnerBusClient::setConfig(void *config){
@@ -245,6 +257,7 @@ int InnerBusClient::disconnect() {
     disconnected_by_user = true;
     connected = false;
     rc = mosquitto_disconnect(m_mosq);
+    this->loop_stop();
     return rc;
 }
 
@@ -309,6 +322,8 @@ void InnerBusClient::on_message(const struct mosquitto_message *message) {
     std::string messagestr(messagearr);
 
     logger.debug("%s- Message(%d) on Topic(%s) with payload: %s", cfg.id, message->mid, message->topic, messagestr);
+
+    this->callbackObj->executeCommand(message->topic, messagestr);
 }
 
 void InnerBusClient::on_subscribe(int mid, int qos_count, const int *granted_qos) {
@@ -336,19 +351,9 @@ void InnerBusClient::on_error() {
 //
 //
 
-
 InnerBus::InnerBus() {
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
     logger.debug("InnerBus default Created");
-    this->coreLibPath="../core/InnerBus";
-    loadConfig();
-}
-
-InnerBus::InnerBus(std::string path) {
-    Poco::Logger& logger = Poco::Logger::get("InnerBus");
-    logger.debug("InnerBus Created with workdir <%s>", path);
-    this->coreLibPath = path;
-    loadConfig();
 }
 
 InnerBus::~InnerBus() {
@@ -356,10 +361,10 @@ InnerBus::~InnerBus() {
     logger.debug("InnerBus Destroyed");
 }
 
-int InnerBus::loadConfig() {
+int InnerBus::loadConfig(std::string libpath) {
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
 
-    std::string confPath = this->coreLibPath + "/" + "config.properties";
+    std::string confPath = libpath + "/" + "config.properties";
 
     Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> pConf;
     pConf = new Poco::Util::PropertyFileConfiguration(confPath);
@@ -385,11 +390,8 @@ bool InnerBus::isAvailable(){
 }
 
 InnerBusClientIF* InnerBus::createIBusClient(){
-    Poco::Logger& logger = Poco::Logger::get("InnerBus");
-    logger.debug("InnerBus enter client creation");
     InnerBusClientIF* client = new InnerBusClient;
     client->setConfig(&defaultConf);
-    logger.debug("InnerBus leave client creation");
     return client;
 }
 
