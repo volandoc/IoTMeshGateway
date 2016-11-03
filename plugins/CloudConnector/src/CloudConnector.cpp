@@ -7,6 +7,7 @@
 #include <Poco/JSON/JSON.h>
 #include <Poco/JSON/Parser.h>
 #include <Poco/Dynamic/Var.h>
+#include "sysdefs.h"
 #include "gwCommand.h"
 
 #define GW_SERIAL                       "987654321"
@@ -98,10 +99,11 @@ void CloudConnector::onProvision() {
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     logger.debug("Gateway provision SUCCESS");
 
-    sendGetDataSync(this->gatewayId, REST_DATASYNC_FILE);
+    string dataSyncFile = this->work_dir + _FILE_SEPARATOR + REST_DATASYNC_FILE;
+    sendGetDataSync(this->gatewayId, dataSyncFile);
 
     string datasyncJson;
-    if (true == readFileContent(REST_DATASYNC_FILE, datasyncJson) &&
+    if (true == readFileContent(dataSyncFile, datasyncJson) &&
             true == getHomeId(datasyncJson)) {
 
         mqttClient->topics_init(this->gatewayId, this->homeId);
@@ -128,7 +130,9 @@ int CloudConnector::setIBusClient(InnerBusClientIF* client){
 }
 
 int CloudConnector::setWorkDir(std::string path){
-    return 0;
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug("Running from %s", path);
+    this->work_dir = path;
 }
 
 int CloudConnector::executeCommand(std::string topic, std::string message){
@@ -297,15 +301,16 @@ bool CloudConnector::provision()
 {
     bool status = true;
     string cloudResponse;
+    string provisionFile = this->work_dir + _FILE_SEPARATOR + REST_PROVISION_FILE;
 
-    if (false == sendProvision(GW_SERIAL, GW_VERSION, GW_MDN, REST_PROVISION_FILE))
+    if (false == sendProvision(GW_SERIAL, GW_VERSION, GW_MDN, provisionFile))
     {
         status = false;
     }
 
     if (true == status)
     {
-        status = readFileContent(REST_PROVISION_FILE, cloudResponse);
+        status = readFileContent(provisionFile, cloudResponse);
     }
 
     if (true == status)
@@ -338,7 +343,9 @@ bool CloudConnector::sendProvision(string serial, string version, string mdn, st
     rst.setDataBody(buffer.c_str());
 
     rst.setHeader("\"Content-Type:application/json\"");
-    rst.setConsoleOutputFile(REST_OUTPUT_FILE);
+
+    string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
+    rst.setConsoleOutputFile(tempOutputFile);
     rst.setCloudResponseFile(cloudResFile);
 
     buffer = REST_HOST;
@@ -476,7 +483,10 @@ int CloudConnector::sendGetDataSync(int gwId, string gwDataSyncFile)
     rst.setPrivatekey(REST_PRIVATEKEY);
     rst.setNocheckCert(true);
     rst.setHeader("\"Content-Type:application/json\"");
-    rst.setConsoleOutputFile(REST_OUTPUT_FILE);
+
+    string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
+    rst.setConsoleOutputFile(tempOutputFile);
+
     rst.setCloudResponseFile(gwDataSyncFile);
 
     buffer = REST_HOST;
@@ -521,7 +531,10 @@ int CloudConnector::sendDiscoveredSensors(int gwId, string status, string sensor
     rst.setDataBody(buffer.c_str());
 
     rst.setHeader("\"Content-Type:application/json\"");
-    rst.setConsoleOutputFile(REST_OUTPUT_FILE);
+
+    string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
+    rst.setConsoleOutputFile(tempOutputFile);
+
     rst.setCloudResponseFile(cloudResFile);
 
     buffer = REST_HOST;
