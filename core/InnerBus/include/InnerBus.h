@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <list>
 #include <mosquitto.h>
 #include <Poco/String.h>
 #include <Poco/Logger.h>
@@ -12,13 +13,18 @@
 #include "innerbusapi.h"
 #include "pluginsapi.h"
 
+class InnerBus;
+
 struct mosquitto_config {
+    std::string prefix;
     std::string id;
     std::string host;
     std::string will_topic;
     std::string will_payload;
-    std::string subtopic;
-    std::string pubtopic;
+    std::string command_topic;
+    std::string occurrence_topic;
+    std::vector<std::string> subTopicList;
+    std::vector<std::string> pubTopicList;
     int   keepalive;
     int   port;
     int   qos;
@@ -38,6 +44,7 @@ struct mosquitto_config {
 
 class InnerBusClient: public InnerBusClientIF {
 private:
+    InnerBus* ptrIBus=nullptr;
     UCLPluginIf* callbackObj=nullptr;
     mosquitto *m_mosq=nullptr;
     mosquitto_config cfg;
@@ -62,9 +69,11 @@ private:
     int will_clear();
     int subscribe();
     int unsubscribe();
+    int generateSubTopics();
+    int generatePubTopics();
 
 public:
-    InnerBusClient();
+    InnerBusClient(InnerBus* innerBus);
     virtual~InnerBusClient();
 
     virtual void init();
@@ -91,6 +100,8 @@ public:
 
 class InnerBus: public InnerBusIF {
     mosquitto_config defaultConf;
+    int connectionsCount = 0;
+    std::list<std::string> clientsList;
 public:
     InnerBus();
     virtual ~InnerBus();
@@ -100,6 +111,9 @@ public:
     virtual int getConnectionsCount();
     virtual int getClientsCount();
     virtual void getInfo();
+
+    void addClientToList(std::string name);
+    void delClientFromList(std::string);
 };
 
 POCO_BEGIN_MANIFEST(InnerBusIF)

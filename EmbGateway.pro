@@ -20,7 +20,7 @@ HEADERS += \
     plugins/include/deviceapi.h \
     include/sysdefs.h
 
-LIBS += -lmosquittopp -ldl -lPocoFoundation
+LIBS += -lPocoFoundation -lPocoUtil
 
 unix {
     target.path = $$PWD/bin

@@ -11,7 +11,8 @@ TARGET = CloudConnector
 TEMPLATE = lib
 
 INCLUDEPATH += $$PWD/include \
-    $$PWD/../include
+    $$PWD/../include \
+    $$PWD/../../core/include
 
 DEFINES += UCL_PLUGINS_EXPORTS
 
@@ -33,7 +34,7 @@ HEADERS += include/CloudConnector.h \
     ../include/pluginsapi.h \
     ../../core/include/innerbusclientapi.h
 
-LIBS += -lPocoFoundation
+LIBS += -lmosquittopp -lPocoFoundation -lPocoJSON
 
 unix {
     target.path = $$PWD

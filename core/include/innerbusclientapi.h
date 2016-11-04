@@ -3,7 +3,8 @@
 
 class InnerBusClientIF {
 public:
-    virtual ~InnerBusClientIF(){};
+    InnerBusClientIF(){}
+    virtual ~InnerBusClientIF(){}
     virtual void init() = 0;
     virtual void free() = 0;
     virtual int connect() = 0;

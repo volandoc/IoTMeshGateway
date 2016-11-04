@@ -14,7 +14,7 @@ CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,CloudConnector.so.1
 INCPATH       = -I../include -I./include -I../../core/include
-LIBS          = $(SUBLIBS) -lmosquittopp -ldl -lpthread -lPocoFoundation -lPocoJSON
+LIBS          = $(SUBLIBS) -lmosquittopp -lPocoFoundation -lPocoJSON
 DESTDIR       = 
 SOURCES       = src/CloudConnector.cpp mqttclient.cpp rest.cpp JSON_messages.cpp
 OBJECTS       = CloudConnector.o mqttclient.o rest.o JSON_messages.o parseCommand.o gwCommand.o

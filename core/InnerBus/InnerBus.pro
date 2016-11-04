@@ -23,7 +23,7 @@ HEADERS += include/InnerBus.h \
         ../include/innerbusclientapi.h \
         ../../plugins/include/pluginsapi.h
 
-LIBS += -lmosquittopp -lPocoFoundation -lPocoUtil
+LIBS += -lmosquitto -lPocoFoundation -lPocoUtil
 
 unix {
     target.path = $$PWD
