@@ -13,7 +13,7 @@ DEFINES       =
 CFLAGS        = -c -pipe -O2 -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -c -pipe -O2 -std=gnu++11 -Wall -W -fPIC $(DEFINES)
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) -ldl -lpthread -lPocoFoundation -lPocoUtil
+LIBS          = $(SUBLIBS) -lPocoFoundation -lPocoUtil
 INCPATH       = -I../EmbGateway/include -I./include -I./plugins/include -I./core/include
 DESTDIR       = bin
 SOURCES       = main.cpp plugincontainer.cpp
