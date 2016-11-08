@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <list>
 #include <mosquitto.h>
 #include <Poco/String.h>
