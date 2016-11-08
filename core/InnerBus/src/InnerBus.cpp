@@ -217,26 +217,28 @@ int InnerBusClient::generateSubTopics() {
         return 0;
     }
 
-    if( (nullptr != callbackObj) && strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
+    if( nullptr != callbackObj ) {
         cfg.subTopicList.clear();
 
-        tmpTopic = cfg.id + "/" + cfg.command_topic;
-        cfg.subTopicList.push_back(tmpTopic);
-        tmpTopic = cfg.id + "/+/" + cfg.command_topic;
-        cfg.subTopicList.push_back(tmpTopic);
-        return 0;
-    }
+        if( (callbackObj->getPluginDetails()->type != NULL)
+             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
+            tmpTopic = cfg.id + "/" + cfg.command_topic;
+            cfg.subTopicList.push_back(tmpTopic);
+            tmpTopic = cfg.id + "/+/" + cfg.command_topic;
+            cfg.subTopicList.push_back(tmpTopic);
+            return 0;
+        }
 
-    if( (nullptr != callbackObj) && strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ){
-        cfg.subTopicList.clear();
-
-        tmpTopic = "+/" + cfg.occurrence_topic;
-        cfg.subTopicList.push_back(tmpTopic);
-        tmpTopic = "+/+/" + cfg.occurrence_topic;
-        cfg.subTopicList.push_back(tmpTopic);
-        tmpTopic = "+/+/+/" + cfg.occurrence_topic;
-        cfg.subTopicList.push_back(tmpTopic);
-        return 0;
+        if( (callbackObj->getPluginDetails()->type != NULL)
+             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ){
+            tmpTopic = "+/" + cfg.occurrence_topic;
+            cfg.subTopicList.push_back(tmpTopic);
+            tmpTopic = "+/+/" + cfg.occurrence_topic;
+            cfg.subTopicList.push_back(tmpTopic);
+            tmpTopic = "+/+/+/" + cfg.occurrence_topic;
+            cfg.subTopicList.push_back(tmpTopic);
+            return 0;
+        }
     }
 
     return -1;
@@ -251,16 +253,21 @@ int InnerBusClient::generatePubTopics() {
         return 0;
     }
 
-    if( (nullptr != callbackObj) && strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
-        tmpTopic = cfg.id + "/" + cfg.occurrence_topic;
-        cfg.pubTopicList.push_back(tmpTopic);
-        return 0;
-    }
+    if( nullptr != callbackObj ) {
+        cfg.pubTopicList.clear();
 
-    if( (nullptr != callbackObj) && strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ){
-        tmpTopic = "{PLUGIN}/" + cfg.command_topic;
-        cfg.pubTopicList.push_back(tmpTopic);
-        return 0;
+        if( (callbackObj->getPluginDetails()->type != NULL)
+             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
+            tmpTopic = cfg.id + "/" + cfg.occurrence_topic;
+            cfg.pubTopicList.push_back(tmpTopic);
+            return 0;
+        }
+        if( (callbackObj->getPluginDetails()->type != NULL)
+             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ){
+            tmpTopic = "{PLUGIN}/" + cfg.command_topic;
+            cfg.pubTopicList.push_back(tmpTopic);
+            return 0;
+        }
     }
 }
 
@@ -351,19 +358,22 @@ int InnerBusClient::sendMessage(std::string message){
 
 void InnerBusClient::getInfo() {
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
-    logger.information(":\n\
-    %s InnerBus client info:\n\
-        mqtt.host: %s\n\
-        mqtt.port: %d\n\
-        mqtt.subscribed to:"
-    ,cfg.id, cfg.host, cfg.port);
-//    for( int i=0; i<cfg.subTopicList.size(); i++){
-//        logger.information("            %s", cfg.subTopicList[i]);
-//    }
-//    logger.information("        mqtt.publish to:");
-//    for( int i=0; i<cfg.pubTopicList.size(); i++){
-//        logger.information("            %s", cfg.pubTopicList[i]);
-//    }
+    std::stringstream infoStream;
+    infoStream << ":\n"
+               << cfg.id
+               << "        InnerBus client info:\n"
+               << "        mqtt.host: " << cfg.host << "\n"
+               << "        mqtt.port: " << cfg.port << "\n"
+               << "        mqtt.subscribed to:\n";
+    for( int i=0; i<cfg.subTopicList.size(); i++){
+        infoStream << "            " << cfg.subTopicList[i] << "\n";
+    }
+    infoStream << "        mqtt.publish to:\n";
+    for( int i=0; i<cfg.pubTopicList.size(); i++){
+        infoStream << "            " << cfg.pubTopicList[i] << "\n";;
+    }
+
+    logger.debug(infoStream.str());
 
 }
 

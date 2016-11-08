@@ -35,7 +35,7 @@ CloudConnector::CloudConnector()
     , isDiscovering(false)
 {
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    this->pluginDetails.type = _PD_T_DEVICE;
+    this->pluginDetails.type = _PD_T_COMM;
     this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
     this->pluginDetails.className = "CloudConnector";
     this->pluginDetails.pluginName ="CloudConnector Plugin";
