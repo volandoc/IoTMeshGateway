@@ -48,7 +48,7 @@ int PluginContainer::addIBusClients(InnerBusIF& ibus){
             UCLPluginIf& tmpPlugin = pluginLoader.instance(plgName);
             int rc = tmpPlugin.setIBusClient(ibus.createIBusClient());
             if( rc == 0 ){
-                logger.debug("Plugin <%s> ", plgName);
+                logger.debug("Plugin <%s> client added", plgName);
             } else {
                 logger.debug("Plugin <%s> failed", plgName);
             }

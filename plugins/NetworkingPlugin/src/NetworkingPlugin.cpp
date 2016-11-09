@@ -3,6 +3,7 @@
 
 NetworkingPlugin::NetworkingPlugin(){
     Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    this->pluginDetails.type = _PD_T_DEVICE;
     this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
     this->pluginDetails.className = "NetworkingPlugin";
     this->pluginDetails.pluginName ="Networking Plugin";

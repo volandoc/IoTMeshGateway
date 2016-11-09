@@ -18,9 +18,10 @@ HEADERS += \
     core/include/innerbusclientapi.h \
     include/gwtemplates.h \
     plugins/include/deviceapi.h \
-    include/sysdefs.h
+    include/sysdefs.h \
+    core/include/ibmessage.h
 
-LIBS += -lmosquittopp -ldl -lPocoFoundation
+LIBS += -lPocoFoundation -lPocoUtil -lPocoJSON
 
 unix {
     target.path = $$PWD/bin

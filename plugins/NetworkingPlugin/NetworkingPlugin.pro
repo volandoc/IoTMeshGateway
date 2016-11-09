@@ -11,7 +11,8 @@ TARGET = NetworkingPlugin
 TEMPLATE = lib
 
 INCLUDEPATH += $$PWD/include \
-    $$PWD/../include
+    $$PWD/../include \
+    $$PWD/../../core/include
 
 DEFINES += UCL_PLUGINS_EXPORTS
 

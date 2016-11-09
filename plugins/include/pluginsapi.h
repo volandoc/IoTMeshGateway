@@ -3,12 +3,13 @@
 
 #include <string>
 #include <Poco/Task.h>
+#include "ibmessage.h"
 #include "innerbusclientapi.h"
 
 #define UCL_PLUGINS_API_VERSION 1
 
-#define _PD_T_DEVICE "device";
-#define _PD_T_COMM   "comm";
+#define _PD_T_DEVICE "device"
+#define _PD_T_COMM   "comm"
 
 static const char *PLUGIN_COMMANDS[] = { "GET", "SET", "UPDATE", "REBOOT", "LIST" };
 

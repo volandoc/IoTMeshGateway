@@ -17,7 +17,7 @@
 #define _RW_T_WRITE   1;
 #define _RW_T_BOTH    3;
 
-static const char *CAPABILITY_TYPES[] = { "bool", "int", "float", "char", "string" };
+static const char *CAPABILITY_TYPES[] = { "bool", "int", "float", "char", "string", "url" };
 static const char *CONSTRAIN_TYPES[] = { "RANGE", "ENUM", "REGEXP" };
 static const char *READWRITE_TYPES[] = { "READ", "WRITE", "BOTH" };
 
