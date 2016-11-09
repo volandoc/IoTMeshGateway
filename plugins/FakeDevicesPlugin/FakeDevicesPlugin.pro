@@ -23,6 +23,7 @@ SOURCES += src/FakeDevicesPlugin.cpp \
 HEADERS += include/FakeDevicesPlugin.h \
     ../include/pluginsapi.h \
     ../../core/include/innerbusclientapi.h \
+    ../../core/include/ibmessage.h \
     include/device.h \
     include/FakeDevice.h \
     include/FakeDeviceFactory.h

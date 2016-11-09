@@ -21,9 +21,10 @@ SOURCES += src/InnerBus.cpp
 HEADERS += include/InnerBus.h \
         ../include/innerbusapi.h \
         ../include/innerbusclientapi.h \
+        ../include/ibmessage.h \
         ../../plugins/include/pluginsapi.h
 
-LIBS += -lmosquitto -lPocoFoundation -lPocoUtil
+LIBS += -lmosquitto -lPocoFoundation -lPocoUtil -lPocoJSON
 
 unix {
     target.path = $$PWD

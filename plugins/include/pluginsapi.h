@@ -3,6 +3,7 @@
 
 #include <string>
 #include <Poco/Task.h>
+#include "ibmessage.h"
 #include "innerbusclientapi.h"
 
 #define UCL_PLUGINS_API_VERSION 1
