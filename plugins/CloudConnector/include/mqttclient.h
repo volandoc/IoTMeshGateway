@@ -30,7 +30,6 @@ struct mosquittoConfig {
     int   will_qos;
     bool  will_retain;
     bool  clean_session; /* sub */
-    std::string topics[]; /* sub */
     int   topic_count; /* sub */
     bool  no_retain; /* sub */
     std::string filter_outs; /* sub */

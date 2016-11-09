@@ -63,7 +63,17 @@ int FakeDevicesPlugin::setWorkDir(std::string path){
 
 int FakeDevicesPlugin::executeCommand(std::string topic, std::string message){
     Poco::Logger& logger = Poco::Logger::get("FakeDevicesPlugin");
-    logger.debug("executeInternalCommand $d:%s: ", topic, message);
+    logger.debug("executeInternalCommand %s:%s ", topic, message);
+
+    IBMessage ibMessage;
+    if(ibMessage.fromJSON(message))
+        logger.debug("\"%s : %s : %s : %d\"", ibMessage.getId(), ibMessage.getPayload(), ibMessage.getReference(), (int) ibMessage.getTimestamp());
+
+    IBPayload payload;
+    if(payload.fromJSON(ibMessage.getPayload()))
+        logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+
+
     return 0;
 }
 
