@@ -150,18 +150,36 @@ int InnerBusClient::loop_stop(bool force) {
 }
 
 int InnerBusClient::publish(std::string message) {
+    int rc = 0;
 
     if(cfg.id == cfg.prefix){
     }
 
-    if( (nullptr != callbackObj) && strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
-//        cfg.msg_count++;
-//        return mosquitto_publish(m_mosq, &(cfg.msg_count), cfg.pubtopic.c_str(), message.length(), message.c_str(), cfg.qos, false);
+    if( nullptr != callbackObj ) {
+        if( (callbackObj->getPluginDetails()->type != NULL)
+             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
+            for(size_t count=0; count < cfg.pubTopicList.size(); count++) {
+                cfg.msg_count++;
+                rc = mosquitto_publish(m_mosq, &(cfg.msg_count), cfg.pubTopicList[count].c_str(), message.length(), message.c_str(), cfg.qos, false);
+            }
+        }
 
+        if( (callbackObj->getPluginDetails()->type != NULL)
+             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ){
+            std::string tmpTopic="";
+            for(size_t count=0; count < cfg.pubTopicList.size(); count++){
+                cfg.msg_count++;
+                tmpTopic = Poco::replace(cfg.pubTopicList[count], "{PLUGIN}", callbackObj->getPluginDetails()->className);
+                rc = mosquitto_publish(m_mosq, &(cfg.msg_count), tmpTopic.c_str(), message.length(), message.c_str(), cfg.qos, false);
+            }
+        }
     }
 
-    if( (nullptr != callbackObj) && strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ){
-    }
+    return rc;
+}
+
+int InnerBusClient::sendStatus(std::string status) {
+    return mosquitto_publish(m_mosq, &(cfg.msg_count), cfg.will_topic.c_str(), status.length(), status.c_str(), cfg.will_qos, true);
 }
 
 int InnerBusClient::tls_set(const char *cafile, const char *capath, const char *certfile, const char *keyfile, int (*pw_callback)(char *buf, int size, int rwflag, void *userdata)) {
@@ -181,7 +199,7 @@ int InnerBusClient::tls_psk_set(const char *psk, const char *identity, const cha
 }
 
 int InnerBusClient::will_set() {
-    return mosquitto_will_set(m_mosq, cfg.will_topic.c_str(), cfg.will_payload.length(), cfg.will_payload.c_str(), cfg.will_qos, false);
+    return mosquitto_will_set(m_mosq, cfg.will_topic.c_str(), cfg.will_payload.length(), cfg.will_payload.c_str(), cfg.will_qos, true);
 }
 
 int InnerBusClient::will_clear() {
@@ -189,7 +207,7 @@ int InnerBusClient::will_clear() {
 }
 
 int InnerBusClient::subscribe() {
-    for(int count=0; count < cfg.subTopicList.size(); count++){
+    for(size_t count=0; count < cfg.subTopicList.size(); count++){
         cfg.msg_count++;
         mosquitto_subscribe(m_mosq, &(cfg.msg_count), cfg.subTopicList[count].c_str(), cfg.qos);
     }
@@ -197,7 +215,7 @@ int InnerBusClient::subscribe() {
 }
 
 int InnerBusClient::unsubscribe() {
-    for(int count=0; count < cfg.subTopicList.size(); count++){
+    for(size_t count=0; count < cfg.subTopicList.size(); count++){
         cfg.msg_count++;
         mosquitto_unsubscribe(m_mosq, &(cfg.msg_count), cfg.subTopicList[count].c_str());
     }
@@ -222,20 +240,18 @@ int InnerBusClient::generateSubTopics() {
 
         if( (callbackObj->getPluginDetails()->type != NULL)
              && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
-            tmpTopic = cfg.id + "/" + cfg.command_topic;
+            tmpTopic = cfg.prefix + "/" + cfg.id + "/" + cfg.command_topic;
             cfg.subTopicList.push_back(tmpTopic);
-            tmpTopic = cfg.id + "/+/" + cfg.command_topic;
+            tmpTopic = cfg.prefix + "/" + cfg.id + "/+/" + cfg.command_topic;
             cfg.subTopicList.push_back(tmpTopic);
             return 0;
         }
 
         if( (callbackObj->getPluginDetails()->type != NULL)
              && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ){
-            tmpTopic = "+/" + cfg.occurrence_topic;
+            tmpTopic = cfg.prefix + "/+/" + cfg.occurrence_topic;
             cfg.subTopicList.push_back(tmpTopic);
-            tmpTopic = "+/+/" + cfg.occurrence_topic;
-            cfg.subTopicList.push_back(tmpTopic);
-            tmpTopic = "+/+/+/" + cfg.occurrence_topic;
+            tmpTopic = cfg.prefix + "/+/+/" + cfg.occurrence_topic;
             cfg.subTopicList.push_back(tmpTopic);
             return 0;
         }
@@ -248,7 +264,7 @@ int InnerBusClient::generatePubTopics() {
     std::string tmpTopic;
 
     if(cfg.id == cfg.prefix){
-        tmpTopic = "{PLUGIN}/" + cfg.command_topic;
+        tmpTopic = cfg.prefix +"/{PLUGIN}/" + cfg.command_topic;
         cfg.pubTopicList.push_back(tmpTopic);
         return 0;
     }
@@ -258,17 +274,19 @@ int InnerBusClient::generatePubTopics() {
 
         if( (callbackObj->getPluginDetails()->type != NULL)
              && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
-            tmpTopic = cfg.id + "/" + cfg.occurrence_topic;
+            tmpTopic = cfg.prefix + "/" + cfg.id + "/" + cfg.occurrence_topic;
             cfg.pubTopicList.push_back(tmpTopic);
             return 0;
         }
         if( (callbackObj->getPluginDetails()->type != NULL)
              && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ){
-            tmpTopic = "{PLUGIN}/" + cfg.command_topic;
+            tmpTopic = cfg.prefix +"/{PLUGIN}/" + cfg.command_topic;
             cfg.pubTopicList.push_back(tmpTopic);
             return 0;
         }
     }
+
+    return -1;
 }
 
 //
@@ -308,7 +326,7 @@ void InnerBusClient::setConfig(void *config){
     this->cfg = *(struct mosquitto_config*)config;
 
     cfg.id = cfg.prefix;
-    cfg.will_payload = cfg.prefix + ": " + cfg.will_payload;
+    cfg.will_topic = cfg.prefix + "/" + cfg.will_topic;
     cfg.msg_count = 0;
     generateSubTopics();
     generatePubTopics();
@@ -322,7 +340,7 @@ void InnerBusClient::setListener(void *listener){
         cfg.id = callbackObj->getPluginDetails()->className;
         generateSubTopics();
         generatePubTopics();
-        cfg.will_payload = Poco::replace(cfg.will_payload, cfg.prefix, cfg.id);
+        cfg.will_topic = Poco::replace(cfg.will_topic, cfg.prefix, (cfg.prefix + "/" + cfg.id));
         ptrIBus->addClientToList(cfg.id);
     }
 }
@@ -343,6 +361,7 @@ int InnerBusClient::disconnect() {
     int rc;
     disconnected_by_user = true;
     connected = false;
+    sendStatus(cfg.will_payload);
     rc = mosquitto_disconnect(m_mosq);
     this->loop_stop();
     return rc;
@@ -365,11 +384,11 @@ void InnerBusClient::getInfo() {
                << "        mqtt.host: " << cfg.host << "\n"
                << "        mqtt.port: " << cfg.port << "\n"
                << "        mqtt.subscribed to:\n";
-    for( int i=0; i<cfg.subTopicList.size(); i++){
+    for( size_t i=0; i<cfg.subTopicList.size(); i++){
         infoStream << "            " << cfg.subTopicList[i] << "\n";
     }
     infoStream << "        mqtt.publish to:\n";
-    for( int i=0; i<cfg.pubTopicList.size(); i++){
+    for( size_t i=0; i<cfg.pubTopicList.size(); i++){
         infoStream << "            " << cfg.pubTopicList[i] << "\n";;
     }
 
@@ -383,7 +402,7 @@ void InnerBusClient::on_connect(int rc) {
         logger.debug("%s- connected with server", cfg.id);
         connected = true;
         this->subscribe();
-        this->publish("available");
+        this->sendStatus("available");
     } else {
         logger.debug("%s - Impossible to connect with server (%d)", cfg.id, rc);
         connected = false;
@@ -418,9 +437,13 @@ void InnerBusClient::on_message(const struct mosquitto_message *message) {
 
         std::string messagestr(messagearr);
 
+        IBMessage ibmessage;
+
         logger.debug("%s- Message(%d) on Topic(%s) with payload: %s", cfg.id, message->mid, message->topic, messagestr);
 
-        this->callbackObj->executeCommand(message->topic, messagestr);
+        if(ibmessage.fromJSON(messagestr)) {
+            this->callbackObj->executeCommand(message->topic, messagestr);
+        }
     }
 }
 
@@ -431,14 +454,14 @@ void InnerBusClient::on_subscribe(int mid, int qos_count, const int *granted_qos
 
 void InnerBusClient::on_unsubscribe(int mid) {
     Poco::Logger& logger = Poco::Logger::get("InnerBus");
-
     logger.debug("%s- Topic(%d) unsubscribed", cfg.id, mid);
 }
 
 void InnerBusClient::on_log(int level, const char *str) {
-    //Poco::Logger& logger = Poco::Logger::get("InnerBus");
+    Poco::Logger& logger = Poco::Logger::get("InnerBus");
+    std::string messagestr(str);
 
-    //logger.debug("%s- LogEvent(%d) with message: %s", cfg.id, level, str);
+    logger.trace("%s- LogEvent(%d) with message: %s", cfg.id, level, messagestr);
 }
 
 void InnerBusClient::on_error() {
@@ -482,6 +505,16 @@ int InnerBus::loadConfig(std::string libpath) {
 
     return 0;
 }
+
+int InnerBus::setRoot(std::string serial) {
+    Poco::Logger& logger = Poco::Logger::get("InnerBus");
+
+    defaultConf.prefix = serial;
+    logger.debug("InnerBus Root topic setted: %s", serial);
+
+    return 0;
+}
+
 
 bool InnerBus::isAvailable(){
     return true;

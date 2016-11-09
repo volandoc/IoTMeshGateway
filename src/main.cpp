@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <csignal>
 
+#include <Poco/Timestamp.h>
 #include <Poco/ClassLoader.h>
 #include <Poco/Manifest.h>
 #include <Poco/Logger.h>
@@ -118,6 +119,7 @@ protected:
             InnerBusIF& innerBus = busLoader.instance("InnerBus");
 
             innerBus.loadConfig(core_dir + "/InnerBus");
+            innerBus.setRoot(Application::config().getString("application.gateway.serial"));
 
             InnerBusClientIF* busClient = innerBus.createIBusClient();
             busClient->getInfo();

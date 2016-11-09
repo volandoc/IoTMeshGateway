@@ -68,6 +68,7 @@ private:
     int tls_psk_set(const char *psk, const char *identity, const char *ciphers);
     int will_set();
     int will_clear();
+    int sendStatus(std::string status);
     int subscribe();
     int unsubscribe();
     int generateSubTopics();
@@ -107,6 +108,7 @@ public:
     InnerBus();
     virtual ~InnerBus();
     virtual int loadConfig(std::string libpath = "../core/InnerBus");
+    virtual int setRoot(std::string serial);
     virtual bool isAvailable();
     virtual InnerBusClientIF* createIBusClient();
     virtual int getConnectionsCount();
