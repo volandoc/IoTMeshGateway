@@ -14,6 +14,7 @@ class CloudConnector: public UCLPluginIf {
 private:
     PluginDetails pluginDetails;
     InnerBusClientIF* busClient = NULL;
+    std::string work_dir;
     Poco::Timer timer;
     //Poco::Timer timerDiscoverSensors;
     bool isOnboarded;
