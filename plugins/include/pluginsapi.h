@@ -37,10 +37,9 @@ public:
     virtual int startPlugin()=0;
     virtual int setIBusClient(InnerBusClientIF* client) = 0;
     virtual int setWorkDir(std::string path)=0;
-    virtual int executeCommand(std::string topic, std::string message)=0;
+    virtual int executeCommand(std::string source, IBMessage message)=0;
+    virtual int executeInternalCommand(std::string source, std::string message) = 0;
     virtual int sendOccurrence(std::string message)=0;
-    virtual int getCommandSet()=0;
-    virtual int getCapabilitiesSet()=0;
     virtual int stopPlugin()=0;
     virtual PluginDetails* getPluginDetails()=0;
 
