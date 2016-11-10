@@ -230,8 +230,6 @@ int InnerBusClient::generateSubTopics() {
         cfg.subTopicList.push_back(tmpTopic);
         tmpTopic = cfg.prefix + "/" + cfg.command_topic;
         cfg.subTopicList.push_back(tmpTopic);
-        tmpTopic = "$SYS/broker/clients/connected";
-        cfg.subTopicList.push_back(tmpTopic);
         return 0;
     }
 
@@ -442,7 +440,7 @@ void InnerBusClient::on_message(const struct mosquitto_message *message) {
         logger.debug("%s- Message(%d) on Topic(%s) with payload: %s", cfg.id, message->mid, message->topic, messagestr);
 
         if(ibmessage.fromJSON(messagestr)) {
-            this->callbackObj->executeCommand(message->topic, messagestr);
+            this->callbackObj->executeCommand(message->topic, ibmessage);
         }
     }
 }
