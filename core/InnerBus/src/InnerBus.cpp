@@ -369,8 +369,8 @@ mosquitto * InnerBusClient::getMQTTInst(){
     return this->m_mosq;
 }
 
-int InnerBusClient::sendMessage(std::string message){
-    return publish(message);
+int InnerBusClient::sendMessage(IBMessage message){
+    return publish(message.toJSON());
 }
 
 void InnerBusClient::getInfo() {
