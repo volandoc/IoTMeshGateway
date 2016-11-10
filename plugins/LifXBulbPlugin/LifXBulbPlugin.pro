@@ -11,14 +11,20 @@ TARGET = LifXBulbPlugin
 TEMPLATE = lib
 
 INCLUDEPATH += $$PWD/include \
-    $$PWD/../include
+    $$PWD/../include \
+    $$PWD/../../core/include
 
 DEFINES += UCL_PLUGINS_EXPORTS
 
 SOURCES += src/LifXBulbPlugin.cpp
 
 HEADERS += include/LifXBulbPlugin.h \
-    ../include/pluginsapi.h
+    ../include/pluginsapi.h \
+    ../include/deviceapi.h \
+    ../../core/include/innerbusclientapi.h \
+    include/device_types.h
+
+LIBS += -lPocoFoundation
 
 unix {
     target.path = $$PWD

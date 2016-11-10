@@ -2,82 +2,47 @@
 #define PLUGINSAPI_H
 
 #include <string>
-
-namespace ucl {
-namespace plugins {
+#include <Poco/Task.h>
+#include "ibmessage.h"
+#include "innerbusclientapi.h"
 
 #define UCL_PLUGINS_API_VERSION 1
 
-#define UCL_PLUGIN_STANDART_INFO \
-    UCL_PLUGINS_API_VERSION,     \
-    __FILE__
+#define _PD_T_DEVICE "device"
+#define _PD_T_COMM   "comm"
 
-#if defined(WIN32) || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__)
-#  ifdef UCL_PLUGINS_EXPORTS
-#    define UCL_PLUGIN_EXPORT __declspec(dllexport)
-#  else
-#    define UCL_PLUGIN_EXPORT __declspec(dllimport)
-#  endif
-#else
-#   define UCL_PLUGIN_EXPORT // empty
-#endif
+static const char *PLUGIN_COMMANDS[] = { "GET", "SET", "UPDATE", "REBOOT", "LIST" };
 
-class NotificationListenerIF {
-public :
-    virtual int sendToCloud()=0;
-    virtual int notificationArived(std::string message)=0;
-    virtual int errorHandler()=0;
-    virtual int commandResult()=0;
+struct Capability {
+    const char* name;
+    const char* type;
+    const char* constrain_type;
+    const char* constraints_json;
+    const char* default_value;
+    const char* description;
+    const char* read_write;
 };
-
-class UCLPluginIf {
-private:
-    NotificationListenerIF* pluginsListener;
-public:
-    virtual void setListener(NotificationListenerIF* mngrListener) {
-        this->pluginsListener=mngrListener;
-        this->pluginsListener->notificationArived("Listener Registered");
-    }
-
-    virtual int notifyListener(std::string message) {
-        this->pluginsListener->notificationArived(message);
-        return 0;
-    }
-
-    virtual int startPlugin()=0;
-    virtual int executeCommand()=0;
-    virtual int getCommandSet()=0;
-    virtual int getCapabilitiesSet()=0;
-    virtual int stopPlugin()=0;
-};
-
-UCL_PLUGIN_EXPORT typedef UCLPluginIf* (*GetPluginFunc)();
 
 struct PluginDetails {
     int apiVersion;
-    const char* fileName;
+    const char* type;
     const char* className;
     const char* pluginName;
     const char* pluginVersion;
-    GetPluginFunc initializeFunc;
 };
 
-#define UCL_PLUGIN(classType, managerName, managerVersion)          \
-  extern "C" {                                                      \
-      UCL_PLUGIN_EXPORT ucl::plugins::UCLPluginIf* getPlugin()      \
-      {                                                             \
-          static classType singleton;                               \
-          return &singleton;                                        \
-      }                                                             \
-      UCL_PLUGIN_EXPORT ucl::plugins::PluginDetails exportDetails = \
-      {                                                             \
-          UCL_PLUGIN_STANDART_INFO,                                 \
-          #classType,                                               \
-          managerName,                                              \
-          managerVersion,                                           \
-          getPlugin                                                 \
-      };                                                            \
-  }
+class UCLPluginIf {
+public:
+    virtual ~UCLPluginIf(){};
+    virtual int startPlugin()=0;
+    virtual int setIBusClient(InnerBusClientIF* client) = 0;
+    virtual int setWorkDir(std::string path)=0;
+    virtual int executeCommand(std::string source, IBMessage message)=0;
+    virtual int executeInternalCommand(std::string source, std::string message) = 0;
+    virtual int sendOccurrence(std::string message)=0;
+    virtual int stopPlugin()=0;
+    virtual PluginDetails* getPluginDetails()=0;
 
-}}
-#endif // PLUGINSAPI_H
+};
+
+#endif

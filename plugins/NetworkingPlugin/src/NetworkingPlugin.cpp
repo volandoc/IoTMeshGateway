@@ -1,37 +1,94 @@
 #include "NetworkingPlugin.h"
 #include <iostream>
 
-UCL_PLUGIN(NetworkingPlugin, "Networking Plugin", "0.0.1")
-
 NetworkingPlugin::NetworkingPlugin(){
-    std::cout << "Network Manager: Created" << std::endl;
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    this->pluginDetails.type = _PD_T_DEVICE;
+    this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
+    this->pluginDetails.className = "NetworkingPlugin";
+    this->pluginDetails.pluginName ="Networking Plugin";
+    this->pluginDetails.pluginVersion = "0.0.1";
+    logger.debug("Plugin Created");
 }
 
 NetworkingPlugin::~NetworkingPlugin(){
-    std::cout << "Network Manager: Removed" << std::endl;
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    if( busClient != NULL ) {
+        delete busClient;
+        busClient = NULL;
+    }
+    logger.debug("Plugin Removed");
 }
 
 int NetworkingPlugin::startPlugin(){
-    std::cout << "Network Manager: Started" << std::endl;
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    if(this->busClient!=NULL){
+        this->busClient->init();
+        this->busClient->connect_async();
+        logger.debug("Started");
+        return 0;
+    } else {
+        logger.error("No IBus Client found: can't start", __FILE__, 26);
+        return -1;
+    }
+}
+
+int NetworkingPlugin::setIBusClient(InnerBusClientIF* client){
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    this->busClient = client;
+    this->busClient->setListener(this);
+    this->busClient->getInfo();
+
     return 0;
 }
 
-int NetworkingPlugin::executeCommand(){
-    std::cout << "Network Manager: executeCommand" << std::endl;
+int NetworkingPlugin::setWorkDir(std::string path){
     return 0;
+}
+
+int NetworkingPlugin::executeCommand(std::string source, IBMessage message){
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    logger.debug("executeCommand for {%s} msg{%s}", source, message);
+
+    logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
+
+    IBPayload payload;
+    if(payload.fromJSON(message.getPayload()))
+        logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+
+    return 0;
+}
+
+int NetworkingPlugin::executeInternalCommand(std::string source, std::string message){
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    logger.debug("executeInternalCommand from {%s} msg{%s}", source, message);
+
+    return 0;
+}
+
+int NetworkingPlugin::sendOccurrence(std::string message) {
+      return 0;
 }
 
 int NetworkingPlugin::getCommandSet(){
-    std::cout << "Network Manager: getCommandSet" << std::endl;
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    logger.debug("getCommandSet");
     return 0;
 }
 
 int NetworkingPlugin::getCapabilitiesSet(){
-    std::cout << "Network Manager: getCapabilitiesSet" << std::endl;
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    logger.debug("getCapabilitiesSet");
     return 0;
 }
 
+PluginDetails* NetworkingPlugin::getPluginDetails(){
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    return &pluginDetails;
+}
+
 int NetworkingPlugin::stopPlugin(){
-    std::cout << "Network Manager: Stopped" << std::endl;
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    logger.debug("Stopped");
     return 0;
 }

@@ -1,108 +1,152 @@
 #include "plugincontainer.h"
+#include "sysdefs.h"
+
+PluginContainer::PluginContainer(std::string path): pluginDirPath(path), lerror(false) {
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+    logger.debug("PluginContainer created");
+}
+
+PluginContainer::~PluginContainer(){
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+    logger.debug("PluginContainer destroyed");
+}
 
 int PluginContainer::LoadPlugins() {
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
 
-#ifdef _DIRENT_H
-    DIR* mngrsdir;
-    struct dirent *direntry;
-#endif
-
-#ifdef _WINDOWS_H
-    WIN32_FIND_DATA direntry;
-    HANDLE mngrsdir = INVALID_HANDLE_VALUE;
-#endif
-
-    std::string name = "";
     int result = 0;
+    Poco::File pluginDir(this->pluginDirPath);
 
-#ifdef _DIRENT_H
-    if( (mngrsdir=opendir(this->pluginDirPath.c_str())) != NULL ) {
-        while( (direntry=readdir(mngrsdir)) != NULL ) {
-            name = direntry->d_name;
-            if( (direntry->d_type == DT_DIR) && (name!=".") && (name!="..") ) {
-                result = this->LoadPlugin(name);
-            }
-        }
-    } else {
-        result = -1;
+    if( !pluginDir.exists() && !pluginDir.isDirectory() ) {
+        return -2;
     }
-#endif
 
-#ifdef _WINDOWS_H
-    mngrsdir = FindFirstFile(szDir, &direntry);
-    if( mngrsdir == INVALID_HANDLE_VALUE ) {
-        result = -1;
-    } else {
-        do {
-            if( direntry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) {
-                name = direntry.cFileName;
-                if( (name!=".") && (name!="..") ) {
-                    result = this->LoadPlugin(name);
-                }
-            }
-        } while( FindNextFile(mngrsdir, &direntry) != 0 );
+    std::set<std::string> files;
+    Poco::Glob::glob(this->pluginDirPath + "/*/*.so",files);
+    std::set<std::string>::iterator it = files.begin();
 
-        if ( GetLastError() != ERROR_NO_MORE_FILES ) {
-            result = -1;
-        }
-        FindClose(hFind);
+    for (; it != files.end(); ++it) {
+        logger.information(*it);
+        this->LoadPlugin(*it);
     }
-#endif
+
+    generatePluginList();
 
     return result;
 }
 
-std::string PluginContainer::generatePluginUri(std::string pname){
-    return this->pluginDirPath + _FILE_SEPARATOR + pname + _FILE_SEPARATOR + _PLUGIN_PREFIX + pname + _PLUGIN_EXTENTION;
+int PluginContainer::addIBusClients(InnerBusIF& ibus){
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+    logger.debug("IBus instance Rceived");
+
+    std::map<std::string,std::string>::iterator itCur = this->pluginsList.begin();
+    std::map<std::string,std::string>::iterator itEnd = this->pluginsList.end();
+
+    for (; itCur != itEnd; ++itCur) {
+        std::string plgName = itCur->first;
+        try {
+            UCLPluginIf& tmpPlugin = pluginLoader.instance(plgName);
+            int rc = tmpPlugin.setIBusClient(ibus.createIBusClient());
+            if( rc == 0 ){
+                logger.debug("Plugin <%s> client added", plgName);
+            } else {
+                logger.debug("Plugin <%s> failed", plgName);
+            }
+        } catch(Poco::Exception excp) {
+            logger.log(excp, __FILE__, 48);
+        }
+    }
+
+    return 0;
+}
+
+void PluginContainer::startPlugins() {
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+
+    std::map<std::string,std::string>::iterator itCur = this->pluginsList.begin();
+    std::map<std::string,std::string>::iterator itEnd = this->pluginsList.end();
+
+    for (; itCur != itEnd; ++itCur) {
+        std::string plgName = itCur->first;
+        try {
+            UCLPluginIf& tmpPlugin = pluginLoader.instance(plgName);
+            int rc = tmpPlugin.startPlugin();
+            if( rc == 0 ){
+                logger.debug("Plugin <%s> started", plgName);
+                loadedPlugins.push_back(itCur->first);
+            } else {
+                logger.debug("Plugin <%s> failed", plgName);
+                std::string fpIndex = itCur->first + ":" + itCur->second;
+                failedPlugins[fpIndex] = -2;
+            }
+        } catch(Poco::Exception excp) {
+            logger.log(excp, __FILE__, 48);
+        }
+    }
+}
+
+void PluginContainer::stopPlugins() {
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+    logger.debug("Enter stopPlugins");
+
+    std::list<std::string>::iterator itCur = this->loadedPlugins.begin();
+    std::list<std::string>::iterator itEnd = this->loadedPlugins.end();
+
+    for (; itCur != itEnd; ++itCur) {
+        std::string plgName = *itCur;
+        try {
+            UCLPluginIf& tmpPlugin = pluginLoader.instance(plgName);
+            tmpPlugin.stopPlugin();
+            logger.debug("Plugin <%s> stoped", plgName);
+        } catch(Poco::Exception excp) {
+            logger.log(excp, __FILE__, 48);
+        }
+    }
+    loadedPlugins.clear();
+}
+
+void PluginContainer::generatePluginList() {
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+
+    PluginLoader::Iterator it(pluginLoader.begin());
+    PluginLoader::Iterator end(pluginLoader.end());
+
+    for (; it != end; ++it) {
+        logger.debug("lib path: %s", it->first);
+        PluginManifest::Iterator itMan(it->second->begin());
+        PluginManifest::Iterator endMan(it->second->end());
+        for (; itMan != endMan; ++itMan) {
+            logger.information(itMan->name());
+            this->pluginsList[itMan->name()] = it->first;
+            try {
+                UCLPluginIf& tmpPlugin = pluginLoader.instance(itMan->name());
+                tmpPlugin.setWorkDir(it->first.substr(0, it->first.find_last_of(_FILE_SEPARATOR)));
+            } catch(Poco::Exception excp) {
+                logger.log(excp, __FILE__, 48);
+            }
+
+        }
+    }
 }
 
 int PluginContainer::LoadPlugin(std::string pname) {
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
 
-    std::string pluginURI = generatePluginUri(pname);
-
-#ifdef _WINDOWS_H
-    HMODULE dmhndl = LoadLibrary(pluginURI.c_str());
-#endif
-#ifdef _DLFCN_H
-    void *dmhndl = dlopen(pluginURI.c_str(), RTLD_NOW);
-#endif
-
-    if( dmhndl == NULL ) {
-        LOG(ERROR) << dlerror();
-        this->failedPlugins[pname] = -1;
+    try{
+        this->pluginLoader.loadLibrary(pname);
+    } catch(Poco::Exception excp){
+        logger.log(excp, __FILE__, 88);
+        failedPlugins[pname] = -1;
         return -1;
+    }
+
+    if( this->pluginLoader.isLibraryLoaded(pname) ){
+        logger.information("Plugin file <%s> loaded",pname);
     } else {
-        this->pluginHandlers[pname] = dmhndl;
+        logger.information("Plugin file <%s> not loaded",pname);
+        failedPlugins[pname] = -1;
+        return -1;
     }
-
-    ucl::plugins::PluginDetails *pluginDetails;
-#ifdef _WINDOWS_H
-    pluginDetails = reinterpret_cast<ucl::plugins::PluginDetails*> (GetProcAddress(dmhndl, "exportDetails"));
-#endif
-#ifdef _DLFCN_H
-    pluginDetails = reinterpret_cast<ucl::plugins::PluginDetails*> (dlsym(dmhndl, "exportDetails"));
-#endif
-
-    LOG(INFO) << "Plugin Info: "
-              << "\n\tAPI Version: " << pluginDetails->apiVersion
-              << "\n\tClass Name: " << pluginDetails->className
-              << "\n\tPlugin Name: " << pluginDetails->pluginName
-              << "\n\tPlugin Version: " << pluginDetails->pluginVersion
-              << std::endl;
-    // API Version checking
-    if( pluginDetails->apiVersion != UCL_PLUGINS_API_VERSION ) {
-        this->failedPlugins[pname] = 1;
-        return 1;
-    }
-
-    // Instantiate the plugin
-    auto pluginInstance = reinterpret_cast<ucl::plugins::UCLPluginIf*>(pluginDetails->initializeFunc());
-    if( pluginInstance == NULL ) {
-        this->failedPlugins[pname] = 2;
-        return 2;
-    }
-
-    this->loadedPlugins[pname] = pluginInstance;
 
     return 0;
 }
@@ -111,12 +155,11 @@ std::string PluginContainer::GetPluginsPath() {
     return this->pluginDirPath;
 }
 
-std::list<std::string> PluginContainer::GetPluginsList() {
-    std::list<std::string> result;
-    return result;
+std::map<std::string, std::string> PluginContainer::GetPluginsList() {
+    return this->pluginsList;
 }
 
-std::map<std::string, ucl::plugins::UCLPluginIf*> PluginContainer::GetLoadedPlugins() {
+std::list<std::string> PluginContainer::GetLoadedPlugins() {
     return this->loadedPlugins;
 }
 
@@ -124,31 +167,28 @@ std::map<std::string, int> PluginContainer::GetFailedPlugins() {
     return this->failedPlugins;
 }
 
-int PluginContainer::registerPluginsListener(ucl::plugins::NotificationListenerIF *listener) {
-    std::map<std::string, ucl::plugins::UCLPluginIf*>::iterator iter;
-    for(iter=this->loadedPlugins.begin(); iter != this->loadedPlugins.end(); iter++) {
-        iter->second->setListener(listener);
-    }
-}
-
 bool PluginContainer::HasLoadErrors() {
     return this->lerror;
 }
 
 int PluginContainer::unloadPlugins(){
-    std::map<std::string, void *>::iterator iter;
-    for(iter=this->pluginHandlers.begin(); iter != this->pluginHandlers.end(); iter++) {
-#ifdef _WINDOWS_H
-        FreeLibrary(iter->second)
-#endif
-#ifdef _DLFCN_H
-        dlclose(iter->second);
-#endif
+    Poco::Logger& logger = Poco::Logger::get("PluginContainer");
+    logger.debug("Enter unloadPlugins");
+    stopPlugins();
+
+    std::map<std::string,std::string>::iterator itCur = this->pluginsList.begin();
+    std::map<std::string,std::string>::iterator itEnd = this->pluginsList.end();
+
+    for (; itCur != itEnd; ++itCur) {
+        if( pluginLoader.isLibraryLoaded(itCur->second)) {
+            pluginLoader.unloadLibrary(itCur->second);
+            logger.information("Plugins in <%s> unloaded", itCur->second);
+        } else {
+            logger.debug("<%s> not loaded", itCur->second);
+        }
     }
-    this->loadedPlugins.clear();
+
+    pluginsList.clear();
+
     return 0;
-}
-
-PluginContainer::~PluginContainer(){
-
 }
