@@ -3,8 +3,8 @@
 
 #define UCL_IBUS_API_VERSION 1
 
-#include "innerbusclientapi.h"
 #include "ibmessage.h"
+#include "innerbusclientapi.h"
 #include "pluginsapi.h"
 
 struct BusDetails {
