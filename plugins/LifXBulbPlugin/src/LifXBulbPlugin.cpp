@@ -50,13 +50,21 @@ int LifXBulbPlugin::setWorkDir(std::string path){
 
 int LifXBulbPlugin::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
-    logger.debug("executeCommand for {%s} msg{%s}", source, message);
+    logger.debug("executeCommand for {%s} msg{%s}", source, message.getPayload());
 
     logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
     IBPayload payload;
     if(payload.fromJSON(message.getPayload()))
         logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+
+    Poco::StringTokenizer t1(source, "/");
+    if(4 < t1.count()) {
+        sendOccurrence(false, "ERRORMSG", "Wrong message recepient, not proccessed", message.getId());
+        return 0;
+    }
+
+    sendOccurrence(true, "TESTMSG", "It is a simple test message", message.getId());
 
     return 0;
 }
@@ -68,8 +76,23 @@ int LifXBulbPlugin::executeInternalCommand(std::string source, std::string messa
     return 0;
 }
 
-int LifXBulbPlugin::sendOccurrence(std::string message) {
-      return 0;
+int LifXBulbPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference) {
+    IBPayload payload;
+    payload.setType("occurence");
+    payload.setValue((success?"SUCCESS":"FAILED"));
+    payload.setCvalue(cvalue);
+    payload.setContent(content);
+
+    IBMessage ibmessage;
+    Poco::Timestamp now;
+    ibmessage.setId(pluginDetails.pluginName + reference);
+    ibmessage.setPayload(payload.toJSON());
+    ibmessage.setReference(reference);
+    ibmessage.setTimestamp(now.epochTime());
+
+    busClient->sendMessage(ibmessage);
+
+    return 0;
 }
 
 int LifXBulbPlugin::getCommandSet(){
