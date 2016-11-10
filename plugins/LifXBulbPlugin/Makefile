@@ -13,8 +13,8 @@ DEFINES       = -DUCL_PLUGINS_EXPORTS
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,LifXBulbPlugin.so.1
-INCPATH       = -I./include -I../include
-LIBS          = $(SUBLIBS) -lpthread 
+INCPATH       = -I./include -I../include -I../../core/include
+LIBS          = $(SUBLIBS) -lPocoFoundation
 DESTDIR       = 
 SOURCES       = src/LifXBulbPlugin.cpp 
 OBJECTS       = LifXBulbPlugin.o
@@ -24,6 +24,7 @@ OBJECTS       = LifXBulbPlugin.o
 ###
 DEL_FILE      = rm -f
 AR            = ar cqs
+SYMLINK       = ln -f -s
 
 ###
 # Define target file names
@@ -44,9 +45,9 @@ all: $(TARGET) staticlib
 $(TARGET):  $(OBJECTS)  
 	-$(DEL_FILE) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
-	-ln -s $(TARGET) $(TARGET0)
-	-ln -s $(TARGET) $(TARGET1)
-	-ln -s $(TARGET) $(TARGET2)
+	$(SYMLINK) $(TARGET) $(TARGET0)
+	$(SYMLINK) $(TARGET) $(TARGET1)
+	$(SYMLINK) $(TARGET) $(TARGET2)
 
 staticlib: $(TARGETA)
 
@@ -55,7 +56,7 @@ $(TARGETA):  $(OBJECTS)
 	$(AR) $(TARGETA) $(OBJECTS)
 
 LifXBulbPlugin.o: src/LifXBulbPlugin.cpp include/LifXBulbPlugin.h \
-		../include/pluginsapi.h
+		../include/pluginsapi.h ../../core/include/innerbusclientapi.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o LifXBulbPlugin.o src/LifXBulbPlugin.cpp
 
 clean:

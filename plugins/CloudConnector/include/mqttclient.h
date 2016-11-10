@@ -2,10 +2,14 @@
 #define MQTTCLIENT_H
 
 #include <mosquittopp.h>
-#include <string>
+#include <iostream>
+#include <Poco/Logger.h>
+#include <map>
+#include <vector>
 #include "mqttclientconfig.h"
+#include "pluginsapi.h"
 
-struct mosquitto_config {
+struct mosquittoConfig {
     const char *id;
     const char *id_prefix;
     const char *host;
@@ -26,7 +30,6 @@ struct mosquitto_config {
     int   will_qos;
     bool  will_retain;
     bool  clean_session; /* sub */
-    std::string topics[]; /* sub */
     int   topic_count; /* sub */
     bool  no_retain; /* sub */
     std::string filter_outs; /* sub */
@@ -59,17 +62,10 @@ struct mosquitto_config {
 #endif
 };
 
-//int client_config_load(struct mosq_config *config, int pub_or_sub, int argc, char *argv[]);
-//void client_config_cleanup(struct mosq_config *cfg);
-//int client_opts_set(struct mosquitto *mosq, struct mosq_config *cfg);
-//int client_id_generate(struct mosq_config *cfg, const char *id_base);
-//int client_connect(struct mosquitto *mosq, struct mosq_config *cfg);
-
-
 class mqttclient : public mosqpp::mosquittopp
 {
 public:
-    mqttclient(const char * id, const char * host, int port=1883, int keepalive=60, bool clean_session=true, int max_inflight=20, bool eol=true, int protocol_version=MQTT_PROTOCOL_V31);
+    mqttclient(const char * id, const char * host, int port=MQTT_PORT, int keepalive=MQTT_KEEPALIVE, bool clean_session=true, int max_inflight=0, bool eol=true, int protocol_version=MQTT_PROTOCOL_V311);
     ~mqttclient();
 
     int do_connect_async();
@@ -81,6 +77,9 @@ public:
     int clean_will();
     int config_load();
     int config_load_from_file();
+    void topics_init(int gwId, int homeId);
+    bool is_topic_subscribed(std::string topic);
+    void setCallback(UCLPluginIf *callbackObj);
 
     void on_connect(int rc);
     void on_message(const struct mosquitto_message *message);
@@ -90,15 +89,26 @@ public:
     void on_error();
     void on_disconnect(int rc);
 
-private:
-    bool is_onboarded;
 
-    void config_init(struct mosquitto_config *cfg);
+private:
+    void config_init(struct mosquittoConfig *cfg);
     void config_cleanup();
 
+    bool is_connected;
     bool disconnected_by_user;
-    struct mosquitto_config config;
+    struct mosquittoConfig config;
+    UCLPluginIf *callbackObj;
 
+    std::map<int, std::string> pendingTopics;
+    std::vector<std::string> subscribedTopics;
+
+    std::string subTopicSensorActuartorCmd;
+    std::string subTopicScenarioExecCmnd;
+    std::string subTopicGwCmd;
+
+    std::string pubTopicStatus;
+    std::string pubTopicSensorActuartorOccur;
+    std::string pubTopicSensorActuartorError;
 };
 
 #endif // MQTTCLIENT_H

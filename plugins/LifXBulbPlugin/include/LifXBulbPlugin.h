@@ -1,19 +1,34 @@
-#ifndef DEVICEMANAGER_H
-#define DEVICEMANAGER_H
+#ifndef LIFX_BULB_PLUGIN_H
+#define LIFX_BULB_PLUGIN_H
 
+#include <Poco/ClassLibrary.h>
+#include <Poco/Logger.h>
+#include <Poco/Task.h>
 #include "pluginsapi.h"
 
-class LifXBulbPlugin: public ucl::plugins::UCLPluginIf{
+class LifXBulbPlugin: public UCLPluginIf {
+private:
+    PluginDetails pluginDetails;
+    InnerBusClientIF* busClient = NULL;
+    std::string work_dir;
 public:
     LifXBulbPlugin();
     virtual ~LifXBulbPlugin();
 
     virtual int startPlugin();
-    virtual int executeCommand();
+    virtual int setIBusClient(InnerBusClientIF* client);
+    virtual int setWorkDir(std::string path);
+    virtual int executeCommand(std::string source, IBMessage message);
+    virtual int executeInternalCommand(std::string source, std::string message);
+    virtual int sendOccurrence(std::string message);
     virtual int getCommandSet();
     virtual int getCapabilitiesSet();
     virtual int stopPlugin();
-
+    virtual PluginDetails* getPluginDetails();
 };
 
-#endif // DEVICEMANAGER_H
+POCO_BEGIN_MANIFEST(UCLPluginIf)
+    POCO_EXPORT_SINGLETON(LifXBulbPlugin)
+POCO_END_MANIFEST
+
+#endif // LIFX_BULB_PLUGIN_H

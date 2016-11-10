@@ -1,4 +1,4 @@
-PLUGINS := $(sort $(dir $(wildcard */)))
+PLUGINS = LifXBulbPlugin NetworkingPlugin CloudConnector FakeDevicesPlugin
 
 all: subdirs
 

@@ -11,7 +11,8 @@ TARGET = NetworkingPlugin
 TEMPLATE = lib
 
 INCLUDEPATH += $$PWD/include \
-    $$PWD/../include
+    $$PWD/../include \
+    $$PWD/../../core/include
 
 DEFINES += UCL_PLUGINS_EXPORTS
 
@@ -19,7 +20,9 @@ SOURCES += src/NetworkingPlugin.cpp
 
 HEADERS += include/NetworkingPlugin.h \
     ../include/pluginsapi.h \
-    ../include/easylogging++.h
+    ../../core/include/innerbusclientapi.h
+
+LIBS += -lPocoFoundation
 
 unix {
     target.path = $$PWD
