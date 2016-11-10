@@ -138,7 +138,7 @@ int CloudConnector::setWorkDir(std::string path){
 
 int CloudConnector::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("executeCommand for {%s} msg{%s}", source, message);
+    logger.debug("executeCommand for {%s} msg{%s}", source, message.getPayload());
 
     logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
@@ -211,7 +211,7 @@ int CloudConnector::executeInternalCommand(std::string source, std::string messa
     return 0;
 }
 
-int CloudConnector::sendOccurrence (std::string message) {
+int CloudConnector::sendOccurrence (bool success, std::string cvalue, std::string content, std::string reference) {
     return 0;
 }
 
@@ -506,7 +506,7 @@ int CloudConnector::discoverSensors() {
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     logger.debug("Starting Sensors Discovering");
     isDiscovering = true;
-    this->busClient->sendMessage(GW_COMMAND_EVENT_DISCOVERSENSORS);
+    //this->busClient->sendMessage(GW_COMMAND_EVENT_DISCOVERSENSORS);
 
     //timerDiscoverSensors.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::onDiscoverSensorsEnd));
 }

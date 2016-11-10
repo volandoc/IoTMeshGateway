@@ -3,7 +3,8 @@
 
 #include <Poco/ClassLibrary.h>
 #include <Poco/Logger.h>
-#include <Poco/Task.h>
+#include <Poco/StringTokenizer.h>
+#include <Poco/Timestamp.h>
 #include "pluginsapi.h"
 
 class LifXBulbPlugin: public UCLPluginIf {
@@ -20,7 +21,7 @@ public:
     virtual int setWorkDir(std::string path);
     virtual int executeCommand(std::string source, IBMessage message);
     virtual int executeInternalCommand(std::string source, std::string message);
-    virtual int sendOccurrence(std::string message);
+    virtual int sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference);
     virtual int getCommandSet();
     virtual int getCapabilitiesSet();
     virtual int stopPlugin();
