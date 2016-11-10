@@ -61,27 +61,26 @@ int FakeDevicesPlugin::setWorkDir(std::string path){
     return 0;
 }
 
-int FakeDevicesPlugin::executeCommand(std::string topic, std::string message){
+int FakeDevicesPlugin::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("FakeDevicesPlugin");
-    logger.debug("executeInternalCommand %s:%s ", topic, message);
+    logger.debug("executeInternalCommand %s:%s ", source, message);
 
-    IBMessage ibMessage;
-    if(ibMessage.fromJSON(message))
-        logger.debug("\"%s : %s : %s : %d\"", ibMessage.getId(), ibMessage.getPayload(), ibMessage.getReference(), (int) ibMessage.getTimestamp());
+    logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
     IBPayload payload;
-    if(payload.fromJSON(ibMessage.getPayload()))
+    if(payload.fromJSON(message.getPayload()))
         logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
 
-
     return 0;
 }
 
-int FakeDevicesPlugin::executeInternalCommand(std::string message){
+int FakeDevicesPlugin::executeInternalCommand(std::string source, std::string message){
     Poco::Logger& logger = Poco::Logger::get("FakeDevicesPlugin");
-    logger.debug("executeCloudCommand %s: ", message);
+    logger.debug("executeInternalCommand from {%s} msg{%s}", source, message);
+
     return 0;
 }
+
 
 int FakeDevicesPlugin::sendOccurrence(std::string message) {
       return 0;
