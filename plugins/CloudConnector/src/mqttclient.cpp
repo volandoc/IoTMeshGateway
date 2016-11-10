@@ -232,7 +232,7 @@ void mqttclient::on_message(const struct mosquitto_message *message){
     logger.debug(">> myMosq - Message(%d) on Topic(%s) with payload <%s>", message->mid, topicstr, messagestr);
 
     if (!strcmp(message->topic, subTopicGwCmd.c_str())){
-        this->callbackObj->executeCommand(message->topic, messagestr);
+        this->callbackObj->executeInternalCommand(message->topic, messagestr);
     }
 }
 

@@ -136,22 +136,22 @@ int CloudConnector::setWorkDir(std::string path){
     this->work_dir = path;
 }
 
-int CloudConnector::executeCommand(std::string topic, std::string message){
+int CloudConnector::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("executeCommand topic {%s} msg{%s}", topic, message);
+    logger.debug("executeCommand for {%s} msg{%s}", source, message);
 
-    if (this->mqttClient->is_topic_subscribed(topic)) {
-        executeInternalCommand(topic, message);
-    }
-    else {
-        // parse messages from busClient here
-    }
+    logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
+
+    IBPayload payload;
+    if(payload.fromJSON(message.getPayload()))
+        logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+
     return 0;
 }
 
-int CloudConnector::executeInternalCommand(std::string topic, std::string message){
+int CloudConnector::executeInternalCommand(std::string source, std::string message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("executeInternalCommand topic {%s} msg{%s}", topic, message);
+    logger.debug("executeInternalCommand from {%s} msg{%s}", source, message);
 
     std::string json = message;
     gwCommand gwCmd(json);

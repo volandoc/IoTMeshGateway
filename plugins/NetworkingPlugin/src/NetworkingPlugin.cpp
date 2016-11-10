@@ -46,9 +46,23 @@ int NetworkingPlugin::setWorkDir(std::string path){
     return 0;
 }
 
-int NetworkingPlugin::executeCommand(std::string topic, std::string message){
+int NetworkingPlugin::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
-    logger.debug("executeCommand topic {%s} msg{%s}", topic, message);
+    logger.debug("executeCommand for {%s} msg{%s}", source, message);
+
+    logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
+
+    IBPayload payload;
+    if(payload.fromJSON(message.getPayload()))
+        logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+
+    return 0;
+}
+
+int NetworkingPlugin::executeInternalCommand(std::string source, std::string message){
+    Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
+    logger.debug("executeInternalCommand from {%s} msg{%s}", source, message);
+
     return 0;
 }
 
