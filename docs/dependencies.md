@@ -5,7 +5,6 @@ Dependencies
 <pre>
 <a href="#mosquitto">Mosquitto</a>
 <a href="#poco">POCO</a>
-<a href="#easylogging">Easylogging++</a>
 </pre>
 
 
@@ -101,6 +100,3 @@ $ make install
 For detailed instruction please withit [POCO - Getting Started](https://pocoproject.org/docs/00200-GettingStarted.html)
 
 [Goto Top](#table-of-contents)
-
-# Easylogging ++
-[Easylogging++](https://github.com/easylogging/easyloggingpp) - very simple but powerfull logging library (added to sources of GLEmbGateway, look for easylogging.h in src foulder)

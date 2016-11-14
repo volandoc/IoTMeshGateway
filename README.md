@@ -38,7 +38,6 @@ GLEmbGateway running on linux systems, for more information please read ["Enviro
 ### Dependencies
  * [Mosquitto](https://mosquitto.org/) library used for communictaion ower mqtt protocol
  * [POCO](https://pocoproject.org/)  C++ framework used for working with SQLite, json, XML
- * [Easylogging++](https://github.com/easylogging/easyloggingpp) - very simple but powerfull logging library (added to sources of GLEmbGateway)
 
 for more information please read ["Dependencies instalation"](docs/dependencies.md)
 
@@ -56,7 +55,7 @@ Latest version using git
 ```bash
 git clone https://portal-ua.globallogic.com/gitlab/andrii.maslianyi/EmbGateway.git
 cd EmbGateway
-git checkout dev
+git checkout dev-POCO
 ```
 
  [Goto Top](#table-of-contents)
@@ -89,10 +88,11 @@ $ cd bin && ./embgateway
 [Goto Top](#table-of-contents)
 
 # Configuration
-There is two configiration files in [conf](conf/) folder.
+There is basic configiration files in [conf](conf/) folder.
 
-[logger.conf](conf/logger.conf) - contain configuration for Easylogging++. You can read all documentation about configuration here <https://github.com/easylogging/easyloggingpp#using-configuration-file>
+[embgateway.properties](conf/embgateway.properties) - contains configuration for core component and ro POCO Logger instances.
 
-[gateway.conf](conf/logger.conf) - contains configuration for core component
+Any othre configuration can be placed in ane place by desire .For example InnerBus core component has its own configuration file in component folder.
+In same way all components can utilize POCO::Configuration library and store its own configuration
 
 [Goto Top](#table-of-contents)
