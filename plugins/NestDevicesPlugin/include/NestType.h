@@ -2,11 +2,12 @@
 #define NEST_DEVICES_TYPE_H
 
 #include <Poco/Logger.h>
-#include "device.h"
 
 #define REST_NEST_HOST      "https://developer-api.nest.com/"
 #define URL_DEVICES_PATH    "devices/"
 
+typedef std::map<long, std::string> Properties;
+typedef std::map<long, std::string>::iterator PropertiesIterator;
 typedef std::map<std::string, Properties> Devices;
 typedef std::map<std::string, Properties>::iterator DevicesIterator;
 typedef std::vector<std::string> StringVector;
