@@ -1,5 +1,6 @@
 #include "rest.h"
 #include <iostream>
+#include <fstream>
 
 #define REST_CMD_HEADER             "wget"
 #define REST_OPTION_METHOD          " --method="
@@ -169,4 +170,36 @@ bool rest::addStrOption(string value, string header)
     }
     return false;
 }
+
+bool rest::readFileContent(string& fileContent)
+{
+    std::ifstream streamFile(this->cloudResFile);
+    if (streamFile.is_open())
+    {
+        std::string strFileContent;
+
+        streamFile.seekg(0, std::ios::end);
+        strFileContent.reserve(streamFile.tellg());
+        streamFile.seekg(0, std::ios::beg);
+
+        strFileContent.assign((std::istreambuf_iterator<char>(streamFile)),
+                                std::istreambuf_iterator<char>());
+
+        fileContent = strFileContent;
+        return true;
+    }
+    return false;
+}
+
+string rest::execute() {
+    string fileContent = "";
+
+    if (0 == system(buildRest().c_str()))
+    {
+        readFileContent(fileContent);
+    }
+
+    return fileContent;
+}
+
 

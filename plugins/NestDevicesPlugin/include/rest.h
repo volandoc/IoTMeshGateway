@@ -2,7 +2,6 @@
 #define REST_CLASS_H
 
 #include <string>
-#include "restconfig.h"
 
 using namespace std;
 
@@ -34,7 +33,9 @@ public:
     bool setUrl(string url);
     void unsetUrl();
 
+    bool readFileContent(string& fileContent);
     string buildRest();
+    string execute();
 
 private:
     string rest_cmd;

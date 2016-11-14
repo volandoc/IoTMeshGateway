@@ -34,7 +34,9 @@ public:
     bool setUrl(string url);
     void unsetUrl();
 
+    bool readFileContent(string& fileContent);
     string buildRest();
+    string execute();
 
 private:
     string rest_cmd;
