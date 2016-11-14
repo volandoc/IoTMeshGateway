@@ -76,12 +76,11 @@ int CloudConnector::startPlugin() {
         logger.debug("Started");
 
         timer.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::doProvision));
-
-
     } else {
         logger.error("No IBus Client found: can't start", __FILE__, 26);
         return -1;
     }
+    return 0;
 }
 
 void CloudConnector::doProvision(Timer& timer){

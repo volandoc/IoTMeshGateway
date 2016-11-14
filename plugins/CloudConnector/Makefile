@@ -16,8 +16,8 @@ LFLAGS        = -shared -Wl,-soname,CloudConnector.so.1
 INCPATH       = -I./include -I../include -I../../include  -I../../core/include
 LIBS          = $(SUBLIBS) -lmosquittopp -ldl -lpthread -lPocoFoundation -lPocoJSON
 DESTDIR       = 
-SOURCES       = src/CloudConnector.cpp mqttclient.cpp rest.cpp JSON_messages.cpp
-OBJECTS       = CloudConnector.o mqttclient.o rest.o JSON_messages.o parseCommand.o gwCommand.o
+SOURCES       = src/CloudConnector.cpp mqttclient.cpp rest.cpp
+OBJECTS       = CloudConnector.o mqttclient.o rest.o parseCommand.o gwCommand.o
 
 ###
 # Define system commands
@@ -64,9 +64,6 @@ mqttclient.o: src/mqttclient.cpp include/mqttclient.h
 
 rest.o: src/rest.cpp include/rest.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rest.o src/rest.cpp
-
-JSON_messages.o: src/JSON_messages.cpp include/JSON_messages.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o JSON_messages.o src/JSON_messages.cpp
 
 parseCommand.o: src/parseCommand.cpp include/parseCommand.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o parseCommand.o src/parseCommand.cpp
