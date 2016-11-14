@@ -2,7 +2,6 @@
 #define REST_CLASS_H
 
 #include <string>
-#include "restconfig.h"
 
 using namespace std;
 
