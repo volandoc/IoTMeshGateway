@@ -1,8 +1,13 @@
 #include "NestType.h"
 #include "rest.h"
+#include "sysdefs.h"
+#include <sstream>
 #include <fstream>
 #include <streambuf>
 #include <cstdlib>
+#include <Poco/AutoPtr.h>
+#include <Poco/Util/XMLConfiguration.h>
+#include <Poco/Exception.h>
 #include <Poco/JSON/JSON.h>
 #include <Poco/JSON/Parser.h>
 #include <Poco/Dynamic/Var.h>
@@ -15,10 +20,12 @@
 using namespace Poco::JSON;
 using namespace Poco::Dynamic;
 using namespace Poco;
+using namespace Poco::Util;
 
 
-NestType::NestType(std::string token) {
+NestType::NestType(std::string token, std::string work_dir) {
     this->token = token;
+    this->work_dir = work_dir;
 }
 
 NestType::~NestType() {
@@ -32,8 +39,8 @@ void NestType::init(std::string nestType) {
 
     for (unsigned int i = 0; i < serials.size(); ++i) {
         properties.clear();
-        for (unsigned int j = 0; j < this->propertyNames.size(); ++j) {
-            propertyValue = parseStrDeviceProperty(serials[i], this->propertyNames[j]);
+        for (unsigned int j = 0; j < this->capabilities.size(); ++j) {
+            propertyValue = parseStrDeviceProperty(serials[i], this->capabilities[j].getName());
             properties[j] = propertyValue;
         }
         addDevice(serials[i], properties);
@@ -164,16 +171,17 @@ void NestType::addDevice(std::string serial, Properties properties) {
     this->devices[serial] = properties;
 }
 
-StringVector NestType::getPropertyNames()
-{
-    return propertyNames;
+Capabilities NestType::getCapabilities() {
+    return this->capabilities;
 }
 
-void NestType::setPropertyNames(StringVector propertyNames)
-{
-    this->propertyNames = propertyNames;
+void NestType::setgetCapabilities(Capabilities capabilities) {
+    this->capabilities = capabilities;
 }
 
+void NestType::addCapability(unsigned int id, CapabilityInfo capability) {
+    this->capabilities[id] = capability;
+}
 
 std::string NestType::getToken() {
     return this->token;
@@ -181,5 +189,77 @@ std::string NestType::getToken() {
 
 void NestType::setToken(std::string token) {
     this->token = token;
+}
+
+void NestType::initCapabilities(std::string nestType) {
+Poco::Logger& logger = Poco::Logger::get("NestType");
+
+    std::string fileName = getWorkDir();
+    fileName += _FILE_SEPARATOR;
+    fileName += CONFIG_CAPABILITIES_FLIENAME;
+
+    try
+    {
+        AutoPtr<XMLConfiguration> pConf(new XMLConfiguration(fileName));
+
+        std::stringstream attribPath;
+        unsigned int counter = 0;
+        CapabilityInfo tempCapability;
+        std::string value;
+
+        try {
+            while(1) {
+                tempCapability.clear();
+
+                attribPath.str(std::string());
+                attribPath << nestType << ".Capability[" << counter<< "]" << "[@name]";
+                value = pConf->getString(attribPath.str());
+                tempCapability.setName(value);
+
+                attribPath.str(std::string());
+                attribPath << nestType << ".Capability[" << counter<< "]" << "[@type]";
+                value = pConf->getString(attribPath.str());
+                tempCapability.setType(value);
+
+                attribPath.str(std::string());
+                attribPath << nestType << ".Capability[" << counter<< "]" << "[@constrain_type]";
+                value = pConf->getString(attribPath.str());
+                tempCapability.setConstrainType(value);
+
+                attribPath.str(std::string());
+                attribPath << nestType << ".Capability[" << counter<< "]" << "[@constraints_json]";
+                value = pConf->getString(attribPath.str());
+                tempCapability.setConstraintsJson(value);
+
+                attribPath.str(std::string());
+                attribPath << nestType << ".Capability[" << counter<< "]" << "[@default_value]";
+                value = pConf->getString(attribPath.str());
+                tempCapability.setDefaultValue(value);
+
+                attribPath.str(std::string());
+                attribPath << nestType << ".Capability[" << counter<< "]" << "[@description]";
+                value = pConf->getString(attribPath.str());
+                tempCapability.setDescription(value);
+
+                attribPath.str(std::string());
+                attribPath << nestType << ".Capability[" << counter<< "]" << "[@read_write]";
+                value = pConf->getString(attribPath.str());
+                tempCapability.setReadWrite(value);
+
+                addCapability(counter, tempCapability);
+                ++counter;
+            }
+        } catch(NotFoundException& e) {
+        }
+    }
+    catch (...)
+    {
+        logger.debug("Config File %s not found", fileName);
+        return;
+    }
+}
+
+std::string NestType::getWorkDir() {
+    return this->work_dir;
 }
 
