@@ -16,104 +16,40 @@ enum {
 
 class NestTypeCamera: public NestType {
 public:
-    NestTypeCamera(std::string token):
-        NestType(token) {
-        StringVector propertyNames = {
-            "name",
-            "software_version",
-            "where_id",
-            "device_id",
-            "structure_id",
-            "is_online",
-            "is_streaming",
-            "is_audio_input_enabled",
-            "last_is_online_change",
-            "is_video_history_enabled",
-            "name_long",
-            "web_url",
-            "app_url",
-        };
-        setPropertyNames(propertyNames);
+    NestTypeCamera(std::string token, std::string work_dir):
+        NestType(token, work_dir) {
     }
     virtual ~NestTypeCamera(){}
 
     void init();
+    void initCapabilities();
 };
+
 
 class NestTypeThermostat: public NestType {
 public:
-    NestTypeThermostat(std::string token):
-        NestType(token) {
-        StringVector propertyNames = {
-            "humidity",
-            "locale",
-            "temperature_scale",
-            "is_using_emergency_heat",
-            "has_fan",
-            "software_version",
-            "has_leaf",
-            "where_id",
-            "device_id",
-            "name",
-            "can_heat",
-            "can_cool",
-            "target_temperature_c",
-            "target_temperature_f",
-            "target_temperature_high_c",
-            "target_temperature_high_f",
-            "target_temperature_low_c",
-            "target_temperature_low_f",
-            "ambient_temperature_c",
-            "ambient_temperature_f",
-            "away_temperature_high_c",
-            "away_temperature_high_f",
-            "away_temperature_low_c",
-            "away_temperature_low_f",
-            "eco_temperature_high_c",
-            "eco_temperature_high_f",
-            "eco_temperature_low_c",
-            "eco_temperature_low_f",
-            "is_locked",
-            "locked_temp_min_c",
-            "locked_temp_min_f",
-            "locked_temp_max_c",
-            "locked_temp_max_f",
-            "sunlight_correction_active",
-            "sunlight_correction_enabled",
-            "structure_id",
-            "fan_timer_active",
-            "fan_timer_timeout",
-            "fan_timer_duration",
-            "previous_hvac_mode",
-            "hvac_mode",
-            "time_to_target",
-            "time_to_target_training",
-            "where_name",
-            "label",
-            "name_long",
-            "is_online",
-            "hvac_state",
-        };
-        setPropertyNames(propertyNames);
+    NestTypeThermostat(std::string token, std::string work_dir):
+        NestType(token, work_dir) {
     }
     virtual ~NestTypeThermostat(){}
 
     void init();
+    void initCapabilities();
 };
 
 
 class NestTypeFactory {
 public:
-    static NestType* buildNestType(int typecnt){
+    static NestType* buildNestType(int typecnt, std::string work_dir){
         Poco::Logger& logger = Poco::Logger::get("NestDevicesPlugin");
         logger.debug("Creating (%d) nest devices type list", typecnt);
         NestType* tmpType;
         switch(typecnt){
             case NEST_TYPE_CAMERA:
-                tmpType = new NestTypeCamera("c.J2QMRqxtk5SHfE7oU5gu9LkDXfQdzWJz0tAxaU18aflh7w59vc5DllMXNlg0Rrq3viFcDReErCzNWys7kGotEK6hkFPqRlAA2r9q7aMbcOpWLVkiUEzwdiLOh8ZFZdKMtY9g53xKaBoASyrq");
+                tmpType = new NestTypeCamera("c.J2QMRqxtk5SHfE7oU5gu9LkDXfQdzWJz0tAxaU18aflh7w59vc5DllMXNlg0Rrq3viFcDReErCzNWys7kGotEK6hkFPqRlAA2r9q7aMbcOpWLVkiUEzwdiLOh8ZFZdKMtY9g53xKaBoASyrq", work_dir);
                 break;
             case NEST_TYPE_THERMOSTAT:
-                tmpType = new NestTypeThermostat("c.J2QMRqxtk5SHfE7oU5gu9LkDXfQdzWJz0tAxaU18aflh7w59vc5DllMXNlg0Rrq3viFcDReErCzNWys7kGotEK6hkFPqRlAA2r9q7aMbcOpWLVkiUEzwdiLOh8ZFZdKMtY9g53xKaBoASyrq");
+                tmpType = new NestTypeThermostat("c.J2QMRqxtk5SHfE7oU5gu9LkDXfQdzWJz0tAxaU18aflh7w59vc5DllMXNlg0Rrq3viFcDReErCzNWys7kGotEK6hkFPqRlAA2r9q7aMbcOpWLVkiUEzwdiLOh8ZFZdKMtY9g53xKaBoASyrq", work_dir);
                 break;
 
             default: tmpType = NULL;

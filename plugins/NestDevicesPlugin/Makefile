@@ -13,7 +13,7 @@ DEFINES       = -DUCL_PLUGINS_EXPORTS
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,NestDevicesPlugin.so.1
-INCPATH       = -I./include -I../include -I../../core/include
+INCPATH       = -I./include -I../include -I../../include -I../../core/include
 LIBS          = $(SUBLIBS) -lpthread -lPocoFoundation  -lPocoJSON
 DESTDIR       = 
 SOURCES       = src/rest.cpp src/NestDevicesPlugin.cpp src/NestTypeFactory.cpp src/NestType.cpp

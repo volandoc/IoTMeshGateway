@@ -31,7 +31,7 @@ int NestDevicesPlugin::startPlugin() {
     }
 
     for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
-        typeList[typecount] = NestTypeFactory::buildNestType(typecount);
+        typeList[typecount] = NestTypeFactory::buildNestType(typecount, this->work_dir);
         typeList[typecount]->init();
     }
 
