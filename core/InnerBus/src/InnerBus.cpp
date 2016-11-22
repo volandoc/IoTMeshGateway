@@ -176,7 +176,7 @@ int InnerBusClient::sendCommand(IBMessage message) {
             std::list<std::string>::iterator pluginsItr = pluginsList.begin();
             for(; pluginsItr != pluginsList.end(); pluginsItr++){
                 std::string name = *pluginsItr;
-                if( !name.compare(cfg.id) ){
+                if( name.compare(cfg.id) ){
                     std::string tmpTopic = cfg.prefix + "/" + name + "/" + cfg.command_topic;
                     rc = publish(tmpTopic, message.toJSON());
                 }
@@ -405,11 +405,11 @@ int InnerBusClient::sendMessage(IBMessage message){
     IBPayload payload;
     payload.fromJSON(message.getPayload());
 
-    if(payload.getType().compare("command")){
+    if(!payload.getType().compare("command")){
         return sendCommand(message);
     }
 
-    if(payload.getType().compare("event")){
+    if(!payload.getType().compare("event")){
         return sendEvent(message);
     }
 }
