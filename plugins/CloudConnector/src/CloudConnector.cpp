@@ -145,7 +145,7 @@ int CloudConnector::executeCommand(std::string source, IBMessage message){
     if(payload.fromJSON(message.getPayload())) {
         logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
 
-        if ("occurence" == payload.getType()) {
+        if ("event" == payload.getType()) {
             if ("SUCCESS" == payload.getValue()) {
                 if ("LIST" == payload.getCvalue()) {
                     sendDiscoveredSensors(this->gatewayId, "DONE", payload.getContent(), "log.log");

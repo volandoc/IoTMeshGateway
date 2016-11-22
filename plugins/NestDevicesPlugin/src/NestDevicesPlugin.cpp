@@ -132,7 +132,7 @@ int NestDevicesPlugin::executeInternalCommand(std::string source, std::string me
 
 int NestDevicesPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference) {
     IBPayload payload;
-    payload.setType("occurence");
+    payload.setType("event");
     payload.setValue((success?"SUCCESS":"FAILED"));
     payload.setCvalue(cvalue);
     payload.setContent(content);
