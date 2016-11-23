@@ -1,5 +1,9 @@
 #include "FakeDevicesPlugin.h"
+#include "discoveredDevInfo.h"
 #include <iostream>
+#include "Poco/JSON/Parser.h"
+#include "Poco/JSON/ParseHandler.h"
+#include "Poco/JSON/JSONException.h"
 
 FakeDevicesPlugin::FakeDevicesPlugin() {
     Poco::Logger& logger = Poco::Logger::get("FakeDevicesPlugin");
@@ -35,7 +39,9 @@ int FakeDevicesPlugin::startPlugin(){
     for(int typecount = 0; typecount < DEVICE_TYPES_SIZE; typecount++){
         Poco::UUID dev_serial = generator.createRandom();
         deviceList[typecount] = FakeDeviceFactory::buildFakeDevice(typecount, dev_serial.toString());
-        deviceList[typecount]->generateProperties();
+        if (NULL != deviceList[typecount]) {
+            deviceList[typecount]->generateProperties();
+        }
     }
 
     logger.debug("Started");
@@ -68,8 +74,65 @@ int FakeDevicesPlugin::executeCommand(std::string source, IBMessage message){
     logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
     IBPayload payload;
-    if(payload.fromJSON(message.getPayload()))
+    if(payload.fromJSON(message.getPayload())) {
         logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+        if ("command" == payload.getType()) {
+            if ("GET" == payload.getValue()) {
+                if ("LIST" == payload.getCvalue()) {
+                    std::string devicesList;
+
+                    for(int typecount = 0; typecount < DEVICE_TYPES_SIZE; ++typecount) {
+                        if( NULL != deviceList[typecount] ) {
+                            DiscoveredDevInfo devInfo;
+
+                            devInfo.setName(deviceList[typecount]->getName());
+                            devInfo.setDescription(deviceList[typecount]->getDescription());
+                            devInfo.setType(deviceList[typecount]->getType());
+                            devInfo.setSerial(deviceList[typecount]->getSerial());
+
+                            if (0 != devicesList.length()) {
+                                devicesList += ", ";
+                            }
+                            devicesList += devInfo.toJSON();
+                        }
+                    }
+
+                    devicesList = Poco::replace(devicesList, "\"", "*");
+                    devicesList = Poco::replace(devicesList, "*", "\\\"");
+                    logger.debug("DEVICES LIST   <<%s>>", devicesList);
+                    sendOccurrence(true, payload.getCvalue(), devicesList, message.getId());
+                }
+
+                if ("CAPABILITIES" == payload.getCvalue()) {
+                    std::vector<std::string> serials;
+
+                    Poco::JSON::Parser parser;
+                    try {
+                        Poco::Dynamic::Var result = parser.parse(payload.getContent());
+                        Poco::JSON::Object::Ptr object = result.extract<Poco::JSON::Object::Ptr>();
+                        object->getNames(serials);
+
+                        for (unsigned int i = 0; i < serials.size(); ++i) {
+                            logger.debug("Serial[%u] = %s", i, serials[i]);
+                            for(int typecount = 0; typecount < DEVICE_TYPES_SIZE; ++typecount) {
+                                if( NULL != deviceList[typecount] ) {
+                                    if (serials[i] == deviceList[typecount]->getSerial()) {
+                                        
+                                    }
+                                }
+                            }
+                        }
+                        
+                    } catch(Poco::Exception excp){
+                        logger.debug("ERROR - EMPTY SERIALS LIST   <<%s>>", payload.getContent());
+                    }
+
+                }
+            }
+        }
+    }
+
+
 
     return 0;
 }
@@ -83,7 +146,22 @@ int FakeDevicesPlugin::executeInternalCommand(std::string source, std::string me
 
 
 int FakeDevicesPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference) {
-      return 0;
+    IBPayload payload;
+    payload.setType("event");
+    payload.setValue((success?"SUCCESS":"FAILED"));
+    payload.setCvalue(cvalue);
+    payload.setContent(content);
+
+    IBMessage ibmessage;
+    Poco::Timestamp now;
+    ibmessage.setId(pluginDetails.pluginName);
+    ibmessage.setPayload(payload.toJSON());
+    ibmessage.setReference(reference);
+    ibmessage.setTimestamp(now.epochTime());
+
+    busClient->sendMessage(ibmessage);
+
+    return 0;
 }
 
 int FakeDevicesPlugin::getCommandSet(){
