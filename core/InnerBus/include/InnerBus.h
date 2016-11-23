@@ -68,7 +68,7 @@ private:
     int tls_psk_set(const char *psk, const char *identity, const char *ciphers);
     int will_set();
     int will_clear();
-    int sendCommand(IBMessage message);
+    int sendCommand(IBMessage message, std::string target);
     int sendEvent(IBMessage message);
     int sendStatus(std::string status);
     int subscribe();
@@ -86,7 +86,7 @@ public:
     virtual int connect_async();
     virtual int disconnect();
     virtual void setListener(void *listener);
-    virtual int sendMessage(IBMessage message, std::string target=NULL);
+    virtual int sendMessage(IBMessage message, std::string target="");
     virtual void setConfig(void *config);
     virtual void getInfo();
 
