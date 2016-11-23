@@ -401,7 +401,7 @@ mosquitto * InnerBusClient::getMQTTInst(){
     return this->m_mosq;
 }
 
-int InnerBusClient::sendMessage(IBMessage message){
+int InnerBusClient::sendMessage(IBMessage message, std::string target){
     IBPayload payload;
     payload.fromJSON(message.getPayload());
 

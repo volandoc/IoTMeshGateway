@@ -86,7 +86,7 @@ public:
     virtual int connect_async();
     virtual int disconnect();
     virtual void setListener(void *listener);
-    virtual int sendMessage(IBMessage message);
+    virtual int sendMessage(IBMessage message, std::string target=NULL);
     virtual void setConfig(void *config);
     virtual void getInfo();
 
