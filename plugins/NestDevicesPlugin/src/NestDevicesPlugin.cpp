@@ -1,4 +1,5 @@
 #include "NestDevicesPlugin.h"
+#include "discoveredDevInfo.h"
 #include <iostream>
 
 NestDevicesPlugin::NestDevicesPlugin() {
@@ -31,7 +32,7 @@ int NestDevicesPlugin::startPlugin() {
     }
 
     for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
-        typeList[typecount] = NestTypeFactory::buildNestType(typecount);
+        typeList[typecount] = NestTypeFactory::buildNestType(typecount, this->work_dir);
         typeList[typecount]->init();
     }
 
@@ -65,8 +66,59 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
     logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
     IBPayload payload;
-    if(payload.fromJSON(message.getPayload()))
+    if(payload.fromJSON(message.getPayload())) {
         logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+        if ("command" == payload.getType()) {
+            if ("GET" == payload.getValue()) {
+                if ("LIST" == payload.getCvalue()) {
+                    std::string devicesList;
+                    for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
+                        Devices devices = typeList[typecount]->getDevices();
+
+                        for (DevicesIterator it = devices.begin(); it != devices.end(); ++it) {
+                            DiscoveredDevInfo devInfo;
+                            static int i = 0;
+
+                            devInfo.setSerial(it->first);
+
+                            if (NEST_TYPE_CAMERA == typecount) {
+                                std::string buffer;
+                                buffer = "NestCameraName" + std::to_string(i);
+                                devInfo.setName(buffer);
+
+                                buffer = "NestCameraDescription" + std::to_string(i);
+                                devInfo.setDescription(buffer);
+
+                                buffer = "Nest_Camera";
+                                devInfo.setType(buffer);
+                            }
+
+                            if (NEST_TYPE_THERMOSTAT == typecount) {
+                                std::string buffer;
+                                buffer = "NestThermostatName" + std::to_string(i);
+                                devInfo.setName(buffer);
+                            
+                                buffer = "NestThermostatDescription" + std::to_string(i);
+                                devInfo.setDescription(buffer);
+                            
+                                buffer = "Nest_Thermostat";
+                                devInfo.setType(buffer);
+                            }
+                            ++i;
+                            if (0 != devicesList.length()) {
+                                devicesList += ",\n";
+                            }
+                            devicesList += devInfo.toJSON();
+                        }
+                    }
+
+                    devicesList = Poco::replace(devicesList, "\"", "*");
+                    devicesList = Poco::replace(devicesList, "*", "\\\"");
+                    sendOccurrence(true, "LIST", devicesList, message.getId());
+                }
+            }
+        }
+    }
 
     return 0;
 }
@@ -79,6 +131,21 @@ int NestDevicesPlugin::executeInternalCommand(std::string source, std::string me
 }
 
 int NestDevicesPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference) {
+    IBPayload payload;
+    payload.setType("event");
+    payload.setValue((success?"SUCCESS":"FAILED"));
+    payload.setCvalue(cvalue);
+    payload.setContent(content);
+
+    IBMessage ibmessage;
+    Poco::Timestamp now;
+    ibmessage.setId(pluginDetails.pluginName);
+    ibmessage.setPayload(payload.toJSON());
+    ibmessage.setReference(reference);
+    ibmessage.setTimestamp(now.epochTime());
+
+    busClient->sendMessage(ibmessage);
+
     return 0;
 }
 
@@ -116,3 +183,4 @@ int NestDevicesPlugin::stopPlugin() {
     logger.debug("Stopped");
     return 0;
 }
+

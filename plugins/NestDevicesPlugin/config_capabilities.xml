@@ -1,0 +1,68 @@
+<config>
+	<cameras>
+		<Capability name = "name" type = "string" constrain_type = "" constraints_json = "" default_value = "Camera" description = "Camera name" read_write = "READ" />
+		<Capability name = "software_version" type = "string" constrain_type = "" constraints_json = "" default_value = "1.0" description = "Software Version" read_write = "READ" />
+		<Capability name = "where_id" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "Where Id" read_write = "READ" />
+		<Capability name = "device_id" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "Device Id" read_write = "READ" />
+		<Capability name = "structure_id" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "Structure Id" read_write = "READ" />
+		<Capability name = "is_online" type = "bool" constrain_type = "" constraints_json = "" default_value = "false" description = "Is Online" read_write = "READ" />
+		<Capability name = "is_streaming" type = "bool" constrain_type = "" constraints_json = "" default_value = "false" description = "Is Streaming" read_write = "READ_WRITE" />
+		<Capability name = "is_audio_input_enabled" type = "bool" constrain_type = "" constraints_json = "" default_value = "false" description = "Is audio input enabled" read_write = "READ" />
+		<Capability name = "last_is_online_change" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "Last is online change" read_write = "READ" />
+		<Capability name = "is_video_history_enabled" type = "bool" constrain_type = "" constraints_json = "" default_value = "false" description = "Is video history enabled" read_write = "READ" />
+		<Capability name = "name_long" type = "string" constrain_type = "" constraints_json = "" default_value = "Nest Camera" description = "Long Name" read_write = "READ" />
+		<Capability name = "web_url" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "Web URL" read_write = "READ" />
+		<Capability name = "app_url" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "Application URL" read_write = "READ" />
+	</cameras>
+	
+	<thermostats>
+		<Capability name = "humidity" type = "double" constrain_type = "" constraints_json = "" default_value = "50" description = "Humidity" read_write = "READ" />
+		<Capability name = "locale" type = "string" constrain_type = "" constraints_json = "" default_value = "en-US" description = "locale" read_write = "READ" />
+		<Capability name = "temperature_scale" type = "string" constrain_type = "" constraints_json = "" default_value = "F" description = "temperature_scale" read_write = "READ_WRITE" />
+		<Capability name = "is_using_emergency_heat" type = "bool" constrain_type = "" constraints_json = "" default_value = "false" description = "is_using_emergency_heat" read_write = "READ" />
+		<Capability name = "has_fan" type = "bool" constrain_type = "" constraints_json = "" default_value = "true" description = "has_fan" read_write = "READ" />
+		<Capability name = "software_version" type = "string" constrain_type = "" constraints_json = "" default_value = "1.0" description = "software_version" read_write = "READ" />
+		<Capability name = "has_leaf" type = "bool" constrain_type = "" constraints_json = "" default_value = "true" description = "has_leaf" read_write = "READ" />
+		<Capability name = "where_id" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "where_id" read_write = "READ" />
+		<Capability name = "device_id" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "device_id" read_write = "READ" />
+		<Capability name = "name" type = "string" constrain_type = "" constraints_json = "" default_value = "Thermostat" description = "name" read_write = "READ" />
+		<Capability name = "can_heat" type = "bool" constrain_type = "" constraints_json = "" default_value = "true" description = "can_heat" read_write = "READ" />
+		<Capability name = "can_cool" type = "bool" constrain_type = "" constraints_json = "" default_value = "true" description = "can_cool" read_write = "READ" />
+		<Capability name = "target_temperature_c" type = "double" constrain_type = "" constraints_json = "" default_value = "20" description = "target_temperature_c" read_write = "READ_WRITE" />
+		<Capability name = "target_temperature_f" type = "double" constrain_type = "" constraints_json = "" default_value = "68" description = "target_temperature_f" read_write = "READ_WRITE" />
+		<Capability name = "target_temperature_high_c" type = "double" constrain_type = "" constraints_json = "" default_value = "26" description = "target_temperature_high_c" read_write = "READ_WRITE" />
+		<Capability name = "target_temperature_high_f" type = "double" constrain_type = "" constraints_json = "" default_value = "79" description = "target_temperature_high_f" read_write = "READ_WRITE" />
+		<Capability name = "target_temperature_low_c" type = "double" constrain_type = "" constraints_json = "" default_value = "19" description = "target_temperature_low_c" read_write = "READ_WRITE" />
+		<Capability name = "target_temperature_low_f" type = "double" constrain_type = "" constraints_json = "" default_value = "66" description = "target_temperature_low_f" read_write = "READ_WRITE" />
+		<Capability name = "ambient_temperature_c" type = "double" constrain_type = "" constraints_json = "" default_value = "21" description = "ambient_temperature_c" read_write = "READ" />
+		<Capability name = "ambient_temperature_f" type = "double" constrain_type = "" constraints_json = "" default_value = "70" description = "ambient_temperature_f" read_write = "READ" />
+		<Capability name = "away_temperature_high_c" type = "double" constrain_type = "" constraints_json = "" default_value = "24" description = "away_temperature_high_c" read_write = "READ" />
+		<Capability name = "away_temperature_high_f" type = "double" constrain_type = "" constraints_json = "" default_value = "76" description = "away_temperature_high_f" read_write = "READ" />
+		<Capability name = "away_temperature_low_c" type = "double" constrain_type = "" constraints_json = "" default_value = "12.5" description = "away_temperature_low_c" read_write = "READ" />
+		<Capability name = "away_temperature_low_f" type = "double" constrain_type = "" constraints_json = "" default_value = "55" description = "away_temperature_low_f" read_write = "READ" />
+		<Capability name = "eco_temperature_high_c" type = "double" constrain_type = "" constraints_json = "" default_value = "24" description = "eco_temperature_high_c" read_write = "READ" />
+		<Capability name = "eco_temperature_high_f" type = "double" constrain_type = "" constraints_json = "" default_value = "76" description = "eco_temperature_high_f" read_write = "READ" />
+		<Capability name = "eco_temperature_low_c" type = "double" constrain_type = "" constraints_json = "" default_value = "12.5" description = "eco_temperature_low_c" read_write = "READ" />
+		<Capability name = "eco_temperature_low_f" type = "double" constrain_type = "" constraints_json = "" default_value = "55" description = "eco_temperature_low_f" read_write = "READ" />
+		<Capability name = "is_locked" type = "bool" constrain_type = "" constraints_json = "" default_value = "false" description = "is_locked" read_write = "READ" />
+		<Capability name = "locked_temp_min_c" type = "double" constrain_type = "" constraints_json = "" default_value = "20" description = "locked_temp_min_c" read_write = "READ" />
+		<Capability name = "locked_temp_min_f" type = "double" constrain_type = "" constraints_json = "" default_value = "68" description = "locked_temp_min_f" read_write = "READ" />
+		<Capability name = "locked_temp_max_c" type = "double" constrain_type = "" constraints_json = "" default_value = "22" description = "locked_temp_max_c" read_write = "READ" />
+		<Capability name = "locked_temp_max_f" type = "double" constrain_type = "" constraints_json = "" default_value = "72" description = "locked_temp_max_f" read_write = "READ" />
+		<Capability name = "sunlight_correction_active" type = "bool" constrain_type = "" constraints_json = "" default_value = "false" description = "sunlight_correction_active" read_write = "READ" />
+		<Capability name = "sunlight_correction_enabled" type = "bool" constrain_type = "" constraints_json = "" default_value = "true" description = "sunlight_correction_enabled" read_write = "READ" />
+		<Capability name = "structure_id" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "structure_id" read_write = "READ" />
+		<Capability name = "fan_timer_active" type = "bool" constrain_type = "" constraints_json = "" default_value = "false" description = "fan_timer_active" read_write = "READ_WRITE" />
+		<Capability name = "fan_timer_timeout" type = "string" constrain_type = "" constraints_json = "" default_value = "1970-01-01T00:00:00.000Z" description = "fan_timer_timeout" read_write = "READ" />
+		<Capability name = "fan_timer_duration" type = "integer" constrain_type = "" constraints_json = "" default_value = "15" description = "fan_timer_duration" read_write = "READ_WRITE" />
+		<Capability name = "previous_hvac_mode" type = "string" constrain_type = "" constraints_json = "" default_value = "" description = "previous_hvac_mode" read_write = "READ" />
+		<Capability name = "hvac_mode" type = "string" constrain_type = "" constraints_json = "" default_value = "heat" description = "hvac_mode" read_write = "READ_WRITE" />
+		<Capability name = "time_to_target" type = "string" constrain_type = "" constraints_json = "" default_value = "~0" description = "time_to_target" read_write = "READ" />
+		<Capability name = "time_to_target_training" type = "string" constrain_type = "" constraints_json = "" default_value = "ready" description = "time_to_target_training" read_write = "READ" />
+		<Capability name = "where_name" type = "string" constrain_type = "" constraints_json = "" default_value = "Hallway" description = "where_name" read_write = "READ" />
+		<Capability name = "label" type = "string" constrain_type = "" constraints_json = "" default_value = "8C25" description = "label" read_write = "READ_WRITE" />
+		<Capability name = "name_long" type = "string" constrain_type = "" constraints_json = "" default_value = "Thermostat" description = "name_long" read_write = "READ" />
+		<Capability name = "is_online" type = "bool" constrain_type = "" constraints_json = "" default_value = "false" description = "is_online" read_write = "READ" />
+		<Capability name = "hvac_state" type = "string" constrain_type = "" constraints_json = "" default_value = "off" description = "hvac_state" read_write = "READ" />
+	</thermostats>
+</config>
