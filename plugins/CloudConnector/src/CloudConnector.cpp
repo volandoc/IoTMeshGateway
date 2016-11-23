@@ -76,12 +76,11 @@ int CloudConnector::startPlugin() {
         logger.debug("Started");
 
         timer.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::doProvision));
-
-
     } else {
         logger.error("No IBus Client found: can't start", __FILE__, 26);
         return -1;
     }
+    return 0;
 }
 
 void CloudConnector::doProvision(Timer& timer){
@@ -143,8 +142,17 @@ int CloudConnector::executeCommand(std::string source, IBMessage message){
     logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
     IBPayload payload;
-    if(payload.fromJSON(message.getPayload()))
+    if(payload.fromJSON(message.getPayload())) {
         logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+
+        if ("event" == payload.getType()) {
+            if ("SUCCESS" == payload.getValue()) {
+                if ("LIST" == payload.getCvalue()) {
+                    sendDiscoveredSensors(this->gatewayId, "DONE", payload.getContent(), "log.log");
+                }
+            }
+        }
+    }
 
     return 0;
 }
@@ -506,7 +514,20 @@ int CloudConnector::discoverSensors() {
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
     logger.debug("Starting Sensors Discovering");
     isDiscovering = true;
-    //this->busClient->sendMessage(GW_COMMAND_EVENT_DISCOVERSENSORS);
+
+    IBPayload payload;
+    payload.setType("command");
+    payload.setValue("GET");
+    payload.setCvalue("LIST");
+    payload.setContent("");
+
+    IBMessage ibmessage;
+    Poco::Timestamp now;
+    ibmessage.setId(pluginDetails.pluginName);
+    ibmessage.setPayload(payload.toJSON());
+    ibmessage.setReference("");
+    ibmessage.setTimestamp(now.epochTime());
+    this->busClient->sendMessage(ibmessage);
 
     //timerDiscoverSensors.start(Poco::TimerCallback<CloudConnector>(*this, & CloudConnector::onDiscoverSensorsEnd));
 }

@@ -61,13 +61,15 @@ private:
     void message_retry_set(unsigned int message_retry);
     int loop_start();
     int loop_stop(bool force=true);
-    int publish(std::string message);
+    int publish(std::string topic, std::string message);
     int tls_set(const char *cafile, const char *capath, const char *certfile, const char *keyfile, int (*pw_callback)(char *buf, int size, int rwflag, void *userdata));
     int tls_opts_set(int cert_reqs, const char *tls_version, const char *ciphers);
     int tls_insecure_set(bool value);
     int tls_psk_set(const char *psk, const char *identity, const char *ciphers);
     int will_set();
     int will_clear();
+    int sendCommand(IBMessage message);
+    int sendEvent(IBMessage message);
     int sendStatus(std::string status);
     int subscribe();
     int unsubscribe();
@@ -84,7 +86,7 @@ public:
     virtual int connect_async();
     virtual int disconnect();
     virtual void setListener(void *listener);
-    virtual int sendMessage(IBMessage message);
+    virtual int sendMessage(IBMessage message, std::string target=NULL);
     virtual void setConfig(void *config);
     virtual void getInfo();
 
@@ -117,6 +119,7 @@ public:
 
     void addClientToList(std::string name);
     void delClientFromList(std::string);
+    std::list<std::string> getClientsList();
 };
 
 POCO_BEGIN_MANIFEST(InnerBusIF)
