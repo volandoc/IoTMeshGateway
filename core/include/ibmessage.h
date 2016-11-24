@@ -5,9 +5,10 @@
 #include <sstream>
 #include <string>
 #include <ctime>
-#include "Poco/JSON/Parser.h"
-#include "Poco/JSON/ParseHandler.h"
-#include "Poco/JSON/JSONException.h"
+#include <Poco/JSON/Parser.h>
+#include <Poco/JSON/ParseHandler.h>
+#include <Poco/JSON/JSONException.h>
+#include <Poco/String.h>
 
 
 class IBPayload {
@@ -112,6 +113,11 @@ public:
 
     bool fromJSON(std::string json_str) {
         Poco::JSON::Parser parser;
+
+        Poco::replaceInPlace(json_str,"\r","");
+        Poco::replaceInPlace(json_str,"\n","");
+        Poco::replaceInPlace(json_str,"\t","");
+
         bool result = true;
         try {
             Poco::Dynamic::Var result = parser.parse(json_str);
