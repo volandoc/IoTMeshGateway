@@ -175,7 +175,7 @@ Capabilities NestType::getCapabilities() {
     return this->capabilities;
 }
 
-void NestType::setgetCapabilities(Capabilities capabilities) {
+void NestType::setCapabilities(Capabilities capabilities) {
     this->capabilities = capabilities;
 }
 
