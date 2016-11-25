@@ -22,10 +22,14 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.0.0'
     compile 'com.android.support:design:25.0.0'
     compile 'com.android.support:support-v4:25.0.0'
-    compile ('org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'){
-        exclude module: 'support-v4'
-    }
-    compile('org.eclipse.paho:org.eclipse.paho.android.service:1.0.2') {
-        exclude module: 'support-v4'
-    }
+    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
+    compile 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.0'
+
+    compile 'com.squareup.picasso:picasso:2.5.2'
+//    compile('org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0') {
+//        exclude module: 'support-v4'
+//    }
+//    compile('org.eclipse.paho:org.eclipse.paho.android.service:1.1.0') {
+//        exclude module: 'support-v4'
+//    }
 }

@@ -6,7 +6,7 @@
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
     <string name="enter_address">Server address:</string>
-    <string name="test_address_placeholder">172.24.254.22</string>
+    <string name="test_address_placeholder">172.24.254.45</string>
     <string name="status">Status:</string>
     <string name="log">Log:</string>
 </resources>
