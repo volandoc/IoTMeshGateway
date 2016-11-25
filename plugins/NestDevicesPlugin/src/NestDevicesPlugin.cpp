@@ -33,6 +33,7 @@ int NestDevicesPlugin::startPlugin() {
 
     for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
         typeList[typecount] = NestTypeFactory::buildNestType(typecount, this->work_dir);
+        typeList[typecount]->initCapabilities();
         typeList[typecount]->init();
     }
 
@@ -115,6 +116,44 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
                     devicesList = Poco::replace(devicesList, "\"", "*");
                     devicesList = Poco::replace(devicesList, "*", "\\\"");
                     sendOccurrence(true, "LIST", devicesList, message.getId());
+                } else if ("PROPERTIES" == payload.getCvalue()) {
+                    std::vector<std::string> serials;
+                    int begin = source.find("/") + 1;
+                    begin = source.find("/", begin) + 1;
+                    int end = source.find("/", begin);
+                    std::string serialSource = source.substr(begin, end - begin);
+                    // searching target device serial in all nest types
+                    for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
+                        Devices devices = typeList[typecount]->getDevices();
+                        // searching target device serial in each nest type
+                        for (DevicesIterator itDevice = devices.begin(); itDevice != devices.end(); ++itDevice) {
+                            if (serialSource == itDevice->first) {
+                                std::string propertiesJson = typeList[typecount]->requestDeviceProperties(serialSource);
+                                sendOccurrence(true, "PROPERTIES", propertiesJson, message.getId());
+                            }
+                        }
+                    }
+                } else if ("CAPABILITIES" == payload.getCvalue()) {
+                    std::vector<std::string> serials;
+                    int begin = source.find("/") + 1;
+                    begin = source.find("/", begin) + 1;
+                    int end = source.find("/", begin);
+                    std::string serialSource = source.substr(begin, end - begin);
+                    // searching target device serial in all nest types
+                    for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
+                        Devices devices = typeList[typecount]->getDevices();
+                        // searching target device serial in each nest type
+                        for (DevicesIterator itDevice = devices.begin(); itDevice != devices.end(); ++itDevice) {
+                            if (serialSource == itDevice->first) {
+                                Capabilities capabilities = typeList[typecount]->getCapabilities();
+                                std::string capabilitiesJson;
+                                // TODO implement
+                                // generate JSON with capabilities info stored in map 'capabilities',
+                                // store generated JSON to variable 'capabilitiesJson'
+                                sendOccurrence(true, "CAPABILITIES", capabilitiesJson, message.getId());
+                            }
+                        }
+                    }
                 }
             }
             if ("SET" == payload.getValue()) {
