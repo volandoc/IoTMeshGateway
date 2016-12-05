@@ -5,13 +5,21 @@
 #include <Poco/Logger.h>
 #include <Poco/StringTokenizer.h>
 #include <Poco/Timestamp.h>
+#include <Poco/Timer.h>
 #include "pluginsapi.h"
+
+#define POLLING_INTERVAL           5000
+#define POLLING_START_INTERVAL     0
 
 class LifXBulbPlugin: public UCLPluginIf {
 private:
     PluginDetails pluginDetails;
     InnerBusClientIF* busClient = NULL;
+    Poco::Timer pollingTimer;
     std::string work_dir;
+
+    void doPolling(Poco::Timer &timer);
+
 public:
     LifXBulbPlugin();
     virtual ~LifXBulbPlugin();
