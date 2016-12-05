@@ -12,9 +12,14 @@ void NestTypeCamera::init() {
     NestType::init(nestTypeNames[NEST_TYPE_CAMERA]);
 }
 
-void NestTypeCamera:: initCapabilities() {
+void NestTypeCamera::initCapabilities() {
     NestType::initCapabilities(nestTypeNames[NEST_TYPE_CAMERA]);
 }
+
+void NestTypeCamera::setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue) {
+    NestType::setStrDeviceProperty(nestTypeNames[NEST_TYPE_CAMERA], serial, propertyName, propertyValue);
+}
+
 
 
 void NestTypeThermostat::init() {
@@ -22,7 +27,12 @@ void NestTypeThermostat::init() {
     NestType::init(nestTypeNames[NEST_TYPE_THERMOSTAT]);
 }
 
-void NestTypeThermostat:: initCapabilities() {
+void NestTypeThermostat::initCapabilities() {
     NestType::initCapabilities(nestTypeNames[NEST_TYPE_THERMOSTAT]);
 }
+
+void NestTypeThermostat::setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue) {
+    NestType::setStrDeviceProperty(nestTypeNames[NEST_TYPE_THERMOSTAT], serial, propertyName, propertyValue);
+}
+
 

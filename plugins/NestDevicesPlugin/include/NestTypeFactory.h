@@ -6,6 +6,8 @@
 #include <Poco/Logger.h>
 #include "NestType.h"
 
+#define DEFAULT_TOKEN       "c.fVTpnlRYq0KNSg4auBywyh9IErpa8UNDrRwKN8MJEQfIAyOw9dCfuswqa45D3YqAbOCsbelorPGfIlfd2i8JLTa1uowuJKgO3wGT1zIXSoLpegm2bky3Gk5JpG3FCnWoqmCpFHcQ7OIJnvEQ"
+
 enum {
     NEST_TYPE_CAMERA,
     NEST_TYPE_THERMOSTAT,
@@ -23,6 +25,7 @@ public:
 
     void init();
     void initCapabilities();
+    void setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue);
 };
 
 
@@ -35,6 +38,7 @@ public:
 
     void init();
     void initCapabilities();
+    void setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue);
 };
 
 
@@ -46,10 +50,10 @@ public:
         NestType* tmpType;
         switch(typecnt){
             case NEST_TYPE_CAMERA:
-                tmpType = new NestTypeCamera("c.J2QMRqxtk5SHfE7oU5gu9LkDXfQdzWJz0tAxaU18aflh7w59vc5DllMXNlg0Rrq3viFcDReErCzNWys7kGotEK6hkFPqRlAA2r9q7aMbcOpWLVkiUEzwdiLOh8ZFZdKMtY9g53xKaBoASyrq", work_dir);
+                tmpType = new NestTypeCamera(DEFAULT_TOKEN, work_dir);
                 break;
             case NEST_TYPE_THERMOSTAT:
-                tmpType = new NestTypeThermostat("c.J2QMRqxtk5SHfE7oU5gu9LkDXfQdzWJz0tAxaU18aflh7w59vc5DllMXNlg0Rrq3viFcDReErCzNWys7kGotEK6hkFPqRlAA2r9q7aMbcOpWLVkiUEzwdiLOh8ZFZdKMtY9g53xKaBoASyrq", work_dir);
+                tmpType = new NestTypeThermostat(DEFAULT_TOKEN, work_dir);
                 break;
 
             default: tmpType = NULL;
