@@ -18,8 +18,8 @@ enum {
 
 class NestTypeCamera: public NestType {
 public:
-    NestTypeCamera(std::string token, std::string work_dir):
-        NestType(token, work_dir) {
+    NestTypeCamera(std::string type, std::string token, std::string work_dir):
+        NestType(type, token, work_dir) {
     }
     virtual ~NestTypeCamera(){}
 
@@ -31,8 +31,8 @@ public:
 
 class NestTypeThermostat: public NestType {
 public:
-    NestTypeThermostat(std::string token, std::string work_dir):
-        NestType(token, work_dir) {
+    NestTypeThermostat(std::string type, std::string token, std::string work_dir):
+        NestType(type, token, work_dir) {
     }
     virtual ~NestTypeThermostat(){}
 
@@ -50,10 +50,10 @@ public:
         NestType* tmpType;
         switch(typecnt){
             case NEST_TYPE_CAMERA:
-                tmpType = new NestTypeCamera(DEFAULT_TOKEN, work_dir);
+                tmpType = new NestTypeCamera("cameras", DEFAULT_TOKEN, work_dir);
                 break;
             case NEST_TYPE_THERMOSTAT:
-                tmpType = new NestTypeThermostat(DEFAULT_TOKEN, work_dir);
+                tmpType = new NestTypeThermostat("thermostats", DEFAULT_TOKEN, work_dir);
                 break;
 
             default: tmpType = NULL;
