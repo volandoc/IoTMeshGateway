@@ -137,18 +137,30 @@ int CloudConnector::setWorkDir(std::string path){
 
 int CloudConnector::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("executeCommand for {%s} msg{%s}", source, message.getPayload());
 
-    logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
+    if (!message.getReference().compare(pluginDetails.pluginName)) {
+        logger.debug("executeCommand for {%s} msg{%s}", source, message.getPayload());
 
-    IBPayload payload;
-    if(payload.fromJSON(message.getPayload())) {
-        logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+        logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
-        if ("event" == payload.getType()) {
-            if ("SUCCESS" == payload.getValue()) {
-                if ("LIST" == payload.getCvalue()) {
-                    sendDiscoveredSensors(this->gatewayId, "DONE", payload.getContent(), "log.log");
+        IBPayload payload;
+        if(payload.fromJSON(message.getPayload())) {
+            logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+
+            if ("event" == payload.getType()) {
+                if ("SUCCESS" == payload.getValue()) {
+                    if ("LIST" == payload.getCvalue()) {
+                        // source = "GateWay_Serial/{PluginName/#}"
+                        int begin = source.find("/") + 1;
+                        int end = source.find("/", begin);
+                        std::string pluginSource = source.substr(begin, end - begin);
+
+                        storeDiscoveredDevices(pluginSource, payload.getContent());
+
+                        sendDiscoveredSensors(this->gatewayId, "IN_PROGRESS", payload.getContent(), "log.log");
+                    } else if ("PROPERTIES" == payload.getCvalue()) {
+                        sendConnectedSensor(this->gatewayId, "serial", payload.getContent(), "log.log");
+                    }
                 }
             }
         }
@@ -179,6 +191,7 @@ int CloudConnector::executeInternalCommand(std::string source, std::string messa
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_CONNECTSENSORS))
     {
         logger.debug("command %s received", eventType);
+        connectSensors(gwCmd.getPayload());
     }
     else if (!strcmp(eventType.c_str(), GW_COMMAND_EVENT_UPDATEPLUGINS))
     {
@@ -309,8 +322,8 @@ bool CloudConnector::initMqttClient()
 bool CloudConnector::provision()
 {
     bool status = true;
-    string cloudResponse;
-    string provisionFile = this->work_dir + _FILE_SEPARATOR + REST_PROVISION_FILE;
+    std::string cloudResponse;
+    std::string provisionFile = this->work_dir + _FILE_SEPARATOR + REST_PROVISION_FILE;
 
     if (false == sendProvision(GW_SERIAL, GW_VERSION, GW_MDN, provisionFile))
     {
@@ -339,9 +352,9 @@ bool CloudConnector::provision()
     return status;
 }
 
-bool CloudConnector::sendProvision(string serial, string version, string mdn, string cloudResFile)
+bool CloudConnector::sendProvision(std::string serial, std::string version, std::string mdn, std::string cloudResFile)
 {
-    string buffer;
+    std::string buffer;
     rest rst;
     rst.setMethod(REST_METHOD_PUT);
     rst.setCertificate(REST_CERTIFICATE);
@@ -353,7 +366,7 @@ bool CloudConnector::sendProvision(string serial, string version, string mdn, st
 
     rst.setHeader("\"Content-Type:application/json\"");
 
-    string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
+    std::string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
     rst.setConsoleOutputFile(tempOutputFile);
     rst.setCloudResponseFile(cloudResFile);
 
@@ -362,7 +375,7 @@ bool CloudConnector::sendProvision(string serial, string version, string mdn, st
     buffer += serial;
     rst.setUrl(buffer.c_str());
 
-    string built_rest = rst.buildRest();
+    std::string built_rest = rst.buildRest();
 
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
 
@@ -375,12 +388,12 @@ bool CloudConnector::sendProvision(string serial, string version, string mdn, st
     return false;
 }
 
-bool CloudConnector::readFileContent(string fileName, string&  fileContent)
+bool CloudConnector::readFileContent(std::string fileName, std::string&  fileContent)
 {
     ifstream streamFile(fileName.c_str());
     if (streamFile.is_open())
     {
-        string strFileContent;
+        std::string strFileContent;
 
         streamFile.seekg(0, ios::end);
         strFileContent.reserve(streamFile.tellg());
@@ -395,7 +408,7 @@ bool CloudConnector::readFileContent(string fileName, string&  fileContent)
     return false;
 }
 
-bool CloudConnector::getGwId(string provisionJson)
+bool CloudConnector::getGwId(std::string provisionJson)
 {
     bool retVal = false;
     if (0 != provisionJson.length())
@@ -421,7 +434,7 @@ bool CloudConnector::getGwId(string provisionJson)
     return retVal;
 }
 
-bool CloudConnector::getIsOnboarded(string provisionJson)
+bool CloudConnector::getIsOnboarded(std::string provisionJson)
 {
     bool retVal = false;
     if (0 != provisionJson.length())
@@ -451,7 +464,7 @@ bool CloudConnector::getIsOnboarded(string provisionJson)
     return retVal;
 }
 
-bool CloudConnector::getHomeId(string datasyncJson)
+bool CloudConnector::getHomeId(std::string datasyncJson)
 {
     bool retVal = false;
 
@@ -483,9 +496,9 @@ bool CloudConnector::getHomeId(string datasyncJson)
     return retVal;
 }
 
-int CloudConnector::sendGetDataSync(int gwId, string gwDataSyncFile)
+int CloudConnector::sendGetDataSync(int gwId, std::string gwDataSyncFile)
 {
-    string buffer;
+    std::string buffer;
     rest rst;
     rst.setMethod(REST_METHOD_GET);
     rst.setCertificate(REST_CERTIFICATE);
@@ -493,7 +506,7 @@ int CloudConnector::sendGetDataSync(int gwId, string gwDataSyncFile)
     rst.setNocheckCert(true);
     rst.setHeader("\"Content-Type:application/json\"");
 
-    string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
+    std::string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
     rst.setConsoleOutputFile(tempOutputFile);
 
     rst.setCloudResponseFile(gwDataSyncFile);
@@ -503,7 +516,7 @@ int CloudConnector::sendGetDataSync(int gwId, string gwDataSyncFile)
     buffer += to_string(gwId);
     rst.setUrl(buffer.c_str());
 
-    string built_rest = rst.buildRest();
+    std::string built_rest = rst.buildRest();
 
     int ret_val = system(built_rest.c_str());
 
@@ -540,9 +553,9 @@ void CloudConnector::onDiscoverSensorsEnd(Timer& timer) {
 }
 */
 
-int CloudConnector::sendDiscoveredSensors(int gwId, string status, string sensors, string cloudResFile)
+int CloudConnector::sendDiscoveredSensors(int gwId, std::string status, std::string sensors, std::string cloudResFile)
 {
-    string buffer;
+    std::string buffer;
     rest rst;
     rst.setMethod(REST_METHOD_PUT);
     rst.setCertificate(REST_CERTIFICATE);
@@ -554,7 +567,7 @@ int CloudConnector::sendDiscoveredSensors(int gwId, string status, string sensor
 
     rst.setHeader("\"Content-Type:application/json\"");
 
-    string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
+    std::string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
     rst.setConsoleOutputFile(tempOutputFile);
 
     rst.setCloudResponseFile(cloudResFile);
@@ -564,12 +577,120 @@ int CloudConnector::sendDiscoveredSensors(int gwId, string status, string sensor
     buffer += to_string(gwId);
     rst.setUrl(buffer.c_str());
 
-    string built_rest = rst.buildRest();
+    std::string built_rest = rst.buildRest();
 
 cout << "built rest = << " << built_rest << ">>\n";
 
     int ret_val = system(built_rest.c_str());
 
     return ret_val;
+}
+
+int CloudConnector::connectSensors(std::string serialList) {
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug("Starting Connecting Sensors");
+
+    IBPayload payload;
+    payload.setType("command");
+    payload.setValue("GET");
+    payload.setCvalue("PROPERTIES");
+    payload.setContent("");
+
+    IBMessage ibmessage;
+    Poco::Timestamp now;
+    ibmessage.setId(pluginDetails.pluginName);
+    ibmessage.setPayload(payload.toJSON());
+    ibmessage.setReference("");
+    ibmessage.setTimestamp(now.epochTime());
+
+    std::vector<std::string> serials;
+    Poco::JSON::Parser parser;
+    try {
+        Poco::Dynamic::Var result = parser.parse(payload.getContent());
+        Poco::JSON::Object::Ptr object = result.extract<Poco::JSON::Object::Ptr>();
+        object->getNames(serials);
+        std::string target;
+        std::map<std::string, std::string>::iterator it;
+        for (unsigned int i = 0; i < serials.size(); ++i) {
+            logger.debug("Connect sensor request with Request Serial[%u] = %s", i, serials[i]);
+
+            it = discoveredSensors.find(serials[i]);
+            if (it != discoveredSensors.end()) {
+                target = it->second + "/" + serials[i];
+                this->busClient->sendMessage(ibmessage, target);
+            } else {
+                logger.debug("ERROR - Cloud is trying connect unknown device {%s}", serials[i]);
+            }
+        }
+    } catch(Poco::Exception excp) {
+        logger.debug("ERROR - EMPTY SERIALS LIST   <<%s>>", payload.getContent());
+    }
+
+    this->busClient->sendMessage(ibmessage);
+
+}
+
+
+int CloudConnector::sendConnectedSensor(int gwId, std::string serial, std::string properties, std::string cloudResFile) {
+    std::string buffer;
+    rest rst;
+    rst.setMethod(REST_METHOD_PUT);
+    rst.setCertificate(REST_CERTIFICATE);
+    rst.setPrivatekey(REST_PRIVATEKEY);
+    rst.setNocheckCert(true);
+
+    Poco::JSON::Object obj;
+    std::stringstream strFormat;
+    
+    obj.set("serial", serial);
+    obj.set("success", true);
+    obj.set("errorMessage", std::string());
+    obj.set("properties", properties);
+    obj.stringify(strFormat);
+
+    rst.setDataBody(strFormat.str());
+
+    rst.setHeader("\"Content-Type:application/json\"");
+
+    std::string tempOutputFile = this->work_dir + _FILE_SEPARATOR + REST_OUTPUT_FILE;
+    rst.setConsoleOutputFile(tempOutputFile);
+
+    rst.setCloudResponseFile(cloudResFile);
+
+    buffer = REST_HOST;
+    buffer += REST_RESOURCE_DISCOVERED_SENSORS;
+    buffer += to_string(gwId);
+    rst.setUrl(buffer.c_str());
+
+    std::string built_rest = rst.buildRest();
+
+cout << "built rest = << " << built_rest << ">>\n";
+
+    int ret_val = system(built_rest.c_str());
+
+    return ret_val;
+}
+
+int CloudConnector::storeDiscoveredDevices(std::string pluginSource, std::string sensorsList) {
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    Poco::JSON::Parser parser;
+/*
+    try {
+        Poco::Dynamic::Var result = parser.parse(sensorsList);
+        Poco::JSON::Array::Ptr arr = result.extract<Poco::JSON::Array::Ptr>();    
+        Poco::JSON::Object::Ptr object;
+        unsigned int index = 0;
+
+        object = arr->getObject(index);
+        while (!object->isNull()) {
+            logger.debug("############# EXTRACTED OBJECT [%u] <<%s>>", index, object.convert<std::string>());
+
+            std::string serial;
+            discoveredSensors[serial] = pluginSource;
+            ++index;
+            object = arr->getObject(index);
+        }
+    }
+    */
 }
 

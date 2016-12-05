@@ -484,8 +484,8 @@ void InnerBusClient::on_message(const struct mosquitto_message *message) {
         std::string messagestr(messagearr);
 
         IBMessage ibmessage;
-
-        logger.debug("%s- Message(%d) on Topic(%s) with payload: %s", cfg.id, message->mid, message->topic, messagestr);
+        std::string topic =  message->topic;
+        logger.debug("%s- Message(%d) on Topic(%s) with payload: %s", cfg.id, message->mid, topic, messagestr);
 
         if(ibmessage.fromJSON(messagestr)) {
             this->callbackObj->executeCommand(message->topic, ibmessage);

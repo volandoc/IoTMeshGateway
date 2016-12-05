@@ -77,9 +77,6 @@ private:
 
     std::string parseStrDeviceProperty(std::string serial, std::string propertyName);
 
-    void setStrDeviceProperty(std::string nestType, std::string serial, std::string propertyName, std::string propertyValue);
-    std::string getCapabilityAttribute(void* xmlConfig, std::string nestType, std::string attribName, unsigned int index);
-
 public:
     NestType(std::string token, std::string work_dir);
     virtual ~NestType();
@@ -94,11 +91,16 @@ public:
     virtual void initCapabilities() = 0;
     void initCapabilities(std::string nestType);
     Capabilities getCapabilities();
-    void setgetCapabilities(Capabilities capabilities);
+    void setCapabilities(Capabilities capabilities);
     void addCapability(unsigned int id, CapabilityInfo capability);
 
     std::string getToken();
     void setToken(std::string token);
+
+    virtual void setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue) = 0;
+    void setStrDeviceProperty(std::string nestType, std::string serial, std::string propertyName, std::string propertyValue);
+
+    std::string getCapabilityAttribute(void* xmlConfig, std::string nestType, std::string attribName, unsigned int index);
 
     std::string getWorkDir();
 };
