@@ -16,13 +16,15 @@ INCLUDEPATH += $$PWD/include \
 
 DEFINES += UCL_PLUGINS_EXPORTS
 
-SOURCES += src/LifXBulbPlugin.cpp
+SOURCES += src/LifXBulbPlugin.cpp \
+    src/messaging.cpp
 
 HEADERS += include/LifXBulbPlugin.h \
     ../include/pluginsapi.h \
     ../include/deviceapi.h \
     ../../core/include/innerbusclientapi.h \
-    include/device_types.h
+    include/device_types.h \
+    include/messaging.h
 
 LIBS += -lPocoFoundation
 

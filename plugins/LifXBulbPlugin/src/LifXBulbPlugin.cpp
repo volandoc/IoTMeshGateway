@@ -1,4 +1,5 @@
 #include "LifXBulbPlugin.h"
+#include "messaging.h"
 #include <iostream>
 
 LifXBulbPlugin::LifXBulbPlugin() {
@@ -8,6 +9,10 @@ LifXBulbPlugin::LifXBulbPlugin() {
     this->pluginDetails.className = "LifXBulbPlugin";
     this->pluginDetails.pluginName ="LifXBulb Plugin";
     this->pluginDetails.pluginVersion = "0.0.1";
+
+    this->pollingTimer.setStartInterval(POLLING_START_INTERVAL);
+    this->pollingTimer.setPeriodicInterval(POLLING_INTERVAL);
+
     logger.debug("Plugin Created");
 }
 
@@ -26,11 +31,21 @@ int LifXBulbPlugin::startPlugin(){
         this->busClient->init();
         this->busClient->connect_async();
         logger.debug("Started");
+        pollingTimer.start(Poco::TimerCallback<LifXBulbPlugin>(*this, & LifXBulbPlugin::doPolling));
         return 0;
     } else {
         logger.error("No IBus Client found: can't start", __FILE__, 26);
         return -1;
     }
+}
+
+void LifXBulbPlugin::doPolling(Poco::Timer& timer){
+    LifxMessage message;
+    message.acknowledgeRequired(true);
+    message.responseRequired(true);
+    message.sendMessage("");
+    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    logger.debug("Gateway provision failed, retrying in 5 s...");
 }
 
 int LifXBulbPlugin::setIBusClient(InnerBusClientIF* client){
@@ -114,6 +129,9 @@ PluginDetails* LifXBulbPlugin::getPluginDetails(){
 
 int LifXBulbPlugin::stopPlugin(){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+
+    pollingTimer.stop();
+
     logger.debug("Stopped");
     return 0;
 }
