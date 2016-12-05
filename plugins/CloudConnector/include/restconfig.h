@@ -6,6 +6,7 @@
 #define REST_RESOURCE_PROVISION             "provision/"
 #define REST_RESOURCE_DATASYNC              "datasync/"
 #define REST_RESOURCE_DISCOVERED_SENSORS    "discoveredsensors/"
+#define REST_RESOURCE_CONNECTED_SENSORS     "connectedsensors/"
 
 #define REST_CERTIFICATE            "../certs/gw.crt"
 #define REST_PRIVATEKEY             "../certs/gw.key"

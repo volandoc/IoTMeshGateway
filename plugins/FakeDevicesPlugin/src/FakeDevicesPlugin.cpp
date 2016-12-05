@@ -1,5 +1,6 @@
 #include "FakeDevicesPlugin.h"
 #include "discoveredDevInfo.h"
+#include "connectedDevInfo.h"
 #include <iostream>
 #include "Poco/JSON/Parser.h"
 #include "Poco/JSON/ParseHandler.h"
@@ -69,7 +70,7 @@ int FakeDevicesPlugin::setWorkDir(std::string path){
 
 int FakeDevicesPlugin::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("FakeDevicesPlugin");
-    logger.debug("executeInternalCommand %s:%s ", source, message.getPayload());
+    logger.debug("executeCommand %s:%s ", source, message.getPayload());
 
     logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
@@ -103,30 +104,30 @@ int FakeDevicesPlugin::executeCommand(std::string source, IBMessage message){
                     sendOccurrence(true, payload.getCvalue(), devicesList, message.getId());
                 }
 
-                if ("CAPABILITIES" == payload.getCvalue()) {
+                if ("PROPERTIES" == payload.getCvalue()) {
                     std::vector<std::string> serials;
+                    int begin = source.find("/") + 1;
+                    begin = source.find("/", begin) + 1;
+                    int end = source.find("/", begin);
+                    std::string serialSource = source.substr(begin, end - begin);
 
-                    Poco::JSON::Parser parser;
-                    try {
-                        Poco::Dynamic::Var result = parser.parse(payload.getContent());
-                        Poco::JSON::Object::Ptr object = result.extract<Poco::JSON::Object::Ptr>();
-                        object->getNames(serials);
+                    for(int typecount = 0; typecount < DEVICE_TYPES_SIZE; ++typecount) {
+                        if( NULL != deviceList[typecount] ) {
+                            if (serialSource == deviceList[typecount]->getSerial()) {
+                                ConnectedDevInfo conDevInfo;
+                                conDevInfo.setSerial(serialSource);
+                                conDevInfo.setSuccess("true");
+                                conDevInfo.setErrorMessage("null");
 
-                        for (unsigned int i = 0; i < serials.size(); ++i) {
-                            logger.debug("Serial[%u] = %s", i, serials[i]);
-                            for(int typecount = 0; typecount < DEVICE_TYPES_SIZE; ++typecount) {
-                                if( NULL != deviceList[typecount] ) {
-                                    if (serials[i] == deviceList[typecount]->getSerial()) {
-                                        
-                                    }
+                                Properties properties = deviceList[typecount]->getProperties();
+
+                                for (PropertiesIterator it = properties.begin(); it != properties.end(); ++it) {
+                                    conDevInfo.addProperty(it->first, it->second);
                                 }
+                                sendOccurrence(true, payload.getCvalue(), conDevInfo.toJSON(), message.getId());
                             }
                         }
-                        
-                    } catch(Poco::Exception excp){
-                        logger.debug("ERROR - EMPTY SERIALS LIST   <<%s>>", payload.getContent());
                     }
-
                 }
             }
         }

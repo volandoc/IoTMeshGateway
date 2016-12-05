@@ -33,6 +33,7 @@ int NestDevicesPlugin::startPlugin() {
 
     for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
         typeList[typecount] = NestTypeFactory::buildNestType(typecount, this->work_dir);
+        typeList[typecount]->initCapabilities();
         typeList[typecount]->init();
     }
 
@@ -115,6 +116,93 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
                     devicesList = Poco::replace(devicesList, "\"", "*");
                     devicesList = Poco::replace(devicesList, "*", "\\\"");
                     sendOccurrence(true, "LIST", devicesList, message.getId());
+                } else if ("PROPERTIES" == payload.getCvalue()) {
+                    std::vector<std::string> serials;
+                    int begin = source.find("/") + 1;
+                    begin = source.find("/", begin) + 1;
+                    int end = source.find("/", begin);
+                    std::string serialSource = source.substr(begin, end - begin);
+                    // searching target device serial in all nest types
+                    for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
+                        Devices devices = typeList[typecount]->getDevices();
+                        // searching target device serial in each nest type
+                        for (DevicesIterator itDevice = devices.begin(); itDevice != devices.end(); ++itDevice) {
+                            if (serialSource == itDevice->first) {
+                                std::string propertiesJson = typeList[typecount]->requestDeviceProperties(serialSource);
+                                sendOccurrence(true, "PROPERTIES", propertiesJson, message.getId());
+                            }
+                        }
+                    }
+                } else if ("CAPABILITIES" == payload.getCvalue()) {
+                    std::vector<std::string> serials;
+                    int begin = source.find("/") + 1;
+                    begin = source.find("/", begin) + 1;
+                    int end = source.find("/", begin);
+                    std::string serialSource = source.substr(begin, end - begin);
+                    // searching target device serial in all nest types
+                    for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
+                        Devices devices = typeList[typecount]->getDevices();
+                        // searching target device serial in each nest type
+                        for (DevicesIterator itDevice = devices.begin(); itDevice != devices.end(); ++itDevice) {
+                            if (serialSource == itDevice->first) {
+                                Capabilities capabilities = typeList[typecount]->getCapabilities();
+                                std::string capabilitiesJson;
+                                // TODO implement
+                                // generate JSON with capabilities info stored in map 'capabilities',
+                                // store generated JSON to variable 'capabilitiesJson'
+                                sendOccurrence(true, "CAPABILITIES", capabilitiesJson, message.getId());
+                            }
+                        }
+                    }
+                }
+            }
+            if ("SET" == payload.getValue()) {
+                if ("PROPERTIES" == payload.getCvalue()) {
+                    std::vector<std::string> serials;
+                    int begin = source.find("/") + 1;
+                    begin = source.find("/", begin) + 1;
+                    int end = source.find("/", begin);
+                    std::string serialSource = source.substr(begin, end - begin);
+
+                    // searching target device serial in all nest types
+                    for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
+                        Devices devices = typeList[typecount]->getDevices();
+                        // searching target device serial in each nest type
+                        for (DevicesIterator itDevice = devices.begin(); itDevice != devices.end(); ++itDevice) {
+                            if (serialSource == itDevice->first) {
+                                // parsing properties in received message
+                                Poco::JSON::Parser parser;
+                                try {
+                                    Poco::Dynamic::Var result = parser.parse(payload.getContent());
+                                    if (result.type() == typeid(Poco::JSON::Array::Ptr))
+                                    {
+                                        Poco::JSON::Array::Ptr arr = result.extract<Poco::JSON::Array::Ptr>();
+                                        Poco::Dynamic::Array da = *arr;
+                                        for(unsigned int i = 0; i < da.size(); ++i) {
+//                                            Poco::JSON::Object::Ptr object = arr->getObject(i);
+                                            
+                                            if (da[i].isStruct())
+                                            {
+                                                std::string capabilityName = da[i]["name"];
+                                                std::string propertyValue = da[i]["value"];
+
+                                                // searching needed capability in all capabilities of current nest devices type
+                                                Capabilities capabilities = typeList[typecount]->getCapabilities();
+                                                for (Capabilities::iterator itCapability = capabilities.begin(); itCapability != capabilities.end(); ++itCapability) {
+                                                    if (capabilityName == itCapability->second.getName()) {
+                                                        logger.debug("Setting property: serial {%s} property {%s} value {%s}", serialSource, capabilityName, propertyValue);
+                                                        typeList[typecount]->setStrDeviceProperty(serialSource, capabilityName, propertyValue);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch(Poco::Exception excp){
+                                    logger.debug("ERROR - Failed to parse JSON with properties: %s", excp.displayText());
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

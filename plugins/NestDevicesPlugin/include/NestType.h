@@ -69,36 +69,39 @@ private:
     StringVector serials;
     Devices devices;
 
+    std::string type;
+
     std::string work_dir;
 
-    void requestSerialsList(std::string nestType);
+    void requestSerialsList();
 
-    std::string requestStrDeviceProperty(std::string nestType, std::string serial, std::string propertyName);
+    std::string requestStrDeviceProperty(std::string serial, std::string propertyName);
 
     std::string parseStrDeviceProperty(std::string serial, std::string propertyName);
 
-    void setStrDeviceProperty(std::string nestType, std::string serial, std::string propertyName, std::string propertyValue);
-    std::string getCapabilityAttribute(void* xmlConfig, std::string nestType, std::string attribName, unsigned int index);
-
 public:
-    NestType(std::string token, std::string work_dir);
+    NestType(std::string type, std::string token, std::string work_dir);
     virtual ~NestType();
     
-    virtual void init() = 0;
-    void init(std::string nestType);
+    void init();
 
     Devices getDevices();
     void setDevices(Devices devices);
     void addDevice(std::string serial, Properties properties);
 
-    virtual void initCapabilities() = 0;
-    void initCapabilities(std::string nestType);
+    void initCapabilities();
     Capabilities getCapabilities();
-    void setgetCapabilities(Capabilities capabilities);
+    void setCapabilities(Capabilities capabilities);
     void addCapability(unsigned int id, CapabilityInfo capability);
 
     std::string getToken();
     void setToken(std::string token);
+
+    void setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue);
+
+    std::string getCapabilityAttribute(void* xmlConfig, std::string attribName, unsigned int index);
+
+    std::string requestDeviceProperties(std::string serial);
 
     std::string getWorkDir();
 };

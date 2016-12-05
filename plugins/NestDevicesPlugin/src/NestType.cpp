@@ -23,7 +23,8 @@ using namespace Poco;
 using namespace Poco::Util;
 
 
-NestType::NestType(std::string token, std::string work_dir) {
+NestType::NestType(std::string type, std::string token, std::string work_dir) {
+    this->type = type;
     this->token = token;
     this->work_dir = work_dir;
 }
@@ -31,23 +32,27 @@ NestType::NestType(std::string token, std::string work_dir) {
 NestType::~NestType() {
 }
 
-void NestType::init(std::string nestType) {
-    requestSerialsList(nestType);
+void NestType::init() {
+    requestSerialsList();
 
     Properties properties;
     std::string propertyValue;
 
+    Poco::Logger& logger = Poco::Logger::get("NestType");
+
     for (unsigned int i = 0; i < serials.size(); ++i) {
+        logger.debug("Serial[%u] = %s", i, serials[i]);
         properties.clear();
         for (unsigned int j = 0; j < this->capabilities.size(); ++j) {
             propertyValue = parseStrDeviceProperty(serials[i], this->capabilities[j].getName());
             properties[j] = propertyValue;
+            logger.debug("     %s = %s", this->capabilities[j].getName(), propertyValue);
         }
         addDevice(serials[i], properties);
     }
 }
 
-void NestType::requestSerialsList(std::string nestType) {
+void NestType::requestSerialsList() {
     std::string buffer;
     Poco::Logger& logger = Poco::Logger::get("NestType");
 
@@ -65,7 +70,7 @@ void NestType::requestSerialsList(std::string nestType) {
 
     buffer = REST_NEST_HOST;
     buffer += URL_DEVICES_PATH;
-    buffer += nestType;
+    buffer += this->type;
     buffer += "/";
     rst.setUrl(buffer);
 
@@ -81,7 +86,40 @@ void NestType::requestSerialsList(std::string nestType) {
     }
 }
 
-std::string NestType::requestStrDeviceProperty(std::string nestType, std::string serial, std::string propertyName) {
+std::string NestType::requestDeviceProperties(std::string serial) {
+    std::string buffer;
+    Poco::Logger& logger = Poco::Logger::get("NestType");
+
+    std::string properties;
+
+    rest rst;
+    rst.setMethod(REST_METHOD_GET);
+
+    buffer = "\"Authorization:Bearer ";
+    buffer += this->token;
+    buffer += "\"";
+    rst.setHeader(buffer);
+
+    rst.setConsoleOutputFile(HOST_REST_TEMP_FILENAME);
+
+    rst.setCloudResponseFile(HOST_REST_GET_FILENAME);
+
+    buffer = REST_NEST_HOST;
+    buffer += URL_DEVICES_PATH;
+    buffer += this->type;
+    buffer += "/";
+    buffer += serial;
+    buffer += "/";
+    rst.setUrl(buffer);
+
+    properties = rst.execute();
+
+    return properties;
+}
+
+
+
+std::string NestType::requestStrDeviceProperty(std::string serial, std::string propertyName) {
     std::string buffer;
     rest rst;
     rst.setMethod(REST_METHOD_GET);
@@ -97,7 +135,7 @@ std::string NestType::requestStrDeviceProperty(std::string nestType, std::string
 
     buffer = REST_NEST_HOST;
     buffer += URL_DEVICES_PATH;
-    buffer += nestType;
+    buffer += this->type;
     buffer += "/";
     buffer += serial;
     buffer += "/";
@@ -129,7 +167,7 @@ std::string NestType::parseStrDeviceProperty(std::string serial, std::string pro
     return propertyValue;
 }
 
-void NestType::setStrDeviceProperty(std::string nestType, std::string serial, std::string propertyName, std::string propertyValue) {
+void NestType::setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue) {
     std::string buffer;
     rest rst;
     rst.setMethod(REST_METHOD_PUT);
@@ -145,7 +183,7 @@ void NestType::setStrDeviceProperty(std::string nestType, std::string serial, st
 
     buffer = REST_NEST_HOST;
     buffer += URL_DEVICES_PATH;
-    buffer += nestType;
+    buffer += this->type;
     buffer += "/";
     buffer += serial;
     buffer += "/";
@@ -175,7 +213,7 @@ Capabilities NestType::getCapabilities() {
     return this->capabilities;
 }
 
-void NestType::setgetCapabilities(Capabilities capabilities) {
+void NestType::setCapabilities(Capabilities capabilities) {
     this->capabilities = capabilities;
 }
 
@@ -191,7 +229,7 @@ void NestType::setToken(std::string token) {
     this->token = token;
 }
 
-void NestType::initCapabilities(std::string nestType) {
+void NestType::initCapabilities() {
 Poco::Logger& logger = Poco::Logger::get("NestType");
 
     std::string fileName = getWorkDir();
@@ -212,37 +250,37 @@ Poco::Logger& logger = Poco::Logger::get("NestType");
                 tempCapability.clear();
 
                 attribPath.str(std::string());
-                attribPath << nestType << ".Capability[" << counter<< "]" << "[@name]";
+                attribPath << this->type << ".Capability[" << counter<< "]" << "[@name]";
                 value = pConf->getString(attribPath.str());
                 tempCapability.setName(value);
 
                 attribPath.str(std::string());
-                attribPath << nestType << ".Capability[" << counter<< "]" << "[@type]";
+                attribPath << this->type << ".Capability[" << counter<< "]" << "[@type]";
                 value = pConf->getString(attribPath.str());
                 tempCapability.setType(value);
 
                 attribPath.str(std::string());
-                attribPath << nestType << ".Capability[" << counter<< "]" << "[@constrain_type]";
+                attribPath << this->type << ".Capability[" << counter<< "]" << "[@constrain_type]";
                 value = pConf->getString(attribPath.str());
                 tempCapability.setConstrainType(value);
 
                 attribPath.str(std::string());
-                attribPath << nestType << ".Capability[" << counter<< "]" << "[@constraints_json]";
+                attribPath << this->type << ".Capability[" << counter<< "]" << "[@constraints_json]";
                 value = pConf->getString(attribPath.str());
                 tempCapability.setConstraintsJson(value);
 
                 attribPath.str(std::string());
-                attribPath << nestType << ".Capability[" << counter<< "]" << "[@default_value]";
+                attribPath << this->type << ".Capability[" << counter<< "]" << "[@default_value]";
                 value = pConf->getString(attribPath.str());
                 tempCapability.setDefaultValue(value);
 
                 attribPath.str(std::string());
-                attribPath << nestType << ".Capability[" << counter<< "]" << "[@description]";
+                attribPath << this->type << ".Capability[" << counter<< "]" << "[@description]";
                 value = pConf->getString(attribPath.str());
                 tempCapability.setDescription(value);
 
                 attribPath.str(std::string());
-                attribPath << nestType << ".Capability[" << counter<< "]" << "[@read_write]";
+                attribPath << this->type << ".Capability[" << counter<< "]" << "[@read_write]";
                 value = pConf->getString(attribPath.str());
                 tempCapability.setReadWrite(value);
 

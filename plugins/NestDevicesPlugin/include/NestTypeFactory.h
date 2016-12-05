@@ -6,6 +6,8 @@
 #include <Poco/Logger.h>
 #include "NestType.h"
 
+#define DEFAULT_TOKEN       "c.fVTpnlRYq0KNSg4auBywyh9IErpa8UNDrRwKN8MJEQfIAyOw9dCfuswqa45D3YqAbOCsbelorPGfIlfd2i8JLTa1uowuJKgO3wGT1zIXSoLpegm2bky3Gk5JpG3FCnWoqmCpFHcQ7OIJnvEQ"
+
 enum {
     NEST_TYPE_CAMERA,
     NEST_TYPE_THERMOSTAT,
@@ -16,25 +18,27 @@ enum {
 
 class NestTypeCamera: public NestType {
 public:
-    NestTypeCamera(std::string token, std::string work_dir):
-        NestType(token, work_dir) {
+    NestTypeCamera(std::string type, std::string token, std::string work_dir):
+        NestType(type, token, work_dir) {
     }
     virtual ~NestTypeCamera(){}
 
     void init();
     void initCapabilities();
+    void setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue);
 };
 
 
 class NestTypeThermostat: public NestType {
 public:
-    NestTypeThermostat(std::string token, std::string work_dir):
-        NestType(token, work_dir) {
+    NestTypeThermostat(std::string type, std::string token, std::string work_dir):
+        NestType(type, token, work_dir) {
     }
     virtual ~NestTypeThermostat(){}
 
     void init();
     void initCapabilities();
+    void setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue);
 };
 
 
@@ -46,10 +50,10 @@ public:
         NestType* tmpType;
         switch(typecnt){
             case NEST_TYPE_CAMERA:
-                tmpType = new NestTypeCamera("c.J2QMRqxtk5SHfE7oU5gu9LkDXfQdzWJz0tAxaU18aflh7w59vc5DllMXNlg0Rrq3viFcDReErCzNWys7kGotEK6hkFPqRlAA2r9q7aMbcOpWLVkiUEzwdiLOh8ZFZdKMtY9g53xKaBoASyrq", work_dir);
+                tmpType = new NestTypeCamera("cameras", DEFAULT_TOKEN, work_dir);
                 break;
             case NEST_TYPE_THERMOSTAT:
-                tmpType = new NestTypeThermostat("c.J2QMRqxtk5SHfE7oU5gu9LkDXfQdzWJz0tAxaU18aflh7w59vc5DllMXNlg0Rrq3viFcDReErCzNWys7kGotEK6hkFPqRlAA2r9q7aMbcOpWLVkiUEzwdiLOh8ZFZdKMtY9g53xKaBoASyrq", work_dir);
+                tmpType = new NestTypeThermostat("thermostats", DEFAULT_TOKEN, work_dir);
                 break;
 
             default: tmpType = NULL;

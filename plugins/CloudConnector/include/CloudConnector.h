@@ -8,7 +8,7 @@
 #include "pluginsapi.h"
 #include "mqttclient.h"
 
-using namespace std;
+
 
 class CloudConnector: public UCLPluginIf {
 private:
@@ -19,6 +19,8 @@ private:
     //Poco::Timer timerDiscoverSensors;
     bool isOnboarded;
     bool isDiscovering;
+
+    std::map<std::string, std::string> discoveredSensors; // <deviceSerial, pluginName>
 public:
     CloudConnector();
     virtual ~CloudConnector();
@@ -40,6 +42,8 @@ public:
     virtual int discoverSensors();
     //virtual void onDiscoverSensorsEnd(Poco::Timer& timer);
 
+    virtual int connectSensors(std::string serialList);
+
 private:
     mqttclient *mqttClient;
     int gatewayId;
@@ -47,13 +51,16 @@ private:
 
     bool provision();
     bool initMqttClient();
-    bool sendProvision(string serial, string version, string mdn, string cloudResFile);
-    bool readFileContent(string fileName, string& fileContent);
-    bool getGwId(string provisionJson);
-    bool getIsOnboarded(string provisionJson);
-    bool getHomeId(string datasyncJson);
-    int sendGetDataSync(int gwId, string gwDataSyncFile);
-    int sendDiscoveredSensors(int gwId, string status, string sensors, string cloudResFile);
+    bool sendProvision(std::string serial, std::string version, std::string mdn, std::string cloudResFile);
+    bool readFileContent(std::string fileName, std::string& fileContent);
+    bool getGwId(std::string provisionJson);
+    bool getIsOnboarded(std::string provisionJson);
+    bool getHomeId(std::string datasyncJson);
+    int sendGetDataSync(int gwId, std::string gwDataSyncFile);
+    int sendDiscoveredSensors(int gwId, std::string status, std::string sensors, std::string cloudResFile);
+    int sendConnectedSensor(int gwId, std::string serial, std::string properties, std::string cloudResFile);
+
+    int storeDiscoveredDevices(std::string pluginSource, std::string sensorsList);
 };
 
 POCO_BEGIN_MANIFEST(UCLPluginIf)

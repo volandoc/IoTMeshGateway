@@ -159,7 +159,7 @@ int InnerBusClient::publish(std::string topic, std::string message) {
 }
 
 
-int InnerBusClient::sendCommand(IBMessage message) {
+int InnerBusClient::sendCommand(IBMessage message, std::string target) {
     int rc = 0;
 
     if(cfg.id == cfg.prefix){
@@ -167,19 +167,26 @@ int InnerBusClient::sendCommand(IBMessage message) {
 
     if( nullptr != callbackObj ) {
         if( (callbackObj->getPluginDetails()->type != NULL)
-             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
+             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ) {
         }
 
         if( (callbackObj->getPluginDetails()->type != NULL)
-             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ){
-            std::list<std::string> pluginsList = ptrIBus->getClientsList();
-            std::list<std::string>::iterator pluginsItr = pluginsList.begin();
-            for(; pluginsItr != pluginsList.end(); pluginsItr++){
-                std::string name = *pluginsItr;
-                if( name.compare(cfg.id) ){
-                    std::string tmpTopic = cfg.prefix + "/" + name + "/" + cfg.command_topic;
-                    rc = publish(tmpTopic, message.toJSON());
+             && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_COMM) ) {
+
+            if(!target.empty()) {
+                std::string tmpTopic = cfg.prefix + "/" + target + "/" + cfg.command_topic;
+                rc = publish(tmpTopic, message.toJSON());
+            } else {
+                std::list<std::string> pluginsList = ptrIBus->getClientsList();
+                std::list<std::string>::iterator pluginsItr = pluginsList.begin();
+                for(; pluginsItr != pluginsList.end(); pluginsItr++){
+                    std::string name = *pluginsItr;
+                    if( name.compare(cfg.id) ){
+                        std::string tmpTopic = cfg.prefix + "/" + name + "/" + cfg.command_topic;
+                        rc = publish(tmpTopic, message.toJSON());
+                    }
                 }
+
             }
         }
     }
@@ -406,7 +413,7 @@ int InnerBusClient::sendMessage(IBMessage message, std::string target){
     payload.fromJSON(message.getPayload());
 
     if(!payload.getType().compare("command")){
-        return sendCommand(message);
+        return sendCommand(message, target);
     }
 
     if(!payload.getType().compare("event")){
@@ -477,8 +484,8 @@ void InnerBusClient::on_message(const struct mosquitto_message *message) {
         std::string messagestr(messagearr);
 
         IBMessage ibmessage;
-
-        logger.debug("%s- Message(%d) on Topic(%s) with payload: %s", cfg.id, message->mid, message->topic, messagestr);
+        std::string topic =  message->topic;
+        logger.debug("%s- Message(%d) on Topic(%s) with payload: %s", cfg.id, message->mid, topic, messagestr);
 
         if(ibmessage.fromJSON(messagestr)) {
             this->callbackObj->executeCommand(message->topic, ibmessage);
