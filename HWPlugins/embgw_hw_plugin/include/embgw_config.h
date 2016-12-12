@@ -6,6 +6,8 @@
 
 #define MQTT_PUB_TOPIC "gw/Esp8266Plugin/event"
 #define MQTT_SUB_TOPIC "gw/Esp8266Plugin/command"
+#define MQTT_WILL_TOPIC "gw/Esp8266Plugin/status"
+#define MQTT_WILL_MSG "disconected"
 
 #define GPIO_LED 2
 
