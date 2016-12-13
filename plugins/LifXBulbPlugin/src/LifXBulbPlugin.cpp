@@ -65,13 +65,11 @@ int LifXBulbPlugin::setWorkDir(std::string path){
 
 int LifXBulbPlugin::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
-    logger.debug("executeCommand for {%s} msg{%s}", source, message.getPayload());
+    IBPayload payload = message.getPayload();
+    logger.debug("executeCommand for {%s} msg{%s}", source, payload.toJSON());
 
-    logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
-
-    IBPayload payload;
-    if(payload.fromJSON(message.getPayload()))
-        logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+    logger.debug("\"%s : %s : %s : %d\"", message.getId(), payload.toJSON(), message.getReference(), (int) message.getTimestamp());
+    //logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
 
     Poco::StringTokenizer t1(source, "/");
     if(4 < t1.count()) {
@@ -92,8 +90,11 @@ int LifXBulbPlugin::executeInternalCommand(std::string source, std::string messa
 }
 
 int LifXBulbPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference) {
+    Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+    logger.debug("sendOccurrence \"%b : %s : %s : %s\"", success, cvalue, content, reference);
+
     IBPayload payload;
-    payload.setType("occurence");
+    payload.setType("event");
     payload.setValue((success?"SUCCESS":"FAILED"));
     payload.setCvalue(cvalue);
     payload.setContent(content);
@@ -101,10 +102,11 @@ int LifXBulbPlugin::sendOccurrence(bool success, std::string cvalue, std::string
     IBMessage ibmessage;
     Poco::Timestamp now;
     ibmessage.setId(pluginDetails.pluginName + reference);
-    ibmessage.setPayload(payload.toJSON());
+    ibmessage.setPayload(payload);
     ibmessage.setReference(reference);
     ibmessage.setTimestamp(now.epochTime());
 
+    logger.debug("sendOccurrence: message prepared for sending");
     busClient->sendMessage(ibmessage);
 
     return 0;
