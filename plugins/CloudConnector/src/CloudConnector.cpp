@@ -137,14 +137,13 @@ int CloudConnector::setWorkDir(std::string path){
 
 int CloudConnector::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("CloudConnector");
+    IBPayload payload = message.getPayload();
 
     if (!message.getReference().compare(pluginDetails.pluginName)) {
         logger.debug("executeCommand for {%s} msg{%s}", source, message.getPayload());
-
         logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
-        IBPayload payload;
-        if(payload.fromJSON(message.getPayload())) {
+        if(true) {
             logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
 
             if ("event" == payload.getType()) {
@@ -537,7 +536,7 @@ int CloudConnector::discoverSensors() {
     IBMessage ibmessage;
     Poco::Timestamp now;
     ibmessage.setId(pluginDetails.pluginName);
-    ibmessage.setPayload(payload.toJSON());
+    ibmessage.setPayload(payload);
     ibmessage.setReference("");
     ibmessage.setTimestamp(now.epochTime());
     this->busClient->sendMessage(ibmessage);
@@ -599,7 +598,7 @@ int CloudConnector::connectSensors(std::string serialList) {
     IBMessage ibmessage;
     Poco::Timestamp now;
     ibmessage.setId(pluginDetails.pluginName);
-    ibmessage.setPayload(payload.toJSON());
+    ibmessage.setPayload(payload);
     ibmessage.setReference("");
     ibmessage.setTimestamp(now.epochTime());
 
