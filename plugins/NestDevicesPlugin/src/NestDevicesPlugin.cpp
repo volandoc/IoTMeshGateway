@@ -67,7 +67,7 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
     logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
     IBPayload payload;
-    if(payload.fromJSON(message.getPayload())) {
+    if(true) {
         logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
         if ("command" == payload.getType()) {
             if ("GET" == payload.getValue()) {
@@ -228,7 +228,7 @@ int NestDevicesPlugin::sendOccurrence(bool success, std::string cvalue, std::str
     IBMessage ibmessage;
     Poco::Timestamp now;
     ibmessage.setId(pluginDetails.pluginName);
-    ibmessage.setPayload(payload.toJSON());
+    ibmessage.setPayload(payload);
     ibmessage.setReference(reference);
     ibmessage.setTimestamp(now.epochTime());
 
