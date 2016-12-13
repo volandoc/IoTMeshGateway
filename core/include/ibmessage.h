@@ -9,14 +9,15 @@
 #include <Poco/JSON/ParseHandler.h>
 #include <Poco/JSON/JSONException.h>
 #include <Poco/String.h>
+#include <Poco/Logger.h>
 
 
 class IBPayload {
 private:
-    std::string type;
-    std::string value;
-    std::string cvalue;
-    std::string content;
+    std::string type = "";
+    std::string value = "";
+    std::string cvalue = "";
+    std::string content = "";
 public:
     std::string getType(){ return type; }
     std::string getValue(){ return value; }
@@ -42,6 +43,7 @@ public:
     }
 
     bool fromJSON(std::string json_str) {
+        Poco::Logger& logger = Poco::Logger::get("IBMessage");
         Poco::JSON::Parser parser;
         bool result = true;
         try {
@@ -73,6 +75,7 @@ public:
                 result = false;
             }
         } catch(Poco::Exception excp){
+            logger.error("JSON Exception: %s", excp.displayText());
             result = false;
         }
 
@@ -83,71 +86,81 @@ public:
 class IBMessage {
 private:
     std::string id;
-    std::string payload;
+    IBPayload payload;
     std::string reference;
     std::time_t timestamp;
 public:
     std::string getId(){ return id; }
-    std::string getPayload(){ return payload; }
+    IBPayload getPayload(){ return payload; }
     std::string getReference(){ return reference; }
     std::time_t getTimestamp(){ return timestamp; }
 
     void setId(std::string id){ this->id = id; }
-    void setPayload(std::string payload){ this->payload = payload; }
+    void setPayload(IBPayload payload){ this->payload = payload; }
     void setReference(std::string reference){ this->reference = reference; }
     void setTimestamp(std::time_t timestamp){ this->timestamp = timestamp; }
 
     std::string toJSON() {
-        Poco::JSON::Object obj;
+        Poco::JSON::Object msg;
+        Poco::JSON::Object pload;
         std::stringstream strFormat;
 
-        obj.set("id", id);
-        obj.set("payload", payload);
-        obj.set("reference", reference);
-        obj.set("timestamp", timestamp);
+        pload.set("type", payload.getType());
+        pload.set("value", payload.getValue());
+        pload.set("cvalue", payload.getCvalue());
+        pload.set("content", payload.getContent());
 
-        obj.stringify(strFormat);
+        msg.set("id", id);
+        msg.set("payload", pload);
+        msg.set("reference", reference);
+        msg.set("timestamp", timestamp);
+
+        msg.stringify(strFormat);
 
         return strFormat.str();
     }
 
     bool fromJSON(std::string json_str) {
+        Poco::Logger& logger = Poco::Logger::get("IBMessage");
         Poco::JSON::Parser parser;
 
         Poco::replaceInPlace(json_str,"\r","");
         Poco::replaceInPlace(json_str,"\n","");
         Poco::replaceInPlace(json_str,"\t","");
+        std::string tmp;
 
         bool result = true;
         try {
             Poco::Dynamic::Var result = parser.parse(json_str);
             Poco::JSON::Object::Ptr pObject = result.extract<Poco::JSON::Object::Ptr>();
-            Poco::DynamicStruct ds = *pObject;
+            Poco::DynamicStruct msg = *pObject;
 
-            if( ds.contains("id") ) {
-                this->id = ds["id"].convert<std::string>();
+            if( msg.contains("id") ) {
+                this->id = msg["id"].convert<std::string>();
             } else {
                 result = false;
             }
 
-            if( ds.contains("payload") ) {
-                this->payload = ds["payload"].convert<std::string>();
+            if( msg.contains("payload") ) {
+                tmp = msg["payload"].convert<std::string>();
+                result = payload.fromJSON(tmp);
             } else {
                 result = false;
             }
 
-            if( ds.contains("reference") ) {
-                this->reference = ds["reference"].convert<std::string>();
+            if( msg.contains("reference") ) {
+                this->reference = msg["reference"].convert<std::string>();
             } else {
                 result = false;
             }
 
-            if( ds.contains("timestamp") ) {
-                this->timestamp = ds["timestamp"].convert<std::time_t>();
+            if( msg.contains("timestamp") ) {
+                this->timestamp = msg["timestamp"].convert<std::time_t>();
             } else {
                 result = false;
             }
         } catch(Poco::Exception excp){
+            logger.error("JSON Exception: %s", excp.displayText());
             result = false;
         }
 

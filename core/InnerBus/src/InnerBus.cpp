@@ -409,16 +409,21 @@ mosquitto * InnerBusClient::getMQTTInst(){
 }
 
 int InnerBusClient::sendMessage(IBMessage message, std::string target){
+    Poco::Logger& logger = Poco::Logger::get("InnerBus");
     IBPayload payload;
-    payload.fromJSON(message.getPayload());
+    payload = message.getPayload();
 
     if(!payload.getType().compare("command")){
+        logger.debug("%s- sending command", cfg.id);
         return sendCommand(message, target);
     }
 
     if(!payload.getType().compare("event")){
+        logger.debug("%s- sending event", cfg.id);
         return sendEvent(message);
     }
+
+    logger.debug("%s- wrong message type", cfg.id);
 }
 
 void InnerBusClient::getInfo() {
