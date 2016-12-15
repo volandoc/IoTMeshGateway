@@ -31,7 +31,7 @@ int LifXBulbPlugin::startPlugin(){
         this->busClient->init();
         this->busClient->connect_async();
         logger.debug("Started");
-//        pollingTimer.start(Poco::TimerCallback<LifXBulbPlugin>(*this, & LifXBulbPlugin::doPolling));
+        pollingTimer.start(Poco::TimerCallback<LifXBulbPlugin>(*this, & LifXBulbPlugin::doPolling));
         return 0;
     } else {
         logger.error("No IBus Client found: can't start", __FILE__, 26);

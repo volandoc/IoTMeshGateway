@@ -42,7 +42,7 @@ void LifxMessage::sendMessage(){
 }
 
 void LifxMessage::sendMessage(std::string address){
-    //Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+    Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
 
     Poco::Timestamp now;
     lifxPacket.timestamp = now.epochMicroseconds();
@@ -78,7 +78,7 @@ void LifxMessage::sendMessage(std::string address){
         dgs.sendBytes(messageBuffer.begin(), size);
         dgs.close();
     } catch(Poco::Exception excp) {
-      //  logger.log(excp, __FILE__, 77);
+        logger.log(excp, __FILE__, 77);
     }
 
 }
