@@ -31,7 +31,7 @@ int LifXBulbPlugin::startPlugin(){
         this->busClient->init();
         this->busClient->connect_async();
         logger.debug("Started");
-        pollingTimer.start(Poco::TimerCallback<LifXBulbPlugin>(*this, & LifXBulbPlugin::doPolling));
+//        pollingTimer.start(Poco::TimerCallback<LifXBulbPlugin>(*this, & LifXBulbPlugin::doPolling));
         return 0;
     } else {
         logger.error("No IBus Client found: can't start", __FILE__, 26);
@@ -40,12 +40,14 @@ int LifXBulbPlugin::startPlugin(){
 }
 
 void LifXBulbPlugin::doPolling(Poco::Timer& timer){
-    LifxMessage message;
-    message.acknowledgeRequired(true);
-    message.responseRequired(true);
-    message.sendMessage("");
-    Poco::Logger& logger = Poco::Logger::get("CloudConnector");
-    logger.debug("Gateway provision failed, retrying in 5 s...");
+    Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+
+    LifxMessage *message = new SetPowerMessage(1024);
+    message->sendMessage();
+
+    logger.debug("Polling message sent");
+
+    delete message;
 }
 
 int LifXBulbPlugin::setIBusClient(InnerBusClientIF* client){
