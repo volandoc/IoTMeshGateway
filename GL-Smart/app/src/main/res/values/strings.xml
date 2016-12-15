@@ -1,12 +1,17 @@
 <resources>
     <string name="app_name">GL-Smart</string>
-    <string name="action_settings">Settings</string>
-    <string name="status_disconnected">Disconnected</string>
-    <string name="status_connected">Connected</string>
-    <string name="connect">Connect</string>
-    <string name="disconnect">Disconnect</string>
-    <string name="enter_address">Server address:</string>
-    <string name="test_address_placeholder">172.24.254.45</string>
-    <string name="status">Status:</string>
-    <string name="log">Log:</string>
+
+    <string name="server_address">172.24.254.20</string>
+
+    <string name="message_disconnected">Disconnected</string>
+    <string name="message_connected">Connected</string>
+	<string name="message_connect">Connect</string>
+    <string name="message_disconnect">Disconnect</string>
+	
+    <string name="info_address">Server address:</string>
+    <string name="info_status">Status:</string>
+    <string name="info_log">Log:</string>
+    <string name="settings_title">Settings</string>
+    <string name="gateway_title">Gateway</string>
+    <string name="message_subscribe">Subscribe</string>
 </resources>
