@@ -1,9 +1,5 @@
 #include "messaging.h"
 
-void LifxMessage::setPacketSize(Poco::UInt16 size){
-    lifxPacket.size = size;
-}
-
 void LifxMessage::setPacketSource(Poco::UInt32 source){
     lifxPacket.source = source;
 }
@@ -12,8 +8,12 @@ void LifxMessage::setPacketTarget(std::string mac){
 
 }
 
-void LifxMessage::setData(std::string mac){
-
+void LifxMessage::setData(Poco::UInt8 *databuf, Poco::UInt16 size){
+    lifxPacket.size = LifxHeaderSize + size;
+    lifxPacket.data_size = size;
+    for(int pos=0; pos<size; pos++){
+        lifxPacket.data[pos] = databuf[pos];
+    }
 }
 
 void LifxMessage::acknowledgeRequired(bool ack){
@@ -37,15 +37,17 @@ void LifxMessage::setPacketType(Poco::UInt16 type){
 }
 
 void LifxMessage::sendMessage(){
-    sendMessage("255.255.255.255");
+    Poco::Net::NetworkInterface ni = Poco::Net::NetworkInterface::forName("enp0s25");
+    sendMessage(ni.broadcastAddress().toString());
 }
 
 void LifxMessage::sendMessage(std::string address){
+    //Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
 
     Poco::Timestamp now;
     lifxPacket.timestamp = now.epochMicroseconds();
 
-    Poco::Buffer<char> messageBuffer(LifxHeaderSize+lifxPacket.data_size);
+    Poco::Buffer<char> messageBuffer(lifxPacket.size);
     Poco::BasicMemoryBinaryWriter<char> messageWriter(messageBuffer, Poco::BinaryWriter::LITTLE_ENDIAN_BYTE_ORDER);
 
     messageWriter << lifxPacket.size << lifxPacket.protocol << lifxPacket.source;
@@ -67,14 +69,16 @@ void LifxMessage::sendMessage(std::string address){
     }
 
     size_t size = messageBuffer.sizeBytes();
-    std::cout << std::endl;
-    for(int i=0; i < size; i++){
-        std::cout << (short) messageBuffer[i] << " ";
-    }
-    std::cout << std::endl;
 
-    Poco::Net::SocketAddress sa(address, LifxPort);
-    Poco::Net::DatagramSocket dgs;
-    dgs.connect(sa);
-    dgs.sendBytes(messageBuffer.begin(), size);
+    try {
+        Poco::Net::SocketAddress sa(address, LifxPort);
+        Poco::Net::DatagramSocket dgs;
+        dgs.setBroadcast(true);
+        dgs.connect(sa);
+        dgs.sendBytes(messageBuffer.begin(), size);
+        dgs.close();
+    } catch(Poco::Exception excp) {
+      //  logger.log(excp, __FILE__, 77);
+    }
+
 }
