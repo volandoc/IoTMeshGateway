@@ -42,7 +42,7 @@ int LifXBulbPlugin::startPlugin(){
 void LifXBulbPlugin::doPolling(Poco::Timer& timer){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
 
-    LifxMessage *message = new SetPowerMessage(1024);
+    LifxMessage *message = new GetServiceMessage();
     message->sendMessage();
 
     logger.debug("Polling message sent");
@@ -79,7 +79,31 @@ int LifXBulbPlugin::executeCommand(std::string source, IBMessage message){
         return 0;
     }
 
-    sendOccurrence(true, "TESTMSG", "It is a simple test message", message.getId());
+    if(payload.getType().compare("command")) {
+        sendOccurrence(false, "ERRORMSG", "Wrong message type, not command", message.getId());
+        return 0;
+    }
+
+    if( !payload.getValue().compare("GET") ) {
+        if(4 == t1.count()) {
+            //proccessDeviceGetCommand(payload.getContent(), t1[3]);
+            sendOccurrence(true, "TESTMSG", "GET command for device must be proccessed", message.getId());
+        } else {
+            //proccessPluginGetCommand(payload.getContent(), t1[3]);
+            sendOccurrence(true, "TESTMSG", "GET command for plugin must be proccessed", message.getId());
+        }
+    } else if( !payload.getValue().compare("SET") ) {
+        if(4 == t1.count()) {
+            //proccessDeviceSetCommand(payload.getContent(), t1[3]);
+            sendOccurrence(true, "TESTMSG", "SET command for device must be proccessed", message.getId());
+        } else {
+            //proccessPluginSetCommand(payload.getContent(), t1[3]);
+            sendOccurrence(true, "TESTMSG", "SET command for plugin must be proccessed", message.getId());
+        }
+    } else {
+        sendOccurrence(false, "ERRORMSG", "Wrong command value, not proccessed", message.getId());
+        return 0;
+    }
 
     return 0;
 }
