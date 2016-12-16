@@ -194,7 +194,7 @@ int InnerBusClient::sendCommand(IBMessage message, std::string target) {
     return rc;
 }
 
-int InnerBusClient::sendEvent(IBMessage message) {
+int InnerBusClient::sendEvent(IBMessage message, std::string target) {
     int rc = 0;
 
     if(cfg.id == cfg.prefix){
@@ -203,7 +203,9 @@ int InnerBusClient::sendEvent(IBMessage message) {
     if( nullptr != callbackObj ) {
         if( (callbackObj->getPluginDetails()->type != NULL)
              && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
-            std::string tmpTopic = cfg.prefix + "/" + cfg.id + "/" + cfg.occurrence_topic;
+            std::string tmpTopic = cfg.prefix + "/" + cfg.id;
+            if(!target.empty()) tmpTopic = tmpTopic + "/" + target;
+            tmpTopic = tmpTopic + "/" + cfg.occurrence_topic;
             rc = publish(tmpTopic, message.toJSON());
         }
 
@@ -420,7 +422,7 @@ int InnerBusClient::sendMessage(IBMessage message, std::string target){
 
     if(!payload.getType().compare("event")){
         logger.debug("%s- sending event", cfg.id);
-        return sendEvent(message);
+        return sendEvent(message, target);
     }
 
     logger.debug("%s- wrong message type", cfg.id);

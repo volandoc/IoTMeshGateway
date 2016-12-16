@@ -86,18 +86,18 @@ int LifXBulbPlugin::executeCommand(std::string source, IBMessage message){
 
     if( !payload.getValue().compare("GET") ) {
         if(4 == t1.count()) {
-            //proccessDeviceGetCommand(payload.getContent(), t1[3]);
-            sendOccurrence(true, "TESTMSG", "GET command for device must be proccessed", message.getId());
+            //proccessDeviceGetCommand(payload.getContent(), t1[2]);
+            sendOccurrence(true, "TESTMSG", "GET command for device must be proccessed", message.getId(), t1[2]);
         } else {
-            //proccessPluginGetCommand(payload.getContent(), t1[3]);
+            //proccessPluginGetCommand(payload.getContent());
             sendOccurrence(true, "TESTMSG", "GET command for plugin must be proccessed", message.getId());
         }
     } else if( !payload.getValue().compare("SET") ) {
         if(4 == t1.count()) {
-            //proccessDeviceSetCommand(payload.getContent(), t1[3]);
-            sendOccurrence(true, "TESTMSG", "SET command for device must be proccessed", message.getId());
+            //proccessDeviceSetCommand(payload.getContent(), t1[2]);
+            sendOccurrence(true, "TESTMSG", "SET command for device must be proccessed", message.getId(), t1[2]);
         } else {
-            //proccessPluginSetCommand(payload.getContent(), t1[3]);
+            //proccessPluginSetCommand(payload.getContent());
             sendOccurrence(true, "TESTMSG", "SET command for plugin must be proccessed", message.getId());
         }
     } else {
@@ -115,7 +115,7 @@ int LifXBulbPlugin::executeInternalCommand(std::string source, std::string messa
     return 0;
 }
 
-int LifXBulbPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference) {
+int LifXBulbPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference, std::string sender) {
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
     logger.debug("sendOccurrence \"%b : %s : %s : %s\"", success, cvalue, content, reference);
 
@@ -133,7 +133,7 @@ int LifXBulbPlugin::sendOccurrence(bool success, std::string cvalue, std::string
     ibmessage.setTimestamp(now.epochTime());
 
     logger.debug("sendOccurrence: message prepared for sending");
-    busClient->sendMessage(ibmessage);
+    busClient->sendMessage(ibmessage, sender);
 
     return 0;
 }
