@@ -19,6 +19,7 @@ private:
     std::string work_dir;
 
     void doPolling(Poco::Timer &timer);
+    int proccessDeviceSetCommand(std::string content, std::string device_id);
 
 public:
     LifXBulbPlugin();
