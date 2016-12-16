@@ -80,7 +80,7 @@ public class SettingsFragment extends BaseFragment implements Toolbar.OnMenuItem
 		if (R.id.done == item.getItemId()) {
 			Settings.self.setGateway(mGatewayView.getText().toString());
 
-			MqttManager.reset();
+			MqttManager.self().reset();
 
 			return true;
 		}

@@ -24,7 +24,7 @@ public class MqttManager {
 
 	private static MqttManager self;
 
-	private static MqttAndroidClient mqttAndroidClient;
+	private  MqttAndroidClient mqttAndroidClient;
 
 	private MqttManager() {
 		String url = TCP + Settings.self.getGateway() + PORT;
@@ -42,7 +42,7 @@ public class MqttManager {
 		return self;
 	}
 
-	public static void reset() {
+	public void reset() {
 		if (mqttAndroidClient != null && mqttAndroidClient.isConnected()) {
 			try {
 				mqttAndroidClient.disconnect();
