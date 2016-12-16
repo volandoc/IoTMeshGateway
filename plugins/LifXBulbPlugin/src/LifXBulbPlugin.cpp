@@ -111,14 +111,14 @@ int LifXBulbPlugin::executeCommand(std::string source, IBMessage message){
 int LifXBulbPlugin::proccessDeviceSetCommand(std::string content, std::string device_id){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
 
-    if(content.find("on")){
+    if(content.find("on") != -1){
         LifxMessage *message = new SetPowerMessage(65535);
         message->sendMessage();
 
         logger.debug("Power On message sent to %s", device_id);
 
         delete message;
-    } else if(content.find("off")){
+    } else if(content.find("off") != -1){
         LifxMessage *message = new SetPowerMessage(0);
         message->sendMessage();
 
