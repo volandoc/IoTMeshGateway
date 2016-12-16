@@ -94,8 +94,8 @@ int LifXBulbPlugin::executeCommand(std::string source, IBMessage message){
         }
     } else if( !payload.getValue().compare("SET") ) {
         if(4 == t1.count()) {
-            //proccessDeviceSetCommand(payload.getContent(), t1[2]);
-            sendOccurrence(true, "TESTMSG", "SET command for device must be proccessed", message.getId(), t1[2]);
+            proccessDeviceSetCommand(payload.getContent(), t1[2]);
+            sendOccurrence(true, "PROPERTIES", payload.getContent(), message.getId(), t1[2]);
         } else {
             //proccessPluginSetCommand(payload.getContent());
             sendOccurrence(true, "TESTMSG", "SET command for plugin must be proccessed", message.getId());
@@ -105,6 +105,27 @@ int LifXBulbPlugin::executeCommand(std::string source, IBMessage message){
         return 0;
     }
 
+    return 0;
+}
+
+int LifXBulbPlugin::proccessDeviceSetCommand(std::string content, std::string device_id){
+    Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+
+    if(content.find("on")){
+        LifxMessage *message = new SetPowerMessage(65535);
+        message->sendMessage();
+
+        logger.debug("Power On message sent to %s", device_id);
+
+        delete message;
+    } else if(content.find("off")){
+        LifxMessage *message = new SetPowerMessage(0);
+        message->sendMessage();
+
+        logger.debug("Power Off message sent to %s", device_id);
+
+        delete message;
+    }
     return 0;
 }
 
