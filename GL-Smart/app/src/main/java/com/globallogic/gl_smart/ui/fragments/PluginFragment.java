@@ -33,6 +33,7 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 	private SwitchCompat mSwitchView;
 	private ImageView mImageView;
 
+//	c.EOPQ3kFbwC1AWr0rsc8WyQpXMpAYSJz0ZRCI5jENIVGaBMFuP7mSbeC1BbTusI3zF8Z3vzOZkt4Dt4rER1iqmWMbtneGLmSJBTIsjO7bxfOG7Fj83JXejzZEXpFmqdgIUvHX3ZlwSYPM5ao1
 	private static final String NEST_TOPIC = "A000000000000777/NestDevicesPlugin/nK1FIdFVSFe_8wbS1Sz1Qpw07GxLCYe9MJ3dXTbkGKpEmPo6TnJr6Q/command";
 	private static final String ESP_TOPIC = "A000000000000777/Esp8266Plugin/command";
 

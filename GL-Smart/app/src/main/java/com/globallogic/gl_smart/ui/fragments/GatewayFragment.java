@@ -1,7 +1,5 @@
 package com.globallogic.gl_smart.ui.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -98,21 +96,35 @@ public class GatewayFragment extends BaseFragment implements MqttCallback, Toolb
 
 		String[] data = topic.split("/");
 		if (data.length == 3 && data[2].equals("status")) {
-			mPluginList.add(new Plugin(data[0], data[1], mess));
-			mListView.getAdapter().notifyItemInserted(mPluginList.size() - 1);
+			Plugin plugin = findByName(data[1]);
+			if (plugin == null) {
+				mPluginList.add(new Plugin(data[0], data[1], mess));
+				mListView.getAdapter().notifyItemInserted(mPluginList.size() - 1);
+			} else {
+				plugin.status = mess;
+				mListView.getAdapter().notifyItemChanged(mPluginList.indexOf(plugin));
+			}
 		} else if (data.length == 2 && data[1].equals("status")) {
 			mToolbar.setSubtitle(data[0] + " " + mess);
 		}
 
-		if (mPluginList.size() > 0) {
-			mProgressBar.animate().alpha(0).setListener(new AnimatorListenerAdapter() {
-				@Override
-				public void onAnimationEnd(Animator animation) {
-					super.onAnimationEnd(animation);
-					mProgressBar.setVisibility(View.GONE);
-				}
-			}).setDuration(300).start();
+		if (mPluginList.size() > 0 && mProgressBar.getVisibility() == View.VISIBLE) {
+			mProgressBar.setVisibility(View.GONE);
 		}
+	}
+
+	private Plugin findByName(String name) {
+		if (mPluginList == null) {
+			return null;
+		}
+
+		for (Plugin plugin : mPluginList) {
+			if (plugin.name.equals(name)) {
+				return plugin;
+			}
+		}
+
+		return null;
 	}
 
 	@Override
