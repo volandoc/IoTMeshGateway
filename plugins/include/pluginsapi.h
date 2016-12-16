@@ -33,13 +33,13 @@ struct PluginDetails {
 
 class UCLPluginIf {
 public:
-    virtual ~UCLPluginIf(){};
+    virtual ~UCLPluginIf(){}
     virtual int startPlugin()=0;
     virtual int setIBusClient(InnerBusClientIF* client) = 0;
     virtual int setWorkDir(std::string path)=0;
     virtual int executeCommand(std::string source, IBMessage message)=0;
     virtual int executeInternalCommand(std::string source, std::string message) = 0;
-    virtual int sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference)=0;
+    virtual int sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference, std::string sender="")=0;
     virtual int stopPlugin()=0;
     virtual PluginDetails* getPluginDetails()=0;
 

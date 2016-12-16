@@ -231,7 +231,7 @@ int CloudConnector::executeInternalCommand(std::string source, std::string messa
     return 0;
 }
 
-int CloudConnector::sendOccurrence (bool success, std::string cvalue, std::string content, std::string reference) {
+int CloudConnector::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference, std::string sender) {
     return 0;
 }
 

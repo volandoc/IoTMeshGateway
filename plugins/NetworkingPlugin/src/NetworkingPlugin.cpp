@@ -65,7 +65,7 @@ int NetworkingPlugin::executeInternalCommand(std::string source, std::string mes
     return 0;
 }
 
-int NetworkingPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference) {
+int NetworkingPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference, std::string sender) {
       return 0;
 }
 

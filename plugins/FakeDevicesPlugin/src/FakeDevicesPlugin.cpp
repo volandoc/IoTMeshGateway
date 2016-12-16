@@ -146,7 +146,7 @@ int FakeDevicesPlugin::executeInternalCommand(std::string source, std::string me
 }
 
 
-int FakeDevicesPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference) {
+int FakeDevicesPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference, std::string sender) {
     IBPayload payload;
     payload.setType("event");
     payload.setValue((success?"SUCCESS":"FAILED"));
