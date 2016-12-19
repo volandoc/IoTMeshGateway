@@ -76,7 +76,7 @@ void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
             logger.debug("UDP Packet received");
         }
     } catch(Poco::Exception excp){
-        logger.log(excp, __FILE__, 84);
+        logger.error(excp.displayText(), __FILE__, 84);
     }
 }
 
