@@ -34,7 +34,7 @@ int LifXBulbPlugin::startPlugin(){
         this->busClient->connect_async();
         logger.debug("Started");
         pollingTimer.start(Poco::TimerCallback<LifXBulbPlugin>(*this, & LifXBulbPlugin::doPolling));
-        pollingTimer.start(Poco::TimerCallback<LifXBulbPlugin>(*this, & LifXBulbPlugin::listenUDP));
+        listenerTimer.start(Poco::TimerCallback<LifXBulbPlugin>(*this, & LifXBulbPlugin::listenUDP));
         return 0;
     } else {
         logger.error("No IBus Client found: can't start", __FILE__, 26);
@@ -56,17 +56,23 @@ void LifXBulbPlugin::doPolling(Poco::Timer& timer){
 void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
     try {
-        Poco::Net::NetworkInterface ni = Poco::Net::NetworkInterface::forName("enp0s25");
+        Poco::Net::NetworkInterface ni = Poco::Net::NetworkInterface::forName("ap0");
 
-        Poco::Net::SocketAddress sa(ni.address().toString(), LifxPort);
+        Poco::Net::SocketAddress sa(ni.broadcastAddress().toString(), LifxPort);
+        logger.debug(ni.broadcastAddress().toString());
         Poco::Net::DatagramSocket dgs(sa);
         Poco::UInt8 buffer[256];
         Poco::Net::SocketAddress sender;
+        dgs.setReceiveTimeout(500000)
 
         int n = dgs.receiveFrom(buffer, sizeof(buffer)-1, sender);
         if(n > 0) {
             buffer[n] = '\0';
-            std::cout << sender.toString() << ": " << buffer << std::endl;
+            std::cout << sender.toString() << ": ";
+            for(int i=0; i < n; i++){
+                std::cout << (unsigned int) buffer[i];
+            }
+            std::cout << std::endl;
             logger.debug("UDP Packet received");
         }
     } catch(Poco::Exception excp){
@@ -204,6 +210,7 @@ int LifXBulbPlugin::stopPlugin(){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
 
     pollingTimer.stop();
+    listenerTimer.stop();
 
     logger.debug("Stopped");
     return 0;
