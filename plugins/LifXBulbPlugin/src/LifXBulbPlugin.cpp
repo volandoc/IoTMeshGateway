@@ -63,7 +63,7 @@ void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
         Poco::Net::DatagramSocket dgs(sa);
         Poco::UInt8 buffer[256];
         Poco::Net::SocketAddress sender;
-        dgs.setReceiveTimeout(500000)
+        dgs.setReceiveTimeout(500000);
 
         int n = dgs.receiveFrom(buffer, sizeof(buffer)-1, sender);
         if(n > 0) {
