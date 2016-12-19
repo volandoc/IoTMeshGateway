@@ -37,7 +37,7 @@ void LifxMessage::setPacketType(Poco::UInt16 type){
 }
 
 void LifxMessage::sendMessage(){
-    Poco::Net::NetworkInterface ni = Poco::Net::NetworkInterface::forName("enp0s25");
+    Poco::Net::NetworkInterface ni = Poco::Net::NetworkInterface::forName("ap0");
     sendMessage(ni.broadcastAddress().toString());
 }
 
