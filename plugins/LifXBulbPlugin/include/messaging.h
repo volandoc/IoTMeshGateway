@@ -220,6 +220,7 @@ public:
         netInterface = Poco::Net::NetworkInterface::forName(iname);
         Poco::Net::SocketAddress sa(netInterface.firstAddress(Poco::Net::IPAddress::IPv4), LifxPort);
         socket = Poco::Net::DatagramSocket(sa);
+        socket.setBroadcast(true);
     }
 
     ~LifxMessageFactory(){}
@@ -245,8 +246,8 @@ public:
     }
 
     LifxMessage* getMessage(Poco::UInt16 type, Poco::UInt16 arg1, Poco::UInt16 arg2, Poco::UInt16 arg3, Poco::UInt16 arg4){
-        Poco::Logger& logger = Poco::Logger::get("FakeDevicesPlugin");
-        logger.debug("Creating (%d) message", type);
+        Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+        logger.debug("Creating (%d) message", (int) type);
         LifxMessage* tmpMessage;
 
         switch(type){
