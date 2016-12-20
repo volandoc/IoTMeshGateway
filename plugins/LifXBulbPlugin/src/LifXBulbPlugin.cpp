@@ -1,7 +1,7 @@
 #include "LifXBulbPlugin.h"
 #include <iostream>
 
-LifXBulbPlugin::LifXBulbPlugin() {
+LifXBulbPlugin::LifXBulbPlugin(): messageFactory(LifxMessageFactory("ap0")) {
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
     this->pluginDetails.type = _PD_T_DEVICE;
     this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
@@ -43,6 +43,7 @@ int LifXBulbPlugin::startPlugin(){
 
 void LifXBulbPlugin::doPolling(Poco::Timer& timer){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+    logger.debug("inside Polling timer");
 
     LifxMessage *message = messageFactory.getMessage(GET_SERVICE);
     message->sendMessage();
@@ -136,14 +137,14 @@ int LifXBulbPlugin::proccessDeviceSetCommand(std::string content, std::string de
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
 
     if(content.find("on") != -1){
-        LifxMessage *message = new SetPowerMessage(65535);
+        LifxMessage *message = messageFactory.getMessage(SET_POWER, 65535);
         message->sendMessage();
 
         logger.debug("Power On message sent to %s", device_id);
 
         delete message;
     } else if(content.find("off") != -1){
-        LifxMessage *message = new SetPowerMessage(0);
+        LifxMessage *message = messageFactory.getMessage(SET_POWER, 0);
         message->sendMessage();
 
         logger.debug("Power Off message sent to %s", device_id);
