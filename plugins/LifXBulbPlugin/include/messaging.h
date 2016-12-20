@@ -218,12 +218,15 @@ public:
 
     LifxMessageFactory(std::string iname): ifname(iname) {
         netInterface = Poco::Net::NetworkInterface::forName(iname);
-        Poco::Net::SocketAddress sa(netInterface.firstAddress(Poco::Net::IPAddress::IPv4), LifxPort);
+        Poco::Net::SocketAddress sa(netInterface.broadcastAddress(), LifxPort);
         socket = Poco::Net::DatagramSocket(sa);
         socket.setBroadcast(true);
+        socket.connect(sa);
     }
 
-    ~LifxMessageFactory(){}
+    ~LifxMessageFactory(){
+        socket.close();
+    }
 
     Poco::Net::DatagramSocket* getUDPSocket(){
         return &socket;
