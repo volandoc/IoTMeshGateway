@@ -80,7 +80,7 @@ void PluginContainer::startPlugins() {
                 failedPlugins[fpIndex] = -2;
             }
         } catch(Poco::Exception excp) {
-            logger.log(excp, __FILE__, 48);
+            logger.log(excp, __FILE__, 72);
         }
     }
 }
@@ -99,7 +99,7 @@ void PluginContainer::stopPlugins() {
             tmpPlugin.stopPlugin();
             logger.debug("Plugin <%s> stoped", plgName);
         } catch(Poco::Exception excp) {
-            logger.log(excp, __FILE__, 48);
+            logger.log(excp, __FILE__, 97);
         }
     }
     loadedPlugins.clear();
@@ -122,7 +122,7 @@ void PluginContainer::generatePluginList() {
                 UCLPluginIf& tmpPlugin = pluginLoader.instance(itMan->name());
                 tmpPlugin.setWorkDir(it->first.substr(0, it->first.find_last_of(_FILE_SEPARATOR)));
             } catch(Poco::Exception excp) {
-                logger.log(excp, __FILE__, 48);
+                logger.log(excp, __FILE__, 121);
             }
 
         }
@@ -135,7 +135,7 @@ int PluginContainer::LoadPlugin(std::string pname) {
     try{
         this->pluginLoader.loadLibrary(pname);
     } catch(Poco::Exception excp){
-        logger.log(excp, __FILE__, 88);
+        logger.log(excp, __FILE__, 135);
         failedPlugins[pname] = -1;
         return -1;
     }
