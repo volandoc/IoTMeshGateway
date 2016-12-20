@@ -1,4 +1,4 @@
-PLUGINS = LifXBulbPlugin NetworkingPlugin FakeDevicesPlugin
+PLUGINS = NetworkingPlugin FakeDevicesPlugin NestDevicesPlugin CloudConnector
 
 all: subdirs
 

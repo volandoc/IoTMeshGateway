@@ -6,7 +6,7 @@
 #include <Poco/Logger.h>
 #include "NestType.h"
 
-#define DEFAULT_TOKEN       "c.fVTpnlRYq0KNSg4auBywyh9IErpa8UNDrRwKN8MJEQfIAyOw9dCfuswqa45D3YqAbOCsbelorPGfIlfd2i8JLTa1uowuJKgO3wGT1zIXSoLpegm2bky3Gk5JpG3FCnWoqmCpFHcQ7OIJnvEQ"
+#define DEFAULT_TOKEN       "c.Bp7k52seS2eApXgSW2UPut9JySWNH059PoaV9ciQeMHfcT6p4BawHmF411knRYE4HmYQ4Rn3PpJcHRp9pe2Yv7bptMLegHFkT0LxOlu36uzlRotj24s14RRu9YU0H7fA72gFEQ43VUYJhkgt"
 
 enum {
     NEST_TYPE_CAMERA,
