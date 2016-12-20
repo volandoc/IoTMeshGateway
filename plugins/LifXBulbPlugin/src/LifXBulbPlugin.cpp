@@ -1,5 +1,4 @@
 #include "LifXBulbPlugin.h"
-#include "messaging.h"
 #include <iostream>
 
 LifXBulbPlugin::LifXBulbPlugin() {
@@ -45,7 +44,7 @@ int LifXBulbPlugin::startPlugin(){
 void LifXBulbPlugin::doPolling(Poco::Timer& timer){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
 
-    LifxMessage *message = new GetServiceMessage();
+    LifxMessage *message = messageFactory.getMessage(GET_SERVICE);
     message->sendMessage();
 
     logger.debug("Polling message sent");
@@ -56,16 +55,11 @@ void LifXBulbPlugin::doPolling(Poco::Timer& timer){
 void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
     try {
-        Poco::Net::NetworkInterface ni = Poco::Net::NetworkInterface::forName("ap0");
-
-        Poco::Net::SocketAddress sa(ni.broadcastAddress().toString(), LifxPort);
-        logger.debug(ni.broadcastAddress().toString());
-        Poco::Net::DatagramSocket dgs(sa);
+        Poco::Net::DatagramSocket *dgs = messageFactory.getUDPSocket();
         Poco::UInt8 buffer[256];
         Poco::Net::SocketAddress sender;
-        dgs.setReceiveTimeout(500000);
 
-        int n = dgs.receiveFrom(buffer, sizeof(buffer)-1, sender);
+        int n = dgs->receiveFrom(buffer, sizeof(buffer)-1, sender);
         if(n > 0) {
             buffer[n] = '\0';
             std::cout << sender.toString() << ": ";

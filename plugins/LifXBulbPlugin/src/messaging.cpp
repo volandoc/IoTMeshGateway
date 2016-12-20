@@ -37,7 +37,7 @@ void LifxMessage::setPacketType(Poco::UInt16 type){
 }
 
 void LifxMessage::sendMessage(){
-    Poco::Net::NetworkInterface ni = Poco::Net::NetworkInterface::forName("ap0");
+    Poco::Net::NetworkInterface ni = Poco::Net::NetworkInterface::forName(ifname);
     sendMessage(ni.broadcastAddress().toString());
 }
 
@@ -72,11 +72,7 @@ void LifxMessage::sendMessage(std::string address){
 
     try {
         Poco::Net::SocketAddress sa(address, LifxPort);
-        Poco::Net::DatagramSocket dgs;
-        dgs.setBroadcast(true);
-        dgs.connect(sa);
-        dgs.sendBytes(messageBuffer.begin(), size);
-        dgs.close();
+        socketUDP->sendTo(messageBuffer.begin(), size, sa);
     } catch(Poco::Exception excp) {
         logger.log(excp, __FILE__, 77);
     }
