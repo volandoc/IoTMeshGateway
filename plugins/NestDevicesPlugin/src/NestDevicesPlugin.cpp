@@ -66,7 +66,7 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
 
     logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
-    IBPayload payload;
+    IBPayload payload = message.getPayload();
     if(true) {
         logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
         if ("command" == payload.getType()) {
@@ -113,8 +113,8 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
                         }
                     }
 
-                    devicesList = Poco::replace(devicesList, "\"", "*");
-                    devicesList = Poco::replace(devicesList, "*", "\\\"");
+//                    devicesList = Poco::replace(devicesList, "\"", "*");
+//                    devicesList = Poco::replace(devicesList, "*", "\\\"");
                     sendOccurrence(true, "LIST", devicesList, message.getId());
                 } else if ("PROPERTIES" == payload.getCvalue()) {
                     std::vector<std::string> serials;
