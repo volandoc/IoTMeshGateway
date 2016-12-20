@@ -14,10 +14,10 @@ CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,LifXBulbPlugin.so.1
 INCPATH       = -I./include -I../include -I../../core/include
-LIBS          = $(SUBLIBS) -lPocoFoundation
+LIBS          = $(SUBLIBS) -lPocoFoundation -lPocoNet
 DESTDIR       = 
-SOURCES       = src/LifXBulbPlugin.cpp 
-OBJECTS       = LifXBulbPlugin.o
+SOURCES       = src/LifXBulbPlugin.cpp src/messaging.cpp
+OBJECTS       = LifXBulbPlugin.o messaging.o
 
 ###
 # Define system commands
@@ -58,6 +58,9 @@ $(TARGETA):  $(OBJECTS)
 LifXBulbPlugin.o: src/LifXBulbPlugin.cpp include/LifXBulbPlugin.h \
 		../include/pluginsapi.h ../../core/include/innerbusclientapi.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o LifXBulbPlugin.o src/LifXBulbPlugin.cpp
+
+messaging.o: src/messaging.cpp include/messaging.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o messaging.o src/messaging.cpp
 
 clean:
 	-$(DEL_FILE) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2) $(TARGETA) $(OBJECTS)
