@@ -72,8 +72,7 @@ void LifxMessage::sendMessage(std::string address){
 
     try {
         Poco::Net::SocketAddress sa(address, LifxPort);
-        socketUDP->connect(sa);
-        socketUDP->sendBytes(messageBuffer.begin(), size);
+        socketUDP->sendTo(messageBuffer.begin(), size, sa);
     } catch(Poco::Exception excp) {
         logger.log(excp, __FILE__, 77);
     }
