@@ -250,9 +250,9 @@ public:
         LifxMessage* tmpMessage;
 
         switch(type){
-            GET_SERVICE: tmpMessage = new GetServiceMessage(); break;
-            GET_POWER:   tmpMessage = new GetPowerMessage(); break;
-            SET_POWER:   tmpMessage = new SetPowerMessage(arg1); break;
+            case GET_SERVICE: tmpMessage = new GetServiceMessage(); break;
+            case GET_POWER:   tmpMessage = new GetPowerMessage(); break;
+            case SET_POWER:   tmpMessage = new SetPowerMessage(arg1); break;
             default: tmpMessage = nullptr;
         }
         tmpMessage->setNetwork(ifname);

@@ -22,7 +22,7 @@ private:
     Poco::Timer pollingTimer;
     Poco::Timer listenerTimer;
     std::string work_dir;
-    LifxMessageFactory messageFactory = LifxMessageFactory("ap0");
+    LifxMessageFactory messageFactory;
 
     void doPolling(Poco::Timer &timer);
     void listenUDP(Poco::Timer &timer);
