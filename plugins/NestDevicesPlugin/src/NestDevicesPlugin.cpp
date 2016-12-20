@@ -129,7 +129,7 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
                         for (DevicesIterator itDevice = devices.begin(); itDevice != devices.end(); ++itDevice) {
                             if (serialSource == itDevice->first) {
                                 std::string propertiesJson = typeList[typecount]->requestDeviceProperties(serialSource);
-                                sendOccurrence(true, "PROPERTIES", propertiesJson, message.getId());
+                                sendOccurrence(true, "PROPERTIES", propertiesJson, message.getId(), serialSource);
                             }
                         }
                     }
@@ -150,7 +150,7 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
                                 // TODO implement
                                 // generate JSON with capabilities info stored in map 'capabilities',
                                 // store generated JSON to variable 'capabilitiesJson'
-                                sendOccurrence(true, "CAPABILITIES", capabilitiesJson, message.getId());
+                                sendOccurrence(true, "CAPABILITIES", capabilitiesJson, message.getId(), serialSource);
                             }
                         }
                     }
@@ -232,7 +232,7 @@ int NestDevicesPlugin::sendOccurrence(bool success, std::string cvalue, std::str
     ibmessage.setReference(reference);
     ibmessage.setTimestamp(now.epochTime());
 
-    busClient->sendMessage(ibmessage);
+    busClient->sendMessage(ibmessage, sender);
 
     return 0;
 }
