@@ -1,6 +1,6 @@
 #include "NestType.h"
 #include "rest.h"
-#include "sysdefs.h"
+#include <sysdefs.h>
 #include <sstream>
 #include <fstream>
 #include <streambuf>
@@ -23,9 +23,9 @@ using namespace Poco;
 using namespace Poco::Util;
 
 
-NestType::NestType(std::string type, std::string token, std::string work_dir) {
+NestType::NestType(std::string type, Configuration config, std::string work_dir) {
     this->type = type;
-    this->token = token;
+    this->configuration = config;
     this->work_dir = work_dir;
 }
 
@@ -60,7 +60,7 @@ void NestType::requestSerialsList() {
     rst.setMethod(REST_METHOD_GET);
 
     buffer = "\"Authorization:Bearer ";
-    buffer += this->token;
+    buffer += this->configuration.tocken;
     buffer += "\"";
     rst.setHeader(buffer);
 
@@ -68,8 +68,8 @@ void NestType::requestSerialsList() {
 
     rst.setCloudResponseFile(HOST_REST_GET_FILENAME);
 
-    buffer = REST_NEST_HOST;
-    buffer += URL_DEVICES_PATH;
+    buffer = configuration.host;
+    buffer += configuration.device_subpath;
     buffer += this->type;
     buffer += "/";
     rst.setUrl(buffer);
@@ -96,7 +96,7 @@ std::string NestType::requestDeviceProperties(std::string serial) {
     rst.setMethod(REST_METHOD_GET);
 
     buffer = "\"Authorization:Bearer ";
-    buffer += this->token;
+    buffer += this->configuration.tocken;
     buffer += "\"";
     rst.setHeader(buffer);
 
@@ -104,8 +104,8 @@ std::string NestType::requestDeviceProperties(std::string serial) {
 
     rst.setCloudResponseFile(HOST_REST_GET_FILENAME);
 
-    buffer = REST_NEST_HOST;
-    buffer += URL_DEVICES_PATH;
+    buffer = configuration.host;
+    buffer += configuration.device_subpath;
     buffer += this->type;
     buffer += "/";
     buffer += serial;
@@ -125,7 +125,7 @@ std::string NestType::requestStrDeviceProperty(std::string serial, std::string p
     rst.setMethod(REST_METHOD_GET);
 
     buffer = "\"Authorization:Bearer ";
-    buffer += this->token;
+    buffer += this->configuration.tocken;
     buffer += "\"";
     rst.setHeader(buffer);
 
@@ -133,8 +133,8 @@ std::string NestType::requestStrDeviceProperty(std::string serial, std::string p
 
     rst.setCloudResponseFile(HOST_REST_GET_FILENAME);
 
-    buffer = REST_NEST_HOST;
-    buffer += URL_DEVICES_PATH;
+    buffer = configuration.host;
+    buffer += configuration.device_subpath;
     buffer += this->type;
     buffer += "/";
     buffer += serial;
@@ -173,7 +173,7 @@ void NestType::setStrDeviceProperty(std::string serial, std::string propertyName
     rst.setMethod(REST_METHOD_PUT);
 
     buffer = "\"Authorization:Bearer ";
-    buffer += this->token;
+    buffer += this->configuration.tocken;
     buffer += "\"";
     rst.setHeader(buffer);
 
@@ -181,8 +181,8 @@ void NestType::setStrDeviceProperty(std::string serial, std::string propertyName
 
     rst.setCloudResponseFile(HOST_REST_GET_FILENAME);
 
-    buffer = REST_NEST_HOST;
-    buffer += URL_DEVICES_PATH;
+    buffer = configuration.host;
+    buffer += configuration.device_subpath;
     buffer += this->type;
     buffer += "/";
     buffer += serial;
@@ -221,12 +221,12 @@ void NestType::addCapability(unsigned int id, CapabilityInfo capability) {
     this->capabilities[id] = capability;
 }
 
-std::string NestType::getToken() {
-    return this->token;
+Configuration NestType::getConfig() {
+    return this->configuration;
 }
 
-void NestType::setToken(std::string token) {
-    this->token = token;
+void NestType::setConfig(Configuration config) {
+    this->configuration = config;
 }
 
 void NestType::initCapabilities() {

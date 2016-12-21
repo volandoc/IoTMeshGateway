@@ -31,8 +31,10 @@ int NestDevicesPlugin::startPlugin() {
         return -1;
     }
 
+    this->loadConfig();
+
     for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
-        typeList[typecount] = NestTypeFactory::buildNestType(typecount, this->work_dir);
+        typeList[typecount] = NestTypeFactory::buildNestType(typecount, defaultConf, this->work_dir);
         typeList[typecount]->initCapabilities();
         typeList[typecount]->init();
     }
@@ -57,6 +59,23 @@ int NestDevicesPlugin::setWorkDir(std::string path) {
     Poco::Logger& logger = Poco::Logger::get("NestDevicesPlugin");
     logger.debug("Running from %s", path);
     this->work_dir = path;
+    return 0;
+}
+
+int NestDevicesPlugin::loadConfig() {
+    Poco::Logger& logger = Poco::Logger::get("NestDevicesPlugin");
+
+    std::string confPath = this->work_dir + "/" + "config.properties";
+
+    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> pConf;
+    pConf = new Poco::Util::PropertyFileConfiguration(confPath);
+
+    defaultConf.tocken = pConf->getString("nest.tocken");
+    defaultConf.host = pConf->getString("nest.host");
+    defaultConf.device_subpath = pConf->getString("nest.devicepath");
+
+    logger.debug("Configuration loaded");
+
     return 0;
 }
 

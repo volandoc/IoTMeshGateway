@@ -2,6 +2,7 @@
 #define NEST_DEVICES_TYPE_H
 
 #include <Poco/Logger.h>
+#include "configuration.h"
 
 #define REST_NEST_HOST      "https://developer-api.nest.com/"
 #define URL_DEVICES_PATH    "devices/"
@@ -62,7 +63,7 @@ public:
 
 class NestType{
 private:
-    std::string token;
+    Configuration configuration;
     std::string devicesJson;
 
     Capabilities capabilities;
@@ -80,7 +81,7 @@ private:
     std::string parseStrDeviceProperty(std::string serial, std::string propertyName);
 
 public:
-    NestType(std::string type, std::string token, std::string work_dir);
+    NestType(std::string type, Configuration config, std::string work_dir);
     virtual ~NestType();
     
     void init();
@@ -94,8 +95,8 @@ public:
     void setCapabilities(Capabilities capabilities);
     void addCapability(unsigned int id, CapabilityInfo capability);
 
-    std::string getToken();
-    void setToken(std::string token);
+    Configuration getConfig();
+    void setConfig(Configuration config);
 
     void setStrDeviceProperty(std::string serial, std::string propertyName, std::string propertyValue);
 
