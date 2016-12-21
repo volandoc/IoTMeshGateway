@@ -27,8 +27,8 @@ HEADERS += include/NestDevicesPlugin.h \
     ../../core/include/innerbusclientapi.h \
     include/NestType.h \
     include/NestTypeFactory.h \
-    include/restconfig.h \
-    include/rest.h
+    include/rest.h \
+    include/configuration.h
 
 LIBS += -lPocoFoundation
 

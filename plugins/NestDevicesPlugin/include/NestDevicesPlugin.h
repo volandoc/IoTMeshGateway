@@ -6,8 +6,11 @@
 #include <Poco/Task.h>
 #include <Poco/UUID.h>
 #include <Poco/UUIDGenerator.h>
+#include <Poco/AutoPtr.h>
+#include <Poco/Util/PropertyFileConfiguration.h>
 #include "pluginsapi.h"
 #include "NestTypeFactory.h"
+#include "configuration.h"
 
 class NestDevicesPlugin: public UCLPluginIf {
 private:
@@ -15,12 +18,14 @@ private:
     InnerBusClientIF* busClient = NULL;
     std::string work_dir;
     NestType* typeList[NEST_DEVICE_TYPES_SIZE];
+    Configuration defaultConf;
 
 public:
     NestDevicesPlugin();
     virtual ~NestDevicesPlugin();
 
     virtual int startPlugin();
+    virtual int loadConfig();
     virtual int setIBusClient(InnerBusClientIF* client);
     virtual int setWorkDir(std::string path);
     virtual int executeCommand(std::string source, IBMessage message);
