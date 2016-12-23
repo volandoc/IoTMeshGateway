@@ -5,9 +5,11 @@ import android.util.Log;
 import com.globallogic.gl_smart.App;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 /**
  * @author eugenii.samarskyi.
@@ -24,11 +26,13 @@ public class MqttManager {
 
 	private static MqttManager self;
 
-	private  MqttAndroidClient mqttAndroidClient;
+	private MqttAndroidClient mqttAndroidClient;
 
 	private MqttManager() {
 		String url = TCP + Settings.self.getGateway() + PORT;
 		mqttAndroidClient = new MqttAndroidClient(App.self(), url, MqttAsyncClient.generateClientId() + SUFFIX_SUB);
+
+		Log.i(TAG, "Current url = " + url);
 	}
 
 	public MqttAndroidClient getMqtt() {
@@ -40,6 +44,29 @@ public class MqttManager {
 			self = new MqttManager();
 		}
 		return self;
+	}
+
+	public void connect(IMqttActionListener l) throws MqttException {
+		mqttAndroidClient.connect(null, l);
+	}
+
+	public void disconnect(IMqttActionListener l) throws MqttException {
+		mqttAndroidClient.disconnect(null, l);
+	}
+
+	public void sendMessage(String mess, String topic) {
+		if (!MqttManager.self().isConnected()) {
+			return;
+		}
+
+		MqttMessage message = new MqttMessage();
+		message.setPayload(mess.getBytes());
+
+		try {
+			MqttManager.self().getMqtt().publish(topic, message);
+		} catch (MqttException e) {
+			Log.e(TAG, "publish failure: ");
+		}
 	}
 
 	public void reset() {
@@ -74,17 +101,46 @@ public class MqttManager {
 	}
 
 	public void subscribe(MqttCallback callback) {
+		subscribe(ALL, callback);
+	}
+
+	public void subscribe(String topic, MqttCallback callback) {
+		if (mqttAndroidClient == null) {
+			return;
+		}
+		mqttAndroidClient.setCallback(callback);
+
+		if (mqttAndroidClient.isConnected()) {
+			try {
+				mqttAndroidClient.subscribe(topic, 0);
+				Log.i(TAG, "subscribed on " + topic);
+			} catch (MqttException e) {
+				Log.e(TAG, "subscribe failed: ", e);
+			}
+		}
+	}
+
+	public void subscribe(String topic) {
 		if (mqttAndroidClient == null) {
 			return;
 		}
 
 		if (mqttAndroidClient.isConnected()) {
 			try {
-				mqttAndroidClient.setCallback(callback);
-				mqttAndroidClient.subscribe(ALL, 0);
+				mqttAndroidClient.subscribe(topic, 0);
+
+				Log.i(TAG, "subscribed on " + topic);
 			} catch (MqttException e) {
 				Log.e(TAG, "subscribe failed: ", e);
 			}
 		}
+	}
+
+	public void setCallback(MqttCallback callback) {
+		if (mqttAndroidClient == null) {
+			return;
+		}
+
+		mqttAndroidClient.setCallback(callback);
 	}
 }

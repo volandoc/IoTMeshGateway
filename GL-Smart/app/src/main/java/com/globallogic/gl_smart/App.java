@@ -24,7 +24,7 @@ public class App extends Application {
 
 	private Handler mHandler = new Handler();
 	private Executor mExecutor = Executors.newSingleThreadExecutor();
-	private Gson mGson = new GsonBuilder().create();
+	private Gson mGson = new GsonBuilder().serializeNulls().create();
 
 	@Override
 	public void onCreate() {
@@ -62,7 +62,7 @@ public class App extends Application {
 		return self.mPreferences;
 	}
 
-	public Gson getGson() {
+	public static Gson getGson() {
 		return self.mGson;
 	}
 }

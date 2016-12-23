@@ -17,6 +17,9 @@ import android.widget.TextView;
 
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Plugin;
+import com.globallogic.gl_smart.model.mqtt.Topic;
+import com.globallogic.gl_smart.model.mqtt.type.MessageType;
+import com.globallogic.gl_smart.model.mqtt.type.SenderType;
 import com.globallogic.gl_smart.ui.base.BaseFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 
@@ -79,7 +82,7 @@ public class GatewayFragment extends BaseFragment implements MqttCallback, Toolb
 
 	@Override
 	public void connectionLost(Throwable cause) {
-		Log.e(TAG, "Connection was lost");
+//		Log.v(TAG, "Connection was lost");
 	}
 
 	@Override
@@ -90,22 +93,28 @@ public class GatewayFragment extends BaseFragment implements MqttCallback, Toolb
 	}
 
 	@Override
-	public void messageArrived(String topic, MqttMessage message) throws Exception {
+	public void messageArrived(String topic_, MqttMessage message) throws Exception {
 		String mess = new String(message.getPayload());
-		Log.d(TAG, "Message: " + topic + ": " + mess);
+		Log.d(TAG, "Topic: " + topic_ + ", Message: " + mess);
 
-		String[] data = topic.split("/");
-		if (data.length == 3 && data[2].equals("status")) {
-			Plugin plugin = findByName(data[1]);
+		Topic topic = new Topic(topic_);
+		MessageType messageType = topic.getMessageType();
+		if (MessageType.Status != messageType) {
+			return;
+		}
+
+		SenderType senderType = SenderType.fromString(topic.topic);
+		if (SenderType.Plugin == senderType) {
+			Plugin plugin = findByName(topic.plugin());
 			if (plugin == null) {
-				mPluginList.add(new Plugin(data[0], data[1], mess));
+				mPluginList.add(new Plugin(topic.gateway(), topic.plugin(), mess));
 				mListView.getAdapter().notifyItemInserted(mPluginList.size() - 1);
 			} else {
 				plugin.status = mess;
 				mListView.getAdapter().notifyItemChanged(mPluginList.indexOf(plugin));
 			}
-		} else if (data.length == 2 && data[1].equals("status")) {
-			mToolbar.setSubtitle(data[0] + " " + mess);
+		} else if (SenderType.Gateway == senderType) {
+			mToolbar.setSubtitle(topic.gateway() + " " + mess);
 		}
 
 		if (mPluginList.size() > 0 && mProgressBar.getVisibility() == View.VISIBLE) {
@@ -129,7 +138,6 @@ public class GatewayFragment extends BaseFragment implements MqttCallback, Toolb
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken token) {
-		MqttManager.self().getMqtt().acknowledgeMessage(String.valueOf(token.getMessageId()));
 		Log.d(TAG, "Delivery Complete!");
 	}
 

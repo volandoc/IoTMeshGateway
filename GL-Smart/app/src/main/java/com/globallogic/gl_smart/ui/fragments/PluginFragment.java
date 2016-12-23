@@ -1,6 +1,9 @@
 package com.globallogic.gl_smart.ui.fragments;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -10,15 +13,19 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 
+import com.globallogic.gl_smart.App;
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Plugin;
+import com.globallogic.gl_smart.model.mqtt.Message;
+import com.globallogic.gl_smart.model.mqtt.Topic;
+import com.globallogic.gl_smart.model.mqtt.type.MessageType;
+import com.globallogic.gl_smart.model.mqtt.type.SenderType;
 import com.globallogic.gl_smart.ui.base.BaseFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 import com.squareup.picasso.Picasso;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 /**
@@ -33,10 +40,12 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 	private SwitchCompat mSwitchView;
 	private ImageView mImageView;
 
-//	c.EOPQ3kFbwC1AWr0rsc8WyQpXMpAYSJz0ZRCI5jENIVGaBMFuP7mSbeC1BbTusI3zF8Z3vzOZkt4Dt4rER1iqmWMbtneGLmSJBTIsjO7bxfOG7Fj83JXejzZEXpFmqdgIUvHX3ZlwSYPM5ao1
 	private static final String NEST_TOPIC = "A000000000000777/NestDevicesPlugin/nK1FIdFVSFe_8wbS1Sz1Qpw07GxLCYe9MJ3dXTbkGKpEmPo6TnJr6Q/command";
-	private static final String ESP_TOPIC = "A000000000000777/Esp8266Plugin/command";
+	private static final String ESP_TOPIC = "A000000000000777/Esp8266Plugin/LED/command";
+	private static final String ESP_LED_TOPIC = "A000000000000777/Esp8266Plugin/LED/command";
 
+	//	A000000000000001/ZWavePlugin_356238hhkj/#
+	//	+/+/+/command
 	public static PluginFragment newInstance(Plugin plugin) {
 		Bundle args = new Bundle();
 		args.putSerializable("plugin", plugin);
@@ -67,7 +76,13 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 
 		mImageView = (ImageView) view.findViewById(R.id.image);
 
-		MqttManager.self().subscribe(this);
+		Topic topic = new Topic.Builder()
+				.gatewayId(mPlugin.gateway)
+				.pluginId(mPlugin.name)
+				.type(MessageType.All)
+				.build();
+
+		MqttManager.self().subscribe(topic.topic, this);
 	}
 
 	@Override
@@ -85,10 +100,10 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 	@Override
 	public void onCheckedChanged(CompoundButton compoundButton, boolean on) {
 		if (on) {
-			sendMessage(mPlugin.name.equals("Esp8266Plugin") ? PAYLOAD_ON : PAYLOAD_ON_NEST,
+			MqttManager.self().sendMessage(mPlugin.name.equals("Esp8266Plugin") ? PAYLOAD_ON : PAYLOAD_ON_NEST,
 					mPlugin.name.equals("Esp8266Plugin") ? ESP_TOPIC : NEST_TOPIC);
 		} else {
-			sendMessage(mPlugin.name.equals("Esp8266Plugin") ? PAYLOAD_OFF : PAYLOAD_OFF_NEST,
+			MqttManager.self().sendMessage(mPlugin.name.equals("Esp8266Plugin") ? PAYLOAD_OFF : PAYLOAD_OFF_NEST,
 					mPlugin.name.equals("Esp8266Plugin") ? ESP_TOPIC : NEST_TOPIC);
 		}
 	}
@@ -100,11 +115,10 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
-		Log.d(TAG, "Message: " + topic + ": " + new String(message.getPayload()));
+		String mess = new String(message.getPayload());
+		Log.d(TAG, "topic: " + topic + ", Mess: " + mess);
 
-		String s = new String(message.getPayload());
-		s = s.replace("\\", "");
-		Log.d(TAG, s);
+		String s = mess.replace("\\", "");
 
 		if (s.contains("https://www.dropcam.com/api/wwn.get_snapshot")) {
 			int start = s.indexOf("https://www.dropcam.com/api/wwn.get_snapshot");
@@ -115,26 +129,27 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 
 			Picasso.with(getActivity()).load(s.substring(start, end)).into(mImageView);
 		}
+
+		Topic t = new Topic(topic);
+		if (MessageType.Event == t.getMessageType() && SenderType.Sensor == SenderType.fromString(t.topic)) {
+			Snackbar snackbar = Snackbar.make(mToolbar, mess, Snackbar.LENGTH_LONG)
+					.setAction("Show camera", new View.OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+							startActivity(intent);
+						}
+					});
+			snackbar.show();
+
+			Message m = App.getGson().fromJson(mess, Message.class);
+			Log.d(TAG, m.toJson());
+		}
 	}
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken token) {
 
-	}
-
-	private void sendMessage(String mess, String topic) {
-		if (!MqttManager.self().getMqtt().isConnected()) {
-			return;
-		}
-
-		MqttMessage message = new MqttMessage();
-		message.setPayload(mess.getBytes());
-
-		try {
-			MqttManager.self().getMqtt().publish(topic, message);
-		} catch (MqttException e) {
-			Log.e(TAG, "publish failure: ");
-		}
 	}
 
 	private static final String PAYLOAD_ON = "{\n" +
@@ -212,17 +227,5 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 			"    \"timestamp\":1479995948\n" +
 			"}";
 
-
-	private static final String PAYLOAD_GET_PROPERTIES_NEST = "{\n" +
-			"    \"id\":\"1\",\n" +
-			"    \"payload\":\"\n" +
-			"    {\n" +
-			"        \\\"cvalue\\\":\\\"PROPERTIES\\\",\n" +
-			"        \\\"type\\\":\\\"command\\\",\n" +
-			"        \\\"value\\\":\\\"GET\\\",\n" +
-			"        \\\"content\\\":\\\"[]\\\"\n" +
-			"    }\",\n" +
-			"    \"reference\":\"\",\n" +
-			"    \"timestamp\":1479995948\n" +
-			"}";
+	private static final String url = "https://home.nest.com/cameras/CjZDRDUwOU1oZ3U5Z3ZKdUNVNUFLbmJqb3ZDZXdMMzFZbWE5OVdBMklkR1VrUms1c2UxTzV6TWcSFkQ0aGZSOWlUanNMUnI5VDhWZEtkVncaNmVWYWFIalplV3JnN19TTVltX1RldDBDcWpjR0t3YkU5R0lGTzBEd01SbTBiOVdSdHZ3bXF3dw?auth=c.Bp7k52seS2eApXgSW2UPut9JySWNH059PoaV9ciQeMHfcT6p4BawHmF411knRYE4HmYQ4Rn3PpJcHRp9pe2Yv7bptMLegHFkT0LxOlu36uzlRotj24s14RRu9YU0H7fA72gFEQ43VUYJhkgt";
 }
