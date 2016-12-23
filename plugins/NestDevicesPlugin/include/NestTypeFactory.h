@@ -5,8 +5,9 @@
 #include <array>
 #include <Poco/Logger.h>
 #include "NestType.h"
+#include "configuration.h"
 
-#define DEFAULT_TOKEN       "c.fVTpnlRYq0KNSg4auBywyh9IErpa8UNDrRwKN8MJEQfIAyOw9dCfuswqa45D3YqAbOCsbelorPGfIlfd2i8JLTa1uowuJKgO3wGT1zIXSoLpegm2bky3Gk5JpG3FCnWoqmCpFHcQ7OIJnvEQ"
+#define DEFAULT_TOKEN       "c.Bp7k52seS2eApXgSW2UPut9JySWNH059PoaV9ciQeMHfcT6p4BawHmF411knRYE4HmYQ4Rn3PpJcHRp9pe2Yv7bptMLegHFkT0LxOlu36uzlRotj24s14RRu9YU0H7fA72gFEQ43VUYJhkgt"
 
 enum {
     NEST_TYPE_CAMERA,
@@ -18,8 +19,8 @@ enum {
 
 class NestTypeCamera: public NestType {
 public:
-    NestTypeCamera(std::string type, std::string token, std::string work_dir):
-        NestType(type, token, work_dir) {
+    NestTypeCamera(std::string type, Configuration config, std::string work_dir):
+        NestType(type, config, work_dir) {
     }
     virtual ~NestTypeCamera(){}
 
@@ -31,8 +32,8 @@ public:
 
 class NestTypeThermostat: public NestType {
 public:
-    NestTypeThermostat(std::string type, std::string token, std::string work_dir):
-        NestType(type, token, work_dir) {
+    NestTypeThermostat(std::string type, Configuration config, std::string work_dir):
+        NestType(type, config, work_dir) {
     }
     virtual ~NestTypeThermostat(){}
 
@@ -44,16 +45,16 @@ public:
 
 class NestTypeFactory {
 public:
-    static NestType* buildNestType(int typecnt, std::string work_dir){
+    static NestType* buildNestType(int typecnt, Configuration config, std::string work_dir){
         Poco::Logger& logger = Poco::Logger::get("NestDevicesPlugin");
         logger.debug("Creating (%d) nest devices type list", typecnt);
         NestType* tmpType;
         switch(typecnt){
             case NEST_TYPE_CAMERA:
-                tmpType = new NestTypeCamera("cameras", DEFAULT_TOKEN, work_dir);
+                tmpType = new NestTypeCamera("cameras", config, work_dir);
                 break;
             case NEST_TYPE_THERMOSTAT:
-                tmpType = new NestTypeThermostat("thermostats", DEFAULT_TOKEN, work_dir);
+                tmpType = new NestTypeThermostat("thermostats", config, work_dir);
                 break;
 
             default: tmpType = NULL;

@@ -31,8 +31,10 @@ int NestDevicesPlugin::startPlugin() {
         return -1;
     }
 
+    this->loadConfig();
+
     for(int typecount = 0; typecount < NEST_DEVICE_TYPES_SIZE; typecount++) {
-        typeList[typecount] = NestTypeFactory::buildNestType(typecount, this->work_dir);
+        typeList[typecount] = NestTypeFactory::buildNestType(typecount, defaultConf, this->work_dir);
         typeList[typecount]->initCapabilities();
         typeList[typecount]->init();
     }
@@ -60,13 +62,30 @@ int NestDevicesPlugin::setWorkDir(std::string path) {
     return 0;
 }
 
+int NestDevicesPlugin::loadConfig() {
+    Poco::Logger& logger = Poco::Logger::get("NestDevicesPlugin");
+
+    std::string confPath = this->work_dir + "/" + "config.properties";
+
+    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> pConf;
+    pConf = new Poco::Util::PropertyFileConfiguration(confPath);
+
+    defaultConf.tocken = pConf->getString("nest.tocken");
+    defaultConf.host = pConf->getString("nest.host");
+    defaultConf.device_subpath = pConf->getString("nest.devicepath");
+
+    logger.debug("Configuration loaded");
+
+    return 0;
+}
+
 int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
     Poco::Logger& logger = Poco::Logger::get("NestDevicesPlugin");
     logger.debug("executeInternalCommand %s:%s ", source, message.getPayload());
 
     logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
 
-    IBPayload payload;
+    IBPayload payload = message.getPayload();
     if(true) {
         logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
         if ("command" == payload.getType()) {
@@ -113,8 +132,8 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
                         }
                     }
 
-                    devicesList = Poco::replace(devicesList, "\"", "*");
-                    devicesList = Poco::replace(devicesList, "*", "\\\"");
+//                    devicesList = Poco::replace(devicesList, "\"", "*");
+//                    devicesList = Poco::replace(devicesList, "*", "\\\"");
                     sendOccurrence(true, "LIST", devicesList, message.getId());
                 } else if ("PROPERTIES" == payload.getCvalue()) {
                     std::vector<std::string> serials;
@@ -129,7 +148,7 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
                         for (DevicesIterator itDevice = devices.begin(); itDevice != devices.end(); ++itDevice) {
                             if (serialSource == itDevice->first) {
                                 std::string propertiesJson = typeList[typecount]->requestDeviceProperties(serialSource);
-                                sendOccurrence(true, "PROPERTIES", propertiesJson, message.getId());
+                                sendOccurrence(true, "PROPERTIES", propertiesJson, message.getId(), serialSource);
                             }
                         }
                     }
@@ -150,7 +169,7 @@ int NestDevicesPlugin::executeCommand(std::string source, IBMessage message) {
                                 // TODO implement
                                 // generate JSON with capabilities info stored in map 'capabilities',
                                 // store generated JSON to variable 'capabilitiesJson'
-                                sendOccurrence(true, "CAPABILITIES", capabilitiesJson, message.getId());
+                                sendOccurrence(true, "CAPABILITIES", capabilitiesJson, message.getId(), serialSource);
                             }
                         }
                     }
@@ -232,7 +251,7 @@ int NestDevicesPlugin::sendOccurrence(bool success, std::string cvalue, std::str
     ibmessage.setReference(reference);
     ibmessage.setTimestamp(now.epochTime());
 
-    busClient->sendMessage(ibmessage);
+    busClient->sendMessage(ibmessage, sender);
 
     return 0;
 }
