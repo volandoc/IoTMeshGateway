@@ -17,12 +17,75 @@
 #include "jsmn.h"
 
 #include "embgw_config.h"
+#include "hw_config.h"
 
 /* You can use http://test.mosquitto.org/ to test mqtt_client instead
  * of setting up your own MQTT server */
 
 SemaphoreHandle_t wifi_alive;
 QueueHandle_t publish_queue;
+QueueHandle_t gpio_queue;
+
+char sub_topic[64];
+
+irq_pin_t     PIR = {.last = 0, .prev = 0, .gpio = GPIO_PIR};
+irq_pin_t     MIC = {.last = 0, .prev = 0, .gpio = GPIO_MIC};
+control_pin_t LED = {.time_on = 0, .gpio = GPIO_LED};
+
+#define PIR_HANDLER gpio05_interrupt_handler
+#define MIC_HANDLER gpio04_interrupt_handler
+#define LED_ACTIVE (0)
+#define LED_TIMEOUT (15000)
+
+const char *json_template = "{\"id\":\"%s\","\
+"\"payload\": {"\
+"\"type\":\"event\","\
+"\"value\":\"SUCCESS\","\
+"\"cvalue\":\"PROPERTIES\","\
+"\"сontent\":["\
+"{\"name\":\"%s\","\
+"\"value\":\"%d\"}"\
+"]"\
+"},"\
+"\"reference\":\"1\","\
+"\"timestamp\" : %ld"\
+"}";
+
+typedef struct
+{
+	char *msg;
+	char *topic;
+}queue_buf_t;
+
+queue_buf_t pub_msg;
+
+void PIR_HANDLER(void)
+{
+
+	printf("interrupt gpio05 occurred\n");
+	if(xQueueSendToBackFromISR(gpio_queue, &PIR, NULL)== pdFALSE)
+		printf("Publish queue overflow.\r\n");
+
+}
+
+void MIC_HANDLER(void)
+{
+	uint32_t delta;
+	MIC.last = xTaskGetTickCountFromISR();
+	delta = MIC.last - MIC.prev;
+	if(delta > 100)
+	{
+		printf("interrupt gpio04 occurred\n");
+		MIC.prev = MIC.last;
+	    if(xQueueSendToBackFromISR(gpio_queue, &MIC, NULL)== pdFALSE)
+			printf("Publish queue overflow.\r\n");
+	}
+	else
+	{
+		printf("Jitter gpio04 detect exit\n");
+	}
+
+}
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
     if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
@@ -35,10 +98,12 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 static void execute_command(char * cmd) {
     if (!strncmp(cmd, "on", 2)) {
         printf("Turning on LED\r\n");
-        gpio_write(GPIO_LED, 0);
+        gpio_write(LED.gpio, 0);
+        LED.time_on = xTaskGetTickCount();
+        printf("led on time %d\n", LED.time_on);
     } else if (!strncmp(cmd, "off", 3)) {
         printf("Turning off LED\r\n");
-        gpio_write(GPIO_LED, 1);
+        gpio_write(LED.gpio, 1);
     }
 }
 
@@ -97,20 +162,6 @@ static void parse_command(char *command, size_t cmdsize) {
     }
 }
 
-static void beat_task(void *pvParameters) {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-    char msg[PUB_MSG_LEN];
-    int count = 0;
-
-    while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 10000 / portTICK_PERIOD_MS);
-        printf("beat\r\n");
-        snprintf(msg, PUB_MSG_LEN, "Beat %d\r\n", count++);
-        if (xQueueSend(publish_queue, (void *)msg, 0) == pdFALSE) {
-            printf("Publish queue overflow.\r\n");
-        }
-    }
-}
 
 static void topic_received(mqtt_message_data_t *md) {
     int i;
@@ -159,6 +210,7 @@ static void  mqtt_task(void *pvParameters) {
     uint8_t mqtt_readbuf[255];
     mqtt_packet_will_options_t will = mqtt_packet_will_options_initializer;
     mqtt_packet_connect_data_t data = mqtt_packet_connect_data_initializer;
+    queue_buf_t pub_msg_loc;
 
 	will.topicName.cstring = MQTT_WILL_TOPIC;
 	will.message.cstring = MQTT_WILL_MSG;
@@ -205,7 +257,7 @@ static void  mqtt_task(void *pvParameters) {
 
         mqtt_message_t init_message;
         init_message.payload = "conected";
-        init_message.payloadlen = 8;
+        init_message.payloadlen = strlen("conected");
         init_message.dup = 0;
         init_message.qos = MQTT_QOS1;
         init_message.retained = 1;
@@ -215,25 +267,37 @@ static void  mqtt_task(void *pvParameters) {
         }
 
         printf("done\r\n");
-        mqtt_subscribe(&client, MQTT_SUB_TOPIC, MQTT_QOS1, topic_received);
+        sprintf(sub_topic, MQTT_SUB_TOPIC, "LED");
+        mqtt_subscribe(&client, sub_topic, MQTT_QOS1, topic_received);
         xQueueReset(publish_queue);
 
         while(1){
             char msg[PUB_MSG_LEN - 1] = "\0";
-            while(xQueueReceive(publish_queue, (void *)msg, 0) == pdTRUE){
+            while(xQueueReceive(publish_queue, &pub_msg_loc, 0) == pdTRUE){
                 printf("got message to publish\r\n");
                 mqtt_message_t message;
-                message.payload = msg;
-                message.payloadlen = PUB_MSG_LEN;
+                message.payload = pub_msg_loc.msg;
+                message.payloadlen = strlen(pub_msg_loc.msg);
                 message.dup = 0;
                 message.qos = MQTT_QOS1;
                 message.retained = 0;
-                ret = mqtt_publish(&client, MQTT_PUB_TOPIC, &message);
+                ret = mqtt_publish(&client, pub_msg_loc.topic, &message);
+                free(pub_msg_loc.msg);
+                free(pub_msg_loc.topic);
                 if (ret != MQTT_SUCCESS ){
                     printf("error while publishing message: %d\n", ret );
                     break;
                 }
             }
+
+            if(gpio_read(LED.gpio) == LED_ACTIVE)
+            {
+            	if((xTaskGetTickCount() - LED.time_on) > LED_TIMEOUT)
+            	{
+            		gpio_write(LED.gpio, 1);
+            	}
+            }
+
 
             ret = mqtt_yield(&client, 1000);
             if (ret == MQTT_DISCONNECTED)
@@ -264,7 +328,7 @@ static void  wifi_task(void *pvParameters)
             printf("%s: status = %d\n\r", __func__, status );
             if( status == STATION_WRONG_PASSWORD ) {
                 printf("WiFi: wrong password\n\r");
-                break;b
+                break;
             } else if( status == STATION_NO_AP_FOUND ) {
                 printf("WiFi: AP not found\n\r");
                 break;
@@ -291,17 +355,73 @@ static void  wifi_task(void *pvParameters)
     }
 }
 
+void gpio_task(void *pvParameters)
+{
+    int count = 0;
+	gpio_set_interrupt(GPIO_PIR, GPIO_INTTYPE_EDGE_POS);
+	gpio_set_interrupt(GPIO_MIC, GPIO_INTTYPE_EDGE_POS);
+
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
+	for(;;)
+	{
+		irq_pin_t gpio_pin;
+		xQueueReceive(gpio_queue, &gpio_pin, portMAX_DELAY);
+		xLastWakeTime = xTaskGetTickCount();
+		char *msg = malloc(256);
+		char *topic = malloc(64);
+
+		if(msg == NULL)
+		{
+			printf("[ERROR allocate memory\n]");
+			return;
+		}
+
+		if(gpio_pin.gpio == GPIO_PIR)
+		{
+			sprintf(msg, json_template, "PIR01", "PIR", 1, xLastWakeTime);
+			sprintf(topic, MQTT_PUB_TOPIC, "PIR_SENSOR");
+
+		}
+		else if (gpio_pin.gpio == GPIO_MIC)
+		{
+			sprintf(msg, json_template, "MIC01", "MIC", 1, xLastWakeTime);
+			sprintf(topic, MQTT_PUB_TOPIC, "MIC_SENSOR");
+		}
+		else
+		{
+			printf("unidentified sensor\n");
+			free(msg);
+			free(topic);
+		}
+
+		pub_msg.msg = msg;
+		pub_msg.topic = topic;
+
+		if (xQueueSend(publish_queue, &pub_msg, 0) == pdFALSE)
+			printf("Publish queue overflow.\r\n");
+
+	}
+}
+
+
+
 void user_init(void)
 {
     uart_set_baud(0, 115200);
     printf("SDK version:%s\n", sdk_system_get_sdk_version());
 
     gpio_enable(GPIO_LED, GPIO_OUTPUT);
+    gpio_enable(GPIO_PIR, GPIO_INPUT);
+    gpio_enable(GPIO_MIC, GPIO_INPUT);
     gpio_write(GPIO_LED, 1);
 
     vSemaphoreCreateBinary(wifi_alive);
-    publish_queue = xQueueCreate(3, PUB_MSG_LEN);
+
+    publish_queue = xQueueCreate(3, sizeof(queue_buf_t));
+    gpio_queue = xQueueCreate(3, sizeof(irq_pin_t));
+
     xTaskCreate(&wifi_task, "wifi_task",  256, NULL, 2, NULL);
-    xTaskCreate(&beat_task, "beat_task", 256, NULL, 3, NULL);
+    xTaskCreate(&gpio_task, "gpio_task", 256, NULL, 3, NULL);
     xTaskCreate(&mqtt_task, "mqtt_task", 1024, NULL, 4, NULL);
 }
