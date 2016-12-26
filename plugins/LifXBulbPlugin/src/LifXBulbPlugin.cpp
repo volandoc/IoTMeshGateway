@@ -55,6 +55,7 @@ void LifXBulbPlugin::doPolling(Poco::Timer& timer){
 
 void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+    logger.debug("inside UDP Packet listener");
     try {
         Poco::Net::DatagramSocket *dgs = messageFactory.getUDPSocket();
         Poco::UInt8 buffer[256];
@@ -69,6 +70,8 @@ void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
             }
             std::cout << std::endl;
             logger.debug("UDP Packet received");
+        } else {
+            logger.debug("empty UDP Packet");
         }
     } catch(Poco::Exception excp){
         logger.error(excp.displayText(), __FILE__, 84);
