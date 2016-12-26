@@ -58,6 +58,7 @@ void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
     logger.debug("inside UDP Packet listener");
     try {
         Poco::Net::DatagramSocket *dgs = messageFactory.getUDPSocket();
+        dgs->setSendTimeout(500000);
         Poco::UInt8 buffer[256];
         Poco::Net::SocketAddress sender;
 
@@ -74,7 +75,7 @@ void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
             logger.debug("empty UDP Packet");
         }
     } catch(Poco::Exception excp){
-        logger.error(excp.displayText(), __FILE__, 84);
+        logger.error(excp.displayText(), __FILE__, 78);
     }
 }
 
