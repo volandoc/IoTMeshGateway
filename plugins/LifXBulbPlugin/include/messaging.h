@@ -221,6 +221,7 @@ public:
         Poco::Net::SocketAddress sa(netInterface.broadcastAddress(), LifxPort);
         socket = Poco::Net::DatagramSocket(sa);
         socket.setBroadcast(true);
+        socket.setReceiveTimeout(500000);
         socket.connect(sa);
     }
 
