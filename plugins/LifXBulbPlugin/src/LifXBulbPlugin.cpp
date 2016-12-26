@@ -58,7 +58,6 @@ void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
     logger.debug("inside UDP Packet listener");
     try {
         Poco::Net::DatagramSocket *dgs = messageFactory.getUDPSocket();
-        dgs->setSendTimeout(500000);
         Poco::UInt8 buffer[256];
         Poco::Net::SocketAddress sender;
 
