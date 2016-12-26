@@ -61,20 +61,24 @@ void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
         Poco::UInt8 buffer[256];
         Poco::Net::SocketAddress sender;
 
-        int n = dgs->receiveFrom(buffer, sizeof(buffer)-1, sender);
-        if(n > 0) {
-            buffer[n] = '\0';
-            std::cout << sender.toString() << ": ";
-            for(int i=0; i < n; i++){
-                std::cout << (unsigned int) buffer[i];
+        if(dgs->poll(500000, Poco::Net::Socket::SelectMode::SELECT_READ)) {
+            int n = dgs->receiveFrom(buffer, sizeof(buffer)-1, sender);
+            if(n > 0) {
+                buffer[n] = '\0';
+                std::cout << sender.toString() << ": ";
+                for(int i=0; i < n; i++){
+                    std::cout << (unsigned int) buffer[i];
+                }
+                std::cout << std::endl;
+                logger.debug("UDP Packet received");
+            } else {
+                logger.debug("empty UDP Packet");
             }
-            std::cout << std::endl;
-            logger.debug("UDP Packet received");
         } else {
-            logger.debug("empty UDP Packet");
+            logger.debug("cannot read from UDP Socket");
         }
     } catch(Poco::Exception excp){
-        logger.error(excp.displayText(), __FILE__, 78);
+        logger.error(excp.displayText() + ":" + excp.message(), __FILE__, 78);
     }
 }
 
