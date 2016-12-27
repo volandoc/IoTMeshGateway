@@ -87,6 +87,7 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 
 	@Override
 	public void onDestroy() {
+		Log.d(TAG, "onDestroy: ");
 		MqttManager.self().unSubscribe();
 
 		super.onDestroy();

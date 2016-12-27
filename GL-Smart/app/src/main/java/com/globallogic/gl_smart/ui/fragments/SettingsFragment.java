@@ -43,7 +43,7 @@ public class SettingsFragment extends BaseFragment implements Toolbar.OnMenuItem
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		mGatewayView = (EditText) view.findViewById(R.id.gateway);
-		mGatewayView.setText(getString(R.string.server_address));
+		mGatewayView.setText(getString(R.string.settings_serverAddress));
 
 		Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
 		toolbar.inflateMenu(R.menu.m_settings);

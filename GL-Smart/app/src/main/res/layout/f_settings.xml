@@ -41,7 +41,7 @@
 			style="@style/TextStyle"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:text="@string/info_status"
+			android:text="@string/settings_infoStatus"
 			android:padding="@dimen/padding_s"
 			android:textSize="@dimen/text_size_large"
 			/>

@@ -21,7 +21,7 @@ public class Settings {
 	}
 
 	public String getGateway() {
-		return settingsPref.getString("gateway", App.self().getString(R.string.server_address));
+		return settingsPref.getString("gateway", App.self().getString(R.string.settings_serverAddress));
 	}
 
 	public void setGateway(String gateway) {

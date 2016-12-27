@@ -3,23 +3,19 @@ package com.globallogic.gl_smart.ui.fragments;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.globallogic.gl_smart.R;
-import com.globallogic.gl_smart.model.Plugin;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.mqtt.type.MessageType;
-import com.globallogic.gl_smart.model.mqtt.type.SenderType;
 import com.globallogic.gl_smart.ui.base.BaseFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 
@@ -27,15 +23,12 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static com.globallogic.gl_smart.R.id.toolbar;
 
 /**
  * @author eugenii.samarskyi.
  */
-public class GatewayFragment extends BaseFragment implements MqttCallback, Toolbar.OnMenuItemClickListener {
+public class GatewayFragment extends BaseFragment implements MqttCallback, Toolbar.OnMenuItemClickListener, View.OnClickListener {
 
 	private static final String TAG = GatewayFragment.class.getSimpleName();
 
@@ -43,11 +36,8 @@ public class GatewayFragment extends BaseFragment implements MqttCallback, Toolb
 		return new GatewayFragment();
 	}
 
+	private String mGateway;
 	private Toolbar mToolbar;
-	private RecyclerView mListView;
-	private ProgressBar mProgressBar;
-
-	private List<Plugin> mPluginList;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -60,15 +50,6 @@ public class GatewayFragment extends BaseFragment implements MqttCallback, Toolb
 		mToolbar.inflateMenu(R.menu.m_gateway);
 		mToolbar.setOnMenuItemClickListener(this);
 
-		mPluginList = new ArrayList<>();
-
-		mListView = (RecyclerView) view.findViewById(R.id.list);
-		mListView.setLayoutManager(new LinearLayoutManager(getActivity()));
-		mListView.setAdapter(new Adapter());
-
-		mProgressBar = (ProgressBar) view.findViewById(R.id.progress);
-		mProgressBar.setVisibility(MqttManager.self().isConnected() ? View.VISIBLE : View.INVISIBLE);
-
 		Drawable drawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_circle);
 		drawable.setColorFilter(MqttManager.self().isConnected()
 						? getResources().getColor(android.R.color.holo_green_light)
@@ -77,7 +58,15 @@ public class GatewayFragment extends BaseFragment implements MqttCallback, Toolb
 
 		mToolbar.setNavigationIcon(drawable);
 
-		MqttManager.self().subscribe(this);
+		view.findViewById(R.id.plugins).setOnClickListener(this);
+		view.findViewById(R.id.sensors).setOnClickListener(this);
+
+		Topic topic = new Topic.Builder()
+				.gatewayId("+")
+				.type(MessageType.Status)
+				.build();
+
+		MqttManager.self().subscribe(topic.topic, this);
 	}
 
 	@Override
@@ -98,42 +87,8 @@ public class GatewayFragment extends BaseFragment implements MqttCallback, Toolb
 		Log.d(TAG, "Topic: " + topic_ + ", Message: " + mess);
 
 		Topic topic = new Topic(topic_);
-		MessageType messageType = topic.getMessageType();
-		if (MessageType.Status != messageType) {
-			return;
-		}
-
-		SenderType senderType = SenderType.fromString(topic.topic);
-		if (SenderType.Plugin == senderType) {
-			Plugin plugin = findByName(topic.plugin());
-			if (plugin == null) {
-				mPluginList.add(new Plugin(topic.gateway(), topic.plugin(), mess));
-				mListView.getAdapter().notifyItemInserted(mPluginList.size() - 1);
-			} else {
-				plugin.status = mess;
-				mListView.getAdapter().notifyItemChanged(mPluginList.indexOf(plugin));
-			}
-		} else if (SenderType.Gateway == senderType) {
-			mToolbar.setSubtitle(topic.gateway() + " " + mess);
-		}
-
-		if (mPluginList.size() > 0 && mProgressBar.getVisibility() == View.VISIBLE) {
-			mProgressBar.setVisibility(View.GONE);
-		}
-	}
-
-	private Plugin findByName(String name) {
-		if (mPluginList == null) {
-			return null;
-		}
-
-		for (Plugin plugin : mPluginList) {
-			if (plugin.name.equals(name)) {
-				return plugin;
-			}
-		}
-
-		return null;
+		mGateway = topic.gateway();
+		mToolbar.setSubtitle(topic.gateway() + " " + mess);
 	}
 
 	@Override
@@ -159,54 +114,33 @@ public class GatewayFragment extends BaseFragment implements MqttCallback, Toolb
 		return false;
 	}
 
-	class Adapter extends RecyclerView.Adapter<Holder> implements View.OnClickListener {
-
-		@Override
-		public Holder onCreateViewHolder(ViewGroup parent, int viewType) {
-			return new Holder(LayoutInflater.from(getActivity()).inflate(R.layout.v_plugin_item, parent, false));
+	@Override
+	public void onClick(View v) {
+		if (mGateway == null) {
+			Snackbar.make(mToolbar, getString(R.string.message_noGateway), Snackbar.LENGTH_LONG).show();
+			return;
 		}
 
-		@Override
-		public void onBindViewHolder(Holder holder, int position) {
-			Plugin plugin = mPluginList.get(position);
+		Fragment fragment = null;
 
-			holder.name.setText(plugin.name);
-			holder.status.setText(plugin.status);
-
-			holder.itemView.setTag(plugin);
-			holder.itemView.setOnClickListener(this);
+		if (R.id.sensors == v.getId()) {
+			fragment = SensorListFragment.newInstance(mGateway);
+		} else if (R.id.plugins == v.getId()) {
+			fragment = PluginListFragment.newInstance(mGateway);
 		}
 
-		@Override
-		public int getItemCount() {
-			return mPluginList.size();
+		if (fragment == null) {
+			return;
 		}
 
-		@Override
-		public void onClick(View view) {
-			Plugin plugin = (Plugin) view.getTag();
-
-			getActivity().getSupportFragmentManager()
-					.beginTransaction()
-					.setCustomAnimations(
-							R.anim.enter_from_right, R.anim.exit_to_left,
-							R.anim.enter_from_left, R.anim.exit_to_right
-					)
-					.replace(R.id.content, PluginFragment.newInstance(plugin))
-					.addToBackStack(null)
-					.commit();
-		}
-	}
-
-	class Holder extends RecyclerView.ViewHolder {
-		final TextView name;
-		final TextView status;
-
-		public Holder(View itemView) {
-			super(itemView);
-
-			name = (TextView) itemView.findViewById(R.id.name);
-			status = (TextView) itemView.findViewById(R.id.status);
-		}
+		getActivity().getSupportFragmentManager()
+				.beginTransaction()
+				.setCustomAnimations(
+						R.anim.enter_from_right, R.anim.exit_to_left,
+						R.anim.enter_from_left, R.anim.exit_to_right
+				)
+				.replace(R.id.content, fragment)
+				.addToBackStack(null)
+				.commit();
 	}
 }

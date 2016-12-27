@@ -5,23 +5,26 @@ import java.io.Serializable;
 /**
  * @author eugenii.samarskyi.
  */
-public class Plugin implements Serializable {
+public class Sensor implements Serializable {
 	public String gateway;
 	public String name;
 	public String status;
+	public String plugin;
 
-	public Plugin(String gateway, String name, String status) {
-		this.gateway = gateway;
+	public Sensor(String gateway, String name, String plugin, String status) {
 		this.name = name;
+		this.plugin = plugin;
 		this.status = status;
+		this.gateway = gateway;
 	}
 
 	@Override
 	public String toString() {
-		return "Plugin{" +
+		return "Sensor{" +
 				"gateway='" + gateway + '\'' +
 				", name='" + name + '\'' +
 				", status='" + status + '\'' +
+				", plugin='" + plugin + '\'' +
 				'}';
 	}
 }

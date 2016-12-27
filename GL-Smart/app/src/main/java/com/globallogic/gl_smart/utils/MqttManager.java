@@ -94,6 +94,8 @@ public class MqttManager {
 			try {
 				mqttAndroidClient.setCallback(null);
 				mqttAndroidClient.unsubscribe(ALL);
+
+				Log.i(TAG, "unSubscribed from " + ALL);
 			} catch (MqttException e) {
 				Log.e(TAG, "unSubscribe failed: ", e);
 			}
@@ -128,7 +130,6 @@ public class MqttManager {
 		if (mqttAndroidClient.isConnected()) {
 			try {
 				mqttAndroidClient.subscribe(topic, 0);
-
 				Log.i(TAG, "subscribed on " + topic);
 			} catch (MqttException e) {
 				Log.e(TAG, "subscribe failed: ", e);
