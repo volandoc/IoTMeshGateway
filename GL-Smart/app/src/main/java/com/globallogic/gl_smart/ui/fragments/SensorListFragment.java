@@ -1,10 +1,10 @@
 package com.globallogic.gl_smart.ui.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +17,8 @@ import com.globallogic.gl_smart.model.Sensor;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.mqtt.type.MessageType;
 import com.globallogic.gl_smart.model.mqtt.type.SenderType;
-import com.globallogic.gl_smart.ui.base.BaseFragment;
+import com.globallogic.gl_smart.ui.GatewayCallback;
+import com.globallogic.gl_smart.ui.base.ToolbarFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -27,12 +28,10 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.globallogic.gl_smart.R.id.toolbar;
-
 /**
  * @author eugenii.samarskyi.
  */
-public class SensorListFragment extends BaseFragment implements MqttCallback, View.OnClickListener {
+public class SensorListFragment extends ToolbarFragment implements MqttCallback {
 
 	private static final String TAG = SensorListFragment.class.getSimpleName();
 
@@ -46,12 +45,16 @@ public class SensorListFragment extends BaseFragment implements MqttCallback, Vi
 		return fragment;
 	}
 
-	private Toolbar mToolbar;
+	private String mSensorTopic;
+	private String mGwTopic;
+
 	private RecyclerView mListView;
 	private ProgressBar mProgressBar;
 
 	private String mGateway;
 	private List<Sensor> mSensorList;
+
+	private GatewayCallback mCallback;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -59,8 +62,15 @@ public class SensorListFragment extends BaseFragment implements MqttCallback, Vi
 	}
 
 	@Override
+	public void onAttach(Context context) {
+		super.onAttach(context);
+
+		mCallback = (GatewayCallback) context;
+	}
+
+	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
-		mToolbar = (Toolbar) view.findViewById(toolbar);
+		mToolbar.setTitle(getString(R.string.sensors_title));
 
 		mGateway = getArguments().getString("gateway");
 
@@ -73,24 +83,21 @@ public class SensorListFragment extends BaseFragment implements MqttCallback, Vi
 		mProgressBar = (ProgressBar) view.findViewById(R.id.progress);
 		mProgressBar.setVisibility(MqttManager.self().isConnected() ? View.VISIBLE : View.INVISIBLE);
 
-		mToolbar.setNavigationIcon(R.drawable.ic_chevron_left);
-		mToolbar.setNavigationOnClickListener(this);
-
-		Topic topic = new Topic.Builder()
+		mSensorTopic = new Topic.Builder()
 				.gatewayId(mGateway)
 				.pluginId("+")
 				.deviceId("+")
 				.type(MessageType.Status)
-				.build();
+				.build().topic;
 
-		MqttManager.self().subscribe(topic.topic);
+		MqttManager.self().subscribe(mSensorTopic);
 
-		topic = new Topic.Builder()
+		mGwTopic = new Topic.Builder()
 				.gatewayId(mGateway)
 				.type(MessageType.Status)
-				.build();
+				.build().topic;
 
-		MqttManager.self().subscribe(topic.topic);
+		MqttManager.self().subscribe(mGwTopic);
 		MqttManager.self().setCallback(this);
 	}
 
@@ -101,7 +108,8 @@ public class SensorListFragment extends BaseFragment implements MqttCallback, Vi
 
 	@Override
 	public void onDestroy() {
-		MqttManager.self().unSubscribe();
+		MqttManager.self().unSubscribe(mGwTopic);
+		MqttManager.self().unSubscribe(mSensorTopic);
 
 		super.onDestroy();
 	}
@@ -124,7 +132,9 @@ public class SensorListFragment extends BaseFragment implements MqttCallback, Vi
 				mListView.getAdapter().notifyItemChanged(mSensorList.indexOf(sensor));
 			}
 		} else if (SenderType.Gateway == senderType) {
-			mToolbar.setSubtitle(topic.gateway() + " " + mess);
+//			mToolbar.setSubtitle(topic.gateway() + " " + mess);
+
+			mCallback.onGateway(topic.gateway());
 		}
 
 		if (mSensorList.size() > 0) {
@@ -149,11 +159,6 @@ public class SensorListFragment extends BaseFragment implements MqttCallback, Vi
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken token) {
 		Log.d(TAG, "Delivery Complete!");
-	}
-
-	@Override
-	public void onClick(View v) {
-		getFragmentManager().popBackStack();
 	}
 
 	class Adapter extends RecyclerView.Adapter<Holder> implements View.OnClickListener {

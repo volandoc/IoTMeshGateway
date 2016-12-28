@@ -102,6 +102,23 @@ public class MqttManager {
 		}
 	}
 
+	public void unSubscribe(String topic) {
+		if (mqttAndroidClient == null) {
+			return;
+		}
+
+		if (mqttAndroidClient.isConnected()) {
+			try {
+//				mqttAndroidClient.setCallback(null);
+				mqttAndroidClient.unsubscribe(topic);
+
+				Log.i(TAG, "unSubscribed from " + topic);
+			} catch (MqttException e) {
+				Log.e(TAG, "unSubscribe failed: ", e);
+			}
+		}
+	}
+
 	public void subscribe(MqttCallback callback) {
 		subscribe(ALL, callback);
 	}

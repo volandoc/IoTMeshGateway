@@ -19,4 +19,8 @@
 
     <string name="plugins_title">Plugins</string>
     <string name="sensors_title">Sensors</string>
+	<string name="gateway_title">Gateway</string>
+
+	<string name="open_drawable">Open menu</string>
+	<string name="close_drawable">Close menu</string>
 </resources>

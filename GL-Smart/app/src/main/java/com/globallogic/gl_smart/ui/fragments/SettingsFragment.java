@@ -12,7 +12,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.globallogic.gl_smart.R;
-import com.globallogic.gl_smart.ui.base.BaseFragment;
+import com.globallogic.gl_smart.ui.MainActivity;
+import com.globallogic.gl_smart.ui.base.ToolbarFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 import com.globallogic.gl_smart.utils.Settings;
 
@@ -23,7 +24,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 /**
  * @author eugenii.samarskyi.
  */
-public class SettingsFragment extends BaseFragment implements Toolbar.OnMenuItemClickListener, View.OnClickListener {
+public class SettingsFragment extends ToolbarFragment implements Toolbar.OnMenuItemClickListener, View.OnClickListener {
 
 	private static final String TAG = SettingsFragment.class.getSimpleName();
 
@@ -42,15 +43,10 @@ public class SettingsFragment extends BaseFragment implements Toolbar.OnMenuItem
 
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
+		mToolbar.setTitle(getString(R.string.settings_title));
+
 		mGatewayView = (EditText) view.findViewById(R.id.gateway);
 		mGatewayView.setText(getString(R.string.settings_serverAddress));
-
-		Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
-		toolbar.inflateMenu(R.menu.m_settings);
-		toolbar.setOnMenuItemClickListener(this);
-
-		toolbar.setNavigationIcon(R.drawable.ic_chevron_left);
-		toolbar.setNavigationOnClickListener(this);
 
 		mStatusTextView = (TextView) view.findViewById(R.id.status);
 		mStatusTextView.setText(MqttManager.self().isConnected()
@@ -94,6 +90,8 @@ public class SettingsFragment extends BaseFragment implements Toolbar.OnMenuItem
 				public void onSuccess(IMqttToken asyncActionToken) {
 					mStatusTextView.setText(R.string.message_connected);
 					mConnectBtn.setText(R.string.message_disconnect);
+
+					((MainActivity)getActivity()).setStatus(true);
 				}
 
 				@Override
@@ -115,6 +113,8 @@ public class SettingsFragment extends BaseFragment implements Toolbar.OnMenuItem
 				public void onSuccess(IMqttToken asyncActionToken) {
 					mStatusTextView.setText(R.string.message_disconnected);
 					mConnectBtn.setText(R.string.message_connect);
+
+					((MainActivity)getActivity()).setStatus(false);
 				}
 
 				@Override

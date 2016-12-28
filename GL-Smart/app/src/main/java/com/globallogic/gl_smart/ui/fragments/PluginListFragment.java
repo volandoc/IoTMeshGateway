@@ -1,10 +1,10 @@
 package com.globallogic.gl_smart.ui.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +17,8 @@ import com.globallogic.gl_smart.model.Plugin;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.mqtt.type.MessageType;
 import com.globallogic.gl_smart.model.mqtt.type.SenderType;
-import com.globallogic.gl_smart.ui.base.BaseFragment;
+import com.globallogic.gl_smart.ui.GatewayCallback;
+import com.globallogic.gl_smart.ui.base.ToolbarFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -27,12 +28,10 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.globallogic.gl_smart.R.id.toolbar;
-
 /**
  * @author eugenii.samarskyi.
  */
-public class PluginListFragment extends BaseFragment implements MqttCallback, View.OnClickListener {
+public class PluginListFragment extends ToolbarFragment implements MqttCallback, View.OnClickListener {
 
 	private static final String TAG = PluginListFragment.class.getSimpleName();
 
@@ -46,12 +45,21 @@ public class PluginListFragment extends BaseFragment implements MqttCallback, Vi
 		return fragment;
 	}
 
-	private Toolbar mToolbar;
 	private RecyclerView mListView;
 	private ProgressBar mProgressBar;
 
 	private String mGateway;
 	private List<Plugin> mPluginList;
+
+	private GatewayCallback mCallback;
+
+	private String pluginsTopic;
+	private String gwTopic;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -60,9 +68,22 @@ public class PluginListFragment extends BaseFragment implements MqttCallback, Vi
 
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
-		mToolbar = (Toolbar) view.findViewById(toolbar);
+		Log.d(TAG, "onViewCreated: SET TITLE");
+
+		mToolbar.setTitle(getString(R.string.plugins_title));
 
 		mGateway = getArguments().getString("gateway");
+
+		pluginsTopic = new Topic.Builder()
+				.gatewayId(mGateway)
+				.pluginId("+")
+				.type(MessageType.Status)
+				.build().topic;
+
+		gwTopic = new Topic.Builder()
+				.gatewayId(mGateway)
+				.type(MessageType.Status)
+				.build().topic;
 
 		mPluginList = new ArrayList<>();
 
@@ -71,26 +92,7 @@ public class PluginListFragment extends BaseFragment implements MqttCallback, Vi
 		mListView.setAdapter(new Adapter());
 
 		mProgressBar = (ProgressBar) view.findViewById(R.id.progress);
-		mProgressBar.setVisibility(MqttManager.self().isConnected() ? View.VISIBLE : View.INVISIBLE);
-
-		mToolbar.setNavigationIcon(R.drawable.ic_chevron_left);
-		mToolbar.setNavigationOnClickListener(this);
-
-		Topic topic = new Topic.Builder()
-				.gatewayId(mGateway)
-				.pluginId("+")
-				.type(MessageType.Status)
-				.build();
-
-		MqttManager.self().subscribe(topic.topic);
-
-		topic = new Topic.Builder()
-				.gatewayId(mGateway)
-				.type(MessageType.Status)
-				.build();
-
-		MqttManager.self().subscribe(topic.topic);
-		MqttManager.self().setCallback(this);
+		mProgressBar.setVisibility(/*MqttManager.self().isConnected() ? View.VISIBLE : */View.INVISIBLE);
 	}
 
 	@Override
@@ -99,10 +101,27 @@ public class PluginListFragment extends BaseFragment implements MqttCallback, Vi
 	}
 
 	@Override
-	public void onDestroy() {
-		MqttManager.self().unSubscribe();
+	public void onResume() {
+		super.onResume();
 
-		super.onDestroy();
+		MqttManager.self().setCallback(this);
+		MqttManager.self().subscribe(pluginsTopic);
+		MqttManager.self().subscribe(gwTopic);
+	}
+
+	@Override
+	public void onPause() {
+		MqttManager.self().unSubscribe(pluginsTopic);
+		MqttManager.self().unSubscribe(gwTopic);
+
+		super.onPause();
+	}
+
+	@Override
+	public void onAttach(Context context) {
+		super.onAttach(context);
+
+		mCallback = (GatewayCallback) context;
 	}
 
 	@Override
@@ -124,6 +143,8 @@ public class PluginListFragment extends BaseFragment implements MqttCallback, Vi
 			}
 		} else if (SenderType.Gateway == senderType) {
 			mToolbar.setSubtitle(topic.gateway() + " " + mess);
+
+			mCallback.onGateway(topic.gateway());
 		}
 
 		if (mPluginList.size() > 0) {

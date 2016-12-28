@@ -32,11 +32,11 @@ public class Settings {
 		return !TextUtils.isEmpty(getGateway());
 	}
 
-	public void setOffline(boolean online) {
-		settingsPref.edit().putBoolean("offline", online).apply();
+	public void setGwName(String name) {
+		settingsPref.edit().putString("name", name).apply();
 	}
 
-	public boolean isOffline() {
-		return settingsPref.getBoolean("offline", false);
+	public String getGwName() {
+		return settingsPref.getString("name", null);
 	}
 }
