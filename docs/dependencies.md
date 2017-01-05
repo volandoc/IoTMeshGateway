@@ -44,6 +44,12 @@ $ sudo apt-get install uuid-dev
 * On Windows, the Redhat pthreads library is required if threading support is
   to be included.
 
+* Additional dependencies to install:
+```bash
+$ sudo apt-get install docbook-xsl
+$ sudo apt-get install xsltproc
+```
+
 [Download](https://mosquitto.org/download/) mosquitto sources, and extrarct downloaded archive
 
 To compile run 
