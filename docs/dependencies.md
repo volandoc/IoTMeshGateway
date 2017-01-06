@@ -97,7 +97,7 @@ $ make -s
 ```
 
 ### Instalation
-To install compl=iled libraries run
+To install compiled libraries run
 ```bash
 $ make install
 ```
