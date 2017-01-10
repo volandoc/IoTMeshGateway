@@ -44,11 +44,6 @@ public class GatewayFragment extends ToolbarFragment implements MqttCallback {
 	}
 
 	@Override
-	public void onViewCreated(View view, Bundle savedInstanceState) {
-
-	}
-
-	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
 

@@ -1,6 +1,7 @@
 package com.globallogic.gl_smart.ui.fragments;
 
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import com.globallogic.gl_smart.ui.MainActivity;
 import com.globallogic.gl_smart.ui.base.ToolbarFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 import com.globallogic.gl_smart.utils.Settings;
+import com.globallogic.gl_smart.utils.Utils;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -28,9 +30,9 @@ public class SettingsFragment extends ToolbarFragment implements Toolbar.OnMenuI
 
 	private static final String TAG = SettingsFragment.class.getSimpleName();
 
+	private Button mConnectView;
+	private TextView mStatusView;
 	private EditText mGatewayView;
-	private TextView mStatusTextView;
-	private Button mConnectBtn;
 
 	public static SettingsFragment newInstance() {
 		return new SettingsFragment();
@@ -48,26 +50,17 @@ public class SettingsFragment extends ToolbarFragment implements Toolbar.OnMenuI
 		mGatewayView = (EditText) view.findViewById(R.id.gateway);
 		mGatewayView.setText(getString(R.string.settings_serverAddress));
 
-		mStatusTextView = (TextView) view.findViewById(R.id.status);
-		mStatusTextView.setText(MqttManager.self().isConnected()
+		mStatusView = (TextView) view.findViewById(R.id.status);
+		mStatusView.setText(MqttManager.self().isConnected()
 				? getString(R.string.message_connected)
 				: getString(R.string.message_disconnected));
 
-		mConnectBtn = (Button) view.findViewById(R.id.connect);
-		mConnectBtn.setText(MqttManager.self().isConnected()
+		mConnectView = (Button) view.findViewById(R.id.connect);
+		mConnectView.setText(MqttManager.self().isConnected()
 				? getString(R.string.message_disconnect)
 				: getString(R.string.message_connect));
 
-		mConnectBtn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				if (!MqttManager.self().isConnected()) {
-					connect();
-				} else {
-					disconnect();
-				}
-			}
-		});
+		mConnectView.setOnClickListener(this);
 	}
 
 	@Override
@@ -88,21 +81,23 @@ public class SettingsFragment extends ToolbarFragment implements Toolbar.OnMenuI
 			MqttManager.self().connect(new IMqttActionListener() {
 				@Override
 				public void onSuccess(IMqttToken asyncActionToken) {
-					mStatusTextView.setText(R.string.message_connected);
-					mConnectBtn.setText(R.string.message_disconnect);
+					mStatusView.setText(R.string.message_connected);
+					mConnectView.setText(R.string.message_disconnect);
 
-					((MainActivity)getActivity()).setStatus(true);
+					((MainActivity) getActivity()).setStatus(true);
 				}
 
 				@Override
 				public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-					Log.e(TAG, "Connection Failure!");
+					Log.e(TAG, exception.getLocalizedMessage());
 
-//					Snackbar.make(mGatewayView, exception.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
+					if (Utils.isAttached(SettingsFragment.this)) {
+						Snackbar.make(mGatewayView, exception.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
+					}
 				}
 			});
 		} catch (MqttException ex) {
-			Log.e(TAG, "connect failure: " + ex.getLocalizedMessage());
+			Log.e(TAG, "Connect failure: " + ex.getLocalizedMessage());
 		}
 	}
 
@@ -111,27 +106,32 @@ public class SettingsFragment extends ToolbarFragment implements Toolbar.OnMenuI
 			MqttManager.self().disconnect(new IMqttActionListener() {
 				@Override
 				public void onSuccess(IMqttToken asyncActionToken) {
-					mStatusTextView.setText(R.string.message_disconnected);
-					mConnectBtn.setText(R.string.message_connect);
+					mStatusView.setText(R.string.message_disconnected);
+					mConnectView.setText(R.string.message_connect);
 
-					((MainActivity)getActivity()).setStatus(false);
+					((MainActivity) getActivity()).setStatus(false);
 				}
 
 				@Override
 				public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
 					Log.e(TAG, "Disconnection Failure");
 
-//					Snackbar.make(mGatewayView, exception.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
+					if (Utils.isAttached(SettingsFragment.this)) {
+						Snackbar.make(mGatewayView, exception.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
+					}
 				}
 			});
-
 		} catch (MqttException ex) {
-			Log.e(TAG, "disconnect failure: " + ex.getLocalizedMessage());
+			Log.e(TAG, "Disconnect failure: " + ex.getLocalizedMessage());
 		}
 	}
 
 	@Override
-	public void onClick(View view) {
-		getFragmentManager().popBackStack();
+	public void onClick(View v) {
+		if (!MqttManager.self().isConnected()) {
+			connect();
+		} else {
+			disconnect();
+		}
 	}
 }

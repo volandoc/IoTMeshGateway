@@ -35,10 +35,10 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 
 	private static final String TAG = PluginFragment.class.getSimpleName();
 
-	private Toolbar mToolbar;
 	private Plugin mPlugin;
-	private SwitchCompat mSwitchView;
+	private Toolbar mToolbar;
 	private ImageView mImageView;
+	private SwitchCompat mSwitchView;
 
 	private static final String NEST_TOPIC = "A000000000000777/NestDevicesPlugin/nK1FIdFVSFe_8wbS1Sz1Qpw07GxLCYe9MJ3dXTbkGKpEmPo6TnJr6Q/command";
 	private static final String ESP_TOPIC = "A000000000000777/Esp8266Plugin/LED/command";

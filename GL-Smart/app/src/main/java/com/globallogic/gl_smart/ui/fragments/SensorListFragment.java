@@ -45,15 +45,14 @@ public class SensorListFragment extends ToolbarFragment implements MqttCallback 
 		return fragment;
 	}
 
-	private String mSensorTopic;
 	private String mGwTopic;
+	private String mGateway;
+	private String mSensorTopic;
+
+	private List<Sensor> mSensorList;
 
 	private RecyclerView mListView;
 	private ProgressBar mProgressBar;
-
-	private String mGateway;
-	private List<Sensor> mSensorList;
-
 	private GatewayCallback mCallback;
 
 	@Override
@@ -204,7 +203,7 @@ public class SensorListFragment extends ToolbarFragment implements MqttCallback 
 		final TextView name;
 		final TextView status;
 
-		public Holder(View itemView) {
+		Holder(View itemView) {
 			super(itemView);
 
 			name = (TextView) itemView.findViewById(R.id.name);

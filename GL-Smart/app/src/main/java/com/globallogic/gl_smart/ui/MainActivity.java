@@ -163,9 +163,7 @@ public class MainActivity extends AppActivity implements NavigationView.OnNaviga
 				PorterDuff.Mode.SRC_IN);
 
 		mIndicatorView.setImageDrawable(drawable);
-		mStatusView.setText(is
-				? getString(R.string.message_connected)
-				: getString(R.string.message_disconnected));
+		mStatusView.setText(is ? getString(R.string.message_connected) : getString(R.string.message_disconnected));
 	}
 
 
