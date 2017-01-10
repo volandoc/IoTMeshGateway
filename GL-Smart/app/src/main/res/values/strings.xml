@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GL-Smart</string>
+    <!--<string name="app_name">GL-Smart</string>-->
 
 	<string name="message_connect">Connect</string>
 	<string name="message_connected">Connected</string>
