@@ -21,6 +21,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.globallogic.gl_smart.BuildConfig;
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.ui.base.AppActivity;
 import com.globallogic.gl_smart.ui.fragments.GatewayFragment;
@@ -75,6 +76,8 @@ public class MainActivity extends AppActivity implements NavigationView.OnNaviga
 
 		mIndicatorView = (ImageView) view.findViewById(R.id.indicator);
 		mStatusView = (TextView) view.findViewById(R.id.status);
+
+		((TextView) view.findViewById(R.id.version)).setText(String.format(getString(R.string.version), BuildConfig.VERSION_NAME));
 
 		setStatus(MqttManager.self().isConnected());
 
