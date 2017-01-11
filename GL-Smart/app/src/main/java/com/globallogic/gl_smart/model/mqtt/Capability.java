@@ -7,13 +7,13 @@ import com.google.gson.annotations.SerializedName;
  * @author eugenii.samarskyi.
  */
 public class Capability {
-	String name;
-	String type;
-	String descr;
-	String lim_type;
-	JsonArray lim_json;
+	public String name;
+	public String type;
+	public String descr;
+	public String lim_type;
+	public JsonArray lim_json;
 
 	@SerializedName("default")
-	String def;
-	String rw;
+	public String def;
+	public String rw;
 }

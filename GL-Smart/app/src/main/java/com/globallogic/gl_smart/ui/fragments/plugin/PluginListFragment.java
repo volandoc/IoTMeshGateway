@@ -1,4 +1,4 @@
-package com.globallogic.gl_smart.ui.fragments;
+package com.globallogic.gl_smart.ui.fragments.plugin;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -16,7 +16,7 @@ import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Plugin;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.MessageType;
-import com.globallogic.gl_smart.model.type.SenderType;
+import com.globallogic.gl_smart.model.type.TopicType;
 import com.globallogic.gl_smart.ui.GatewayCallback;
 import com.globallogic.gl_smart.ui.base.ToolbarFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
@@ -131,8 +131,8 @@ public class PluginListFragment extends ToolbarFragment implements MqttCallback,
 
 		Topic topic = new Topic(topic_);
 
-		SenderType senderType = SenderType.fromString(topic.topic);
-		if (SenderType.Plugin == senderType) {
+		TopicType topicType = TopicType.fromString(topic.topic);
+		if (TopicType.Plugin == topicType) {
 			Plugin plugin = findByName(topic.plugin());
 			if (plugin == null) {
 				mPluginList.add(new Plugin(topic.gateway(), topic.plugin(), mess));
@@ -141,7 +141,7 @@ public class PluginListFragment extends ToolbarFragment implements MqttCallback,
 				plugin.status = mess;
 				mListView.getAdapter().notifyItemChanged(mPluginList.indexOf(plugin));
 			}
-		} else if (SenderType.Gateway == senderType) {
+		} else if (TopicType.Gateway == topicType) {
 			mToolbar.setSubtitle(topic.gateway() + " " + mess);
 
 			mCallback.onGateway(topic.gateway());

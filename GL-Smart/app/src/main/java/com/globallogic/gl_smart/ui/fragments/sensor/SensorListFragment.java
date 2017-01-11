@@ -1,4 +1,4 @@
-package com.globallogic.gl_smart.ui.fragments;
+package com.globallogic.gl_smart.ui.fragments.sensor;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -16,7 +16,7 @@ import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Sensor;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.MessageType;
-import com.globallogic.gl_smart.model.type.SenderType;
+import com.globallogic.gl_smart.model.type.TopicType;
 import com.globallogic.gl_smart.ui.GatewayCallback;
 import com.globallogic.gl_smart.ui.base.ToolbarFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
@@ -120,8 +120,8 @@ public class SensorListFragment extends ToolbarFragment implements MqttCallback 
 
 		Topic topic = new Topic(topic_);
 
-		SenderType senderType = SenderType.fromString(topic.topic);
-		if (SenderType.Sensor == senderType) {
+		TopicType topicType = TopicType.fromString(topic.topic);
+		if (TopicType.Sensor == topicType) {
 			Sensor sensor = findByName(topic.sensor());
 			if (sensor == null) {
 				mSensorList.add(new Sensor(topic.gateway(), topic.sensor(), topic.plugin(), mess));
@@ -130,7 +130,7 @@ public class SensorListFragment extends ToolbarFragment implements MqttCallback 
 				sensor.status = mess;
 				mListView.getAdapter().notifyItemChanged(mSensorList.indexOf(sensor));
 			}
-		} else if (SenderType.Gateway == senderType) {
+		} else if (TopicType.Gateway == topicType) {
 //			mToolbar.setSubtitle(topic.gateway() + " " + mess);
 
 			mCallback.onGateway(topic.gateway());

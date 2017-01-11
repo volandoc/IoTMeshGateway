@@ -3,7 +3,7 @@ package com.globallogic.gl_smart.model.mqtt;
 import android.text.TextUtils;
 
 import com.globallogic.gl_smart.model.type.MessageType;
-import com.globallogic.gl_smart.model.type.SenderType;
+import com.globallogic.gl_smart.model.type.TopicType;
 import com.globallogic.gl_smart.utils.Utils;
 
 
@@ -21,7 +21,7 @@ public class Topic {
 		topic = t;
 	}
 
-	public String get(SenderType type) {
+	public String get(TopicType type) {
 		switch (type) {
 			case Gateway:
 				return topic.split(Utils.SEPARATOR)[0];

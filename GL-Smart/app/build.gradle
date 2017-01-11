@@ -43,6 +43,7 @@ android {
 dependencies {
     compile "com.android.support:design:$supportLibV"
     compile "com.android.support:support-v4:$supportLibV"
+    compile "com.android.support:cardview-v7:$supportLibV"
     compile "com.android.support:appcompat-v7:$supportLibV"
 
     compile 'com.google.code.gson:gson:2.8.0'

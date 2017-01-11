@@ -4,7 +4,7 @@ package com.globallogic.gl_smart.model.type;
  * @author eugenii.samarskyi.
  */
 public enum MessageType {
-	Command("command"), Event("event"), Status("status"), All("#");
+	Command("command"), Event("event"), Status("status"), Property("property"), All("#");
 
 	public final String name;
 

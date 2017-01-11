@@ -5,10 +5,10 @@ import com.globallogic.gl_smart.utils.Utils;
 /**
  * @author eugenii.samarskyi.
  */
-public enum SenderType {
+public enum TopicType {
 	Gateway, Plugin, Sensor;
 
-	public static SenderType fromString(String topic) {
+	public static TopicType fromString(String topic) {
 		if (topic == null) {
 			return null;
 		}

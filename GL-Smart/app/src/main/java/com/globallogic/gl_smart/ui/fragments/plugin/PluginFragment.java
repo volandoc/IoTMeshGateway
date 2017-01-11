@@ -1,4 +1,4 @@
-package com.globallogic.gl_smart.ui.fragments;
+package com.globallogic.gl_smart.ui.fragments.plugin;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -17,7 +17,7 @@ import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Plugin;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.MessageType;
-import com.globallogic.gl_smart.model.type.SenderType;
+import com.globallogic.gl_smart.model.type.TopicType;
 import com.globallogic.gl_smart.ui.base.BaseFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 import com.squareup.picasso.Picasso;
@@ -130,7 +130,7 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 		}
 
 		Topic t = new Topic(topic);
-		if (MessageType.Event == t.getMessageType() && SenderType.Sensor == SenderType.fromString(t.topic)) {
+		if (MessageType.Event == t.getMessageType() && TopicType.Sensor == TopicType.fromString(t.topic)) {
 			Snackbar snackbar = Snackbar.make(mToolbar, mess, Snackbar.LENGTH_LONG)
 					.setAction("Show camera", new View.OnClickListener() {
 						@Override

@@ -4,7 +4,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.MessageType;
-import com.globallogic.gl_smart.model.type.SenderType;
+import com.globallogic.gl_smart.model.type.TopicType;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,7 +62,7 @@ public class TopicTest {
 				.type(MessageType.Command)
 				.build();
 
-		Assert.assertEquals(SenderType.Gateway, SenderType.fromString(topic.topic));
+		Assert.assertEquals(TopicType.Gateway, TopicType.fromString(topic.topic));
 	}
 
 	@Test
@@ -73,7 +73,7 @@ public class TopicTest {
 				.type(MessageType.Command)
 				.build();
 
-		Assert.assertEquals(SenderType.Plugin, SenderType.fromString(topic.topic));
+		Assert.assertEquals(TopicType.Plugin, TopicType.fromString(topic.topic));
 	}
 
 	@Test
@@ -85,16 +85,16 @@ public class TopicTest {
 				.type(MessageType.Command)
 				.build();
 
-		Assert.assertEquals(SenderType.Sensor, SenderType.fromString(topic.topic));
+		Assert.assertEquals(TopicType.Sensor, TopicType.fromString(topic.topic));
 	}
 
 	@Test
 	public void senderUnknown() {
-		Assert.assertEquals(null, SenderType.fromString("777777777"));
+		Assert.assertEquals(null, TopicType.fromString("777777777"));
 	}
 
 	@Test
 	public void senderNull() {
-		Assert.assertNull(SenderType.fromString(null));
+		Assert.assertNull(TopicType.fromString(null));
 	}
 }
