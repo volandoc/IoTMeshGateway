@@ -2,8 +2,8 @@ package com.globallogic.gl_smart.model.mqtt;
 
 import android.text.TextUtils;
 
-import com.globallogic.gl_smart.model.mqtt.type.MessageType;
-import com.globallogic.gl_smart.model.mqtt.type.SenderType;
+import com.globallogic.gl_smart.model.type.MessageType;
+import com.globallogic.gl_smart.model.type.SenderType;
 import com.globallogic.gl_smart.utils.Utils;
 
 

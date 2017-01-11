@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 /**
  * @author eugenii.samarskyi.
  */
-public class Payload {
+public class Data {
 	public String type;
 	public String value;
 	public String cvalue;

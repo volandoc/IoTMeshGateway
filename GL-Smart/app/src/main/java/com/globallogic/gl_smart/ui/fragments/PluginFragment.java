@@ -13,13 +13,11 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 
-import com.globallogic.gl_smart.App;
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Plugin;
-import com.globallogic.gl_smart.model.mqtt.Message;
 import com.globallogic.gl_smart.model.mqtt.Topic;
-import com.globallogic.gl_smart.model.mqtt.type.MessageType;
-import com.globallogic.gl_smart.model.mqtt.type.SenderType;
+import com.globallogic.gl_smart.model.type.MessageType;
+import com.globallogic.gl_smart.model.type.SenderType;
 import com.globallogic.gl_smart.ui.base.BaseFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 import com.squareup.picasso.Picasso;
@@ -142,9 +140,6 @@ public class PluginFragment extends BaseFragment implements View.OnClickListener
 						}
 					});
 			snackbar.show();
-
-			Message m = App.getGson().fromJson(mess, Message.class);
-			Log.d(TAG, m.toJson());
 		}
 	}
 

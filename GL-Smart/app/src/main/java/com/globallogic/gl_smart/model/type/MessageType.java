@@ -1,4 +1,4 @@
-package com.globallogic.gl_smart.model.mqtt.type;
+package com.globallogic.gl_smart.model.type;
 
 /**
  * @author eugenii.samarskyi.

@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.mqtt.Topic;
-import com.globallogic.gl_smart.model.mqtt.type.MessageType;
+import com.globallogic.gl_smart.model.type.MessageType;
 import com.globallogic.gl_smart.ui.GatewayCallback;
 import com.globallogic.gl_smart.ui.base.ToolbarFragment;
 import com.globallogic.gl_smart.utils.MqttManager;

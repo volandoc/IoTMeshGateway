@@ -3,8 +3,8 @@ package com.globallogic.gl_smart;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.globallogic.gl_smart.model.mqtt.Topic;
-import com.globallogic.gl_smart.model.mqtt.type.MessageType;
-import com.globallogic.gl_smart.model.mqtt.type.SenderType;
+import com.globallogic.gl_smart.model.type.MessageType;
+import com.globallogic.gl_smart.model.type.SenderType;
 
 import org.junit.Assert;
 import org.junit.Before;
