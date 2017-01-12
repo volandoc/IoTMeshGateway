@@ -23,6 +23,6 @@ public enum MessageType {
 			}
 		}
 
-		return null;
+		return Property;
 	}
 }

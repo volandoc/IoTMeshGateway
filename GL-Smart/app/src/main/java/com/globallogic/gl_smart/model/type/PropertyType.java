@@ -1,9 +1,8 @@
 package com.globallogic.gl_smart.model.type;
 
 /**
- * Created by Batman on 11.01.2017.
+ * @author eugenii.samarskyi.
  */
-
 public enum PropertyType {
 
 	Bool("boolean"), Int("int"), Float("float"), Char("char"), Str("string"), Url("url");

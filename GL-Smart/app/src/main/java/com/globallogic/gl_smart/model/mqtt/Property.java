@@ -1,9 +1,8 @@
 package com.globallogic.gl_smart.model.mqtt;
 
 /**
- * Created by Batman on 11.01.2017.
+ * @author eugenii.samarskyi.
  */
-
 public class Property {
 	public String name;
 	public Object value;

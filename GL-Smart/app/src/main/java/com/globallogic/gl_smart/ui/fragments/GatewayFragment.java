@@ -16,16 +16,13 @@ import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.MessageType;
 import com.globallogic.gl_smart.ui.GatewayCallback;
 import com.globallogic.gl_smart.ui.MainActivity;
-import com.globallogic.gl_smart.utils.MqttManager;
 
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 /**
  * @author eugenii.samarskyi.
  */
-public class GatewayFragment extends DeviceFragment implements MqttCallback {
+public class GatewayFragment extends NodeFragment {
 
 	private static final String TAG = GatewayFragment.class.getSimpleName();
 
@@ -34,14 +31,7 @@ public class GatewayFragment extends DeviceFragment implements MqttCallback {
 	}
 
 	private Toolbar mToolbar;
-
 	private GatewayCallback mGatewayCallback;
-
-	private final String topic = new Topic.Builder()
-			.gatewayId("+")
-			.type(MessageType.Status)
-			.build()
-			.topic;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -52,11 +42,12 @@ public class GatewayFragment extends DeviceFragment implements MqttCallback {
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 
+		//TODO just for test
 		App.getHandler().postDelayed(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					messageArrived("A000000000000001/status", new MqttMessage(statusMessage.getBytes()));
+					messageArrived("A000000000000001/status", new MqttMessage(status.getBytes()));
 				} catch (Exception e) {
 					Log.e(TAG, "run: " + e.getLocalizedMessage());
 				}
@@ -79,52 +70,71 @@ public class GatewayFragment extends DeviceFragment implements MqttCallback {
 	}
 
 	@Override
-	public void onResume() {
-		super.onResume();
-
-		Log.d(TAG, "onResume: ");
-		MqttManager.self().subscribe(topic, this);
+	protected String getTopic() {
+		return new Topic.Builder()
+				.gatewayId("+")
+				.type(MessageType.Status)
+				.build().topic;
 	}
 
 	@Override
-	public void onDestroy() {
-		Log.d(TAG, "onDestroy: ");
-
-		MqttManager.self().unSubscribe(topic);
-
-		super.onDestroy();
-	}
-
-	@Override
-	public void connectionLost(Throwable cause) {
-//		Log.v(TAG, "Connection was lost");
-	}
-
-	@Override
-	public void messageArrived(String topic_, MqttMessage message) throws Exception {
-		String mess = new String(message.getPayload());
-		Log.d(TAG, "Topic: " + topic_ + ", Message: " + mess);
-
-		Topic topic = new Topic(topic_);
-		mToolbar.setTitle(topic.gateway());
-//		mToolbar.setSubtitle(mess);
+	protected void onStatus(Topic topic, StatusMessage message) {
+		super.onStatus(topic, message);
 
 		mGatewayCallback.onGateway(topic.gateway());
 
-		StatusMessage statusMessage = App.getGson().fromJson(mess, StatusMessage.class);
-
-		mCapabilities = statusMessage.data;
-		mListView.setAdapter(new Adapter());
+		mToolbar.setTitle(topic.gateway());
+		mToolbar.setSubtitle(message.status);
 	}
 
-	@Override
-	public void deliveryComplete(IMqttDeliveryToken token) {
-		Log.d(TAG, "Delivery Complete!");
-	}
+	public static final String property = "000000000000";
 
-	private final String statusMessage = "{\n" +
+	public static final String status = "{\n" +
 			"\t\"status\": \"online\",\n" +
 			"\t\"data\": [{\n" +
+			"\t\t\"name\": \"SSID\",\n" +
+			"\t\t\"type\": \"string\",\n" +
+			"\t\t\"descr\": \"WiFi Name\",\n" +
+			"\t\t\"lim_type\": null,\n" +
+			"\t\t\"lim_json\": null,\n" +
+			"\t\t\"default\": \"VCH-Simulator\",\n" +
+			"\t\t\"rw\": \"rw\"\n" +
+			"\t}, {\n" +
+			"\t\t\"name\": \"SSIDPassword\",\n" +
+			"\t\t\"type\": \"string\",\n" +
+			"\t\t\"descr\": \"WiFi Password\",\n" +
+			"\t\t\"lim_type\": null,\n" +
+			"\t\t\"lim_json\": null,\n" +
+			"\t\t\"default\": \"12345678\",\n" +
+			"\t\t\"rw\": \"rw\"\n" +
+			"\t}, {\n" +
+			"\t\t\"name\": \"GWID\",\n" +
+			"\t\t\"type\": \"string\",\n" +
+			"\t\t\"descr\": \"Gateway ID\",\n" +
+			"\t\t\"lim_type\": null,\n" +
+			"\t\t\"lim_json\": null,\n" +
+			"\t\t\"default\": \"A000000000000777\",\n" +
+			"\t\t\"rw\": \"rw\"\n" +
+			"\t}, {\n" +
+			"\t\t\"name\": \"MQTTAddr\",\n" +
+			"\t\t\"type\": \"string\",\n" +
+			"\t\t\"descr\": \"MQTT Broker Address\",\n" +
+			"\t\t\"lim_type\": null,\n" +
+			"\t\t\"lim_json\": null,\n" +
+			"\t\t\"default\": \"172.24.254.20\",\n" +
+			"\t\t\"rw\": \"rw\"\n" +
+			"\t}, {\n" +
+			"\t\t\"name\": \"restart\",\n" +
+			"\t\t\"type\": \"int\",\n" +
+			"\t\t\"descr\": \"Restart\",\n" +
+			"\t\t\"lim_type\": \"range\",\n" +
+			"\t\t\"lim_json\": [\n" +
+			"\t\t\t\"0\",\n" +
+			"\t\t\t\"1\"\n" +
+			"\t\t],\n" +
+			"\t\t\"default\": \"0\",\n" +
+			"\t\t\"rw\": \"rw\"\n" +
+			"\t}, {\n" +
 			"\t\t\"name\": \"power\",\n" +
 			"\t\t\"type\": \"string\",\n" +
 			"\t\t\"descr\": \"LED power\",\n" +
@@ -156,8 +166,16 @@ public class GatewayFragment extends DeviceFragment implements MqttCallback {
 			"\t\t],\n" +
 			"\t\t\"default\": \"10.35.0.2\",\n" +
 			"\t\t\"rw\": \"rw\"\n" +
+			"\t}, {\n" +
+			"\t\t\"name\": \"isStreaming\",\n" +
+			"\t\t\"descr\": \"Show picture\",\n" +
+			"\t\t\"type\": \"boolean\",\n" +
+			"\t\t\"lim_type\": null,\n" +
+			"\t\t\"lim_json\": null,\n" +
+			"\t\t\"default\": \"true\",\n" +
+			"\t\t\"rw\": \"rw\"\n" +
 			"\t}],\n" +
 			"\t\"time\": 1234123412,\n" +
-			"\t\"err\": \"errMsg\"\n" +
+			"\t\"err\": \"\"\n" +
 			"}";
 }

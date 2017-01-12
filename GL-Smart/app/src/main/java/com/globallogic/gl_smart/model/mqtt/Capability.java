@@ -1,6 +1,7 @@
 package com.globallogic.gl_smart.model.mqtt;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -11,9 +12,17 @@ public class Capability {
 	public String type;
 	public String descr;
 	public String lim_type;
-	public JsonArray lim_json;
+	public JsonElement lim_json;
 
 	@SerializedName("default")
 	public String def;
 	public String rw;
+
+	public JsonArray getLimitation() {
+		if (lim_json.isJsonNull()) {
+			return null;
+		}
+
+		return lim_json.getAsJsonArray();
+	}
 }

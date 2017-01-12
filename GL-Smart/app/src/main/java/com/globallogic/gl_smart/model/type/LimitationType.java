@@ -1,9 +1,8 @@
 package com.globallogic.gl_smart.model.type;
 
 /**
- * Created by Batman on 11.01.2017.
+ * @author eugenii.samarskyi.
  */
-
 public enum LimitationType {
 
 	Range, Enum, List, Regexp, Null;

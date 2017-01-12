@@ -13,8 +13,7 @@ import com.globallogic.gl_smart.utils.Utils;
 public class Topic {
 	public String topic;
 
-	public Topic() {
-
+	private Topic() {
 	}
 
 	public Topic(String t) {
@@ -34,15 +33,15 @@ public class Topic {
 		}
 	}
 
-	public String gateway(){
+	public String gateway() {
 		return topic.split(Utils.SEPARATOR)[0];
 	}
 
-	public String plugin(){
+	public String plugin() {
 		return topic.split(Utils.SEPARATOR)[1];
 	}
 
-	public String sensor(){
+	public String sensor() {
 		return topic.split(Utils.SEPARATOR)[2];
 	}
 
@@ -52,7 +51,7 @@ public class Topic {
 		}
 
 		String[] arr = topic.split(Utils.SEPARATOR);
-		if (arr.length > 0) {
+		if (arr.length > 1) {
 			return MessageType.fromString(arr[arr.length - 1]);
 		}
 
@@ -64,6 +63,7 @@ public class Topic {
 		String gatewayId;
 		String pluginId;
 		String deviceId;
+		String property;
 		MessageType type;
 
 		public Builder gatewayId(String id) {
@@ -86,13 +86,22 @@ public class Topic {
 			return this;
 		}
 
+		public Builder property(String p) {
+			property = p;
+			return this;
+		}
+
 		public Topic build() {
 			if (TextUtils.isEmpty(gatewayId)) {
-				throw new IllegalArgumentException("gatewayId cannot be empty");
+				throw new IllegalArgumentException("GatewayId cannot be empty");
 			}
 
 			if (type == null) {
-				throw new IllegalArgumentException("massage type cannot be NULL");
+				throw new IllegalArgumentException("Massage type cannot be NULL");
+			}
+
+			if (property != null && MessageType.Property != type) {
+				throw new IllegalArgumentException("Property value available only for Property type message");
 			}
 
 			builder = new StringBuilder();
@@ -108,7 +117,12 @@ public class Topic {
 				builder.append(Utils.SEPARATOR).append(deviceId);
 			}
 
-			builder.append(Utils.SEPARATOR).append(type.name);
+			builder.append(Utils.SEPARATOR);
+			if (MessageType.Property == type) {
+				builder.append(property);
+			} else {
+				builder.append(type.name);
+			}
 
 			topic.topic = builder.toString();
 

@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,40 +16,181 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.globallogic.gl_smart.App;
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.mqtt.Capability;
 import com.globallogic.gl_smart.model.mqtt.Property;
+import com.globallogic.gl_smart.model.mqtt.PropertyPayload;
+import com.globallogic.gl_smart.model.mqtt.StatusMessage;
+import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.AccessRight;
 import com.globallogic.gl_smart.model.type.LimitationType;
+import com.globallogic.gl_smart.model.type.MessageType;
 import com.globallogic.gl_smart.model.type.PropertyType;
 import com.globallogic.gl_smart.ui.base.BaseFragment;
 import com.globallogic.gl_smart.ui.view.AppSeekBar;
 import com.globallogic.gl_smart.ui.view.AppSpinnerAdapter;
+import com.globallogic.gl_smart.utils.MqttManager;
 import com.globallogic.gl_smart.utils.Utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.property;
+
 /**
- * Created by Batman on 11.01.2017.
+ * @author eugenii.samarskyi.
  */
+public abstract class NodeFragment extends BaseFragment implements TextView.OnEditorActionListener,
+		CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener, AppSeekBar.Callback, MqttCallback {
 
-public class DeviceFragment extends BaseFragment implements TextView.OnEditorActionListener,
-		CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener, AppSeekBar.Callback {
-
-	private static final String TAG = DeviceFragment.class.getSimpleName();
+	private static final String TAG = NodeFragment.class.getSimpleName();
 
 	protected RecyclerView mListView;
 
-	protected List<Property> mProperties;
+	protected List<Property> mProperties = new ArrayList<>();
 	protected List<Capability> mCapabilities;
+
+	protected abstract String getTopic();
 
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
-		mListView = (RecyclerView) view.findViewById(R.id.list);
-		mListView.setLayoutManager(new LinearLayoutManager(getActivity()));
+		if (mListView == null) {
+			mListView = (RecyclerView) view.findViewById(R.id.list);
+			mListView.setLayoutManager(new LinearLayoutManager(getActivity()));
+		}
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+
+		Log.d(TAG, "onResume: ");
+		MqttManager.self().subscribe(getTopic(), this);
+	}
+
+	@Override
+	public void onDestroy() {
+		Log.d(TAG, "onDestroy: ");
+
+		MqttManager.self().unSubscribe(getTopic());
+
+		super.onDestroy();
+	}
+
+	protected void onStatus(Topic topic, StatusMessage message) {
+		mCapabilities = message.data;
+		mListView.setAdapter(new Adapter());
+
+		for (Capability capability : mCapabilities) {
+			Topic propertyTopic = new Topic.Builder()
+					.gatewayId(topic.gateway())
+					.type(MessageType.Property)
+					.property(capability.name)
+					.build();
+
+			MqttManager.self().subscribe(propertyTopic.topic, this);
+
+			//TODO just for test
+			App.getHandler().postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						messageArrived("A000000000000001/SSIDPassword", new MqttMessage(property.getBytes()));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}, 2000);
+		}
+	}
+
+	protected void onCommand() {
+	}
+
+	protected void onEvent() {
+	}
+
+	protected void onProperty(Property property) {
+		Log.d(TAG, "onProperty: " + property.name + " " + property.value);
+
+		Property p = getProperty(property.name);
+		if (p == null) {
+			mProperties.add(property);
+			mListView.getAdapter().notifyItemChanged(getCapabilityIndex(property.name));
+		} else {
+			p.value = property.value;
+			mListView.getAdapter().notifyItemChanged(getCapabilityIndex(p.name));
+		}
+	}
+
+	@Override
+	public void messageArrived(String topic, MqttMessage message) throws Exception {
+		String mess = new String(message.getPayload());
+		Log.d(TAG, "Topic: " + topic + ", Message: " + mess);
+
+		Topic t = new Topic(topic);
+
+		switch (t.getMessageType()) {
+			case Status:
+				onStatus(t, App.getGson().fromJson(mess, StatusMessage.class));
+				break;
+			case Property:
+				Property property = new Property();
+
+				// get property name from topic
+				String[] arr = topic.split(Utils.SEPARATOR);
+				property.name = arr[arr.length - 1];
+
+				// get property value from payload
+				PropertyPayload payload = new PropertyPayload(mess);
+				property.value = payload.getValue();
+
+				onProperty(property);
+				break;
+			case Command:
+				onCommand();
+				break;
+			case Event:
+				onEvent();
+				break;
+		}
+	}
+
+	public Property getProperty(String name) {
+		for (Property property : mProperties) {
+			if (property.name.equals(name)) {
+				return property;
+			}
+		}
+
+		return null;
+	}
+
+	public int getCapabilityIndex(String name) {
+		for (Capability capability : mCapabilities) {
+			if (capability.name.equals(name)) {
+				return mCapabilities.indexOf(capability);
+			}
+		}
+
+		return 0;
+	}
+
+	@Override
+	public void deliveryComplete(IMqttDeliveryToken token) {
+		Log.d(TAG, "Delivery Complete!");
+	}
+
+	@Override
+	public void connectionLost(Throwable cause) {
+//		Log.v(TAG, "Connection was lost");
 	}
 
 	private enum HolderType {
@@ -96,7 +239,7 @@ public class DeviceFragment extends BaseFragment implements TextView.OnEditorAct
 		}
 	}
 
-	protected class Adapter extends RecyclerView.Adapter<Holder> {
+	class Adapter extends RecyclerView.Adapter<Holder> {
 
 		private final int ITEM_LAYOUT_ID = R.layout.v_property_item;
 
@@ -178,15 +321,20 @@ public class DeviceFragment extends BaseFragment implements TextView.OnEditorAct
 			super.bindView(position);
 
 			final EditText valueText = (EditText) value;
+			final String value;
 
-			// link should be always enabled
-			final String value = mCapabilities.get(position).def;
+			Property property = getProperty(mCapabilities.get(position).name);
+			if (property != null) {
+				value = property.value.toString();
+			} else {
+				value = TextUtils.isEmpty(mCapabilities.get(position).def) ? "" : mCapabilities.get(position).def;
+			}
 
 			valueText.setText(value);
 			valueText.setTag(mCapabilities.get(position));
 			valueText.setSingleLine();
 			valueText.setImeOptions(EditorInfo.IME_ACTION_DONE);
-			valueText.setOnEditorActionListener(DeviceFragment.this);
+			valueText.setOnEditorActionListener(NodeFragment.this);
 		}
 	}
 
@@ -208,7 +356,7 @@ public class DeviceFragment extends BaseFragment implements TextView.OnEditorAct
 			SwitchCompat valueText = (SwitchCompat) value;
 			valueText.setChecked(Boolean.valueOf(mCapabilities.get(position).def));
 			valueText.setTag(mCapabilities.get(position));
-			valueText.setOnCheckedChangeListener(DeviceFragment.this);
+			valueText.setOnCheckedChangeListener(NodeFragment.this);
 		}
 	}
 
@@ -227,7 +375,7 @@ public class DeviceFragment extends BaseFragment implements TextView.OnEditorAct
 		public void bindView(int position) {
 			super.bindView(position);
 
-			List<String> values = getRangeFromJsonArray(mCapabilities.get(position).lim_json);
+			List<String> values = getRangeFromJsonArray(mCapabilities.get(position).getLimitation());
 //			final int currentIndex = mPropertyList.get(position).getCurrentConstraintPosition();
 
 			Spinner view = (Spinner) value;
@@ -248,7 +396,7 @@ public class DeviceFragment extends BaseFragment implements TextView.OnEditorAct
 			view.setAdapter(adapter);
 			view.setTag(mCapabilities.get(position));
 //			view.setSelection(currentIndex);
-			view.setOnItemSelectedListener(DeviceFragment.this);
+			view.setOnItemSelectedListener(NodeFragment.this);
 		}
 	}
 
@@ -278,7 +426,7 @@ public class DeviceFragment extends BaseFragment implements TextView.OnEditorAct
 //			}
 //
 			rangeBar.setTag(mCapabilities.get(position));
-			rangeBar.setOnSeekBarChangeListener(DeviceFragment.this);
+			rangeBar.setOnSeekBarChangeListener(NodeFragment.this);
 		}
 	}
 
