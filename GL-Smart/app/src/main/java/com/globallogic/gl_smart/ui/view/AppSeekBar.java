@@ -137,6 +137,14 @@ public class AppSeekBar extends LinearLayout implements SeekBar.OnSeekBarChangeL
 		return String.format(Locale.ENGLISH, mValueFormat, value);
 	}
 
+	public Number getValue() {
+		if (mDecimalValue) {
+			return getRealValue(mSeekBar.getProgress());
+		} else {
+			return (int) getRealValue(mSeekBar.getProgress());
+		}
+	}
+
 	private int getRealValue(double value) {
 		return (int) ((value - mShift) * mStep);
 	}

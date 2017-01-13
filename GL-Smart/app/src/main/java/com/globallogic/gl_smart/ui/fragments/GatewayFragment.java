@@ -129,8 +129,8 @@ public class GatewayFragment extends NodeFragment {
 			"\t\t\"descr\": \"Restart\",\n" +
 			"\t\t\"lim_type\": \"range\",\n" +
 			"\t\t\"lim_json\": [\n" +
-			"\t\t\t\"0\",\n" +
-			"\t\t\t\"1\"\n" +
+			"\t\t\t0,\n" +
+			"\t\t\t1\n" +
 			"\t\t],\n" +
 			"\t\t\"default\": \"0\",\n" +
 			"\t\t\"rw\": \"rw\"\n" +
@@ -148,14 +148,14 @@ public class GatewayFragment extends NodeFragment {
 			"\t}, {\n" +
 			"\t\t\"name\": \"temperature\",\n" +
 			"\t\t\"descr\": \"Temperature, C\",\n" +
-			"\t\t\"type\": \"string\",\n" +
+			"\t\t\"type\": \"float\",\n" +
 			"\t\t\"lim_type\": \"range\",\n" +
 			"\t\t\"lim_json\": [\n" +
-			"\t\t\t\"-20.12\",\n" +
-			"\t\t\t\"99.8\"\n" +
+			"\t\t\t-20.12,\n" +
+			"\t\t\t99.8\n" +
 			"\t\t],\n" +
 			"\t\t\"default\": \"10.0\",\n" +
-			"\t\t\"rw\": \"r\"\n" +
+			"\t\t\"rw\": \"rw\"\n" +
 			"\t}, {\n" +
 			"\t\t\"name\": \"ip\",\n" +
 			"\t\t\"descr\": \"Ip Address\",\n" +
@@ -167,13 +167,37 @@ public class GatewayFragment extends NodeFragment {
 			"\t\t\"default\": \"10.35.0.2\",\n" +
 			"\t\t\"rw\": \"rw\"\n" +
 			"\t}, {\n" +
-			"\t\t\"name\": \"isStreaming\",\n" +
+			"\t\t\"name\": \"IsStreaming\",\n" +
 			"\t\t\"descr\": \"Show picture\",\n" +
 			"\t\t\"type\": \"boolean\",\n" +
 			"\t\t\"lim_type\": null,\n" +
 			"\t\t\"lim_json\": null,\n" +
-			"\t\t\"default\": \"true\",\n" +
+			"\t\t\"default\": true,\n" +
 			"\t\t\"rw\": \"rw\"\n" +
+			"\t}, {\n" +
+			"\t\t\"name\": \"BuildNumber\",\n" +
+			"\t\t\"descr\": \"Current build number\",\n" +
+			"\t\t\"type\": \"int\",\n" +
+			"\t\t\"lim_type\": null,\n" +
+			"\t\t\"lim_json\": null,\n" +
+			"\t\t\"default\": 166,\n" +
+			"\t\t\"rw\": \"rw\"\n" +
+			"\t}, {\n" +
+			"\t\t\"name\": \"Version number\",\n" +
+			"\t\t\"descr\": \"Current version number\",\n" +
+			"\t\t\"type\": \"float\",\n" +
+			"\t\t\"lim_type\": null,\n" +
+			"\t\t\"lim_json\": null,\n" +
+			"\t\t\"default\": 0.12,\n" +
+			"\t\t\"rw\": \"rw\"\n" +
+			"\t}, {\n" +
+			"\t\t\"name\": \"Host address\",\n" +
+			"\t\t\"type\": \"url\",\n" +
+			"\t\t\"descr\": \"Address\",\n" +
+			"\t\t\"lim_type\": null,\n" +
+			"\t\t\"lim_json\": null,\n" +
+			"\t\t\"default\": \"http://www.google.com\",\n" +
+			"\t\t\"rw\": \"r\"\n" +
 			"\t}],\n" +
 			"\t\"time\": 1234123412,\n" +
 			"\t\"err\": \"\"\n" +

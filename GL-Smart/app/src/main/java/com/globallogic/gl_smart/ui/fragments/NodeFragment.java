@@ -4,7 +4,9 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
+import android.text.Html;
 import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -12,7 +14,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -20,6 +21,7 @@ import com.globallogic.gl_smart.App;
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.mqtt.Capability;
 import com.globallogic.gl_smart.model.mqtt.Property;
+import com.globallogic.gl_smart.model.mqtt.PropertyMessage;
 import com.globallogic.gl_smart.model.mqtt.PropertyPayload;
 import com.globallogic.gl_smart.model.mqtt.StatusMessage;
 import com.globallogic.gl_smart.model.mqtt.Topic;
@@ -40,7 +42,9 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.property;
 
@@ -54,6 +58,8 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 
 	protected RecyclerView mListView;
 
+	// key - property name, value - topic
+	protected Map<String, String> mPropertyTopicList = new HashMap<>();
 	protected List<Property> mProperties = new ArrayList<>();
 	protected List<Capability> mCapabilities;
 
@@ -94,6 +100,10 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 					.type(MessageType.Property)
 					.property(capability.name)
 					.build();
+
+			if (!mPropertyTopicList.containsKey(capability.name)) {
+				mPropertyTopicList.put(capability.name, propertyTopic.topic);
+			}
 
 			MqttManager.self().subscribe(propertyTopic.topic, this);
 
@@ -193,6 +203,13 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 //		Log.v(TAG, "Connection was lost");
 	}
 
+	protected void changeProperty(Property p) {
+		PropertyMessage message = new PropertyMessage(p);
+
+		Log.i(TAG, "ChangeProperty\nTopic = " + mPropertyTopicList.get(p.name) + "\nMessage  = " + message.getAsJson());
+		MqttManager.self().sendMessage(mPropertyTopicList.get(p.name), message.getAsJson());
+	}
+
 	private enum HolderType {
 		RANGE, LIST, ENUM, TEXT, BOOLEAN, NUMBER, URL;
 
@@ -219,7 +236,6 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 							return NUMBER;
 						case Url:
 							return URL;
-
 						default:
 							return TEXT;
 					}
@@ -239,7 +255,7 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 		}
 	}
 
-	class Adapter extends RecyclerView.Adapter<Holder> {
+	private class Adapter extends RecyclerView.Adapter<Holder> {
 
 		private final int ITEM_LAYOUT_ID = R.layout.v_property_item;
 
@@ -257,8 +273,10 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 					return new EnumHolder(itemView);
 				case TEXT:
 					return new TextHolder(itemView);
-//				case NUMBER:
-//					return new NumberHolder(itemView);
+				case URL:
+					return new UrlHolder(itemView);
+				case NUMBER:
+					return new NumberHolder(itemView);
 				default:
 					return new TextHolder(itemView);
 			}
@@ -307,7 +325,52 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 
 	private class TextHolder extends Holder {
 
+		TextView valueText;
+
 		TextHolder(View itemView) {
+			super(itemView);
+		}
+
+		@Override
+		protected int valueLayout() {
+			return R.layout.v_input_text;
+		}
+
+		@Override
+		public void bindView(final int position) {
+			super.bindView(position);
+
+			valueText = (TextView) value;
+			final String value;
+
+			Property property = getProperty(mCapabilities.get(position).name);
+			if (property != null) {
+				value = property.value.toString();
+			} else {
+				value = TextUtils.isEmpty(mCapabilities.get(position).def) ? "" : mCapabilities.get(position).def;
+			}
+
+			PropertyType type = PropertyType.fromString(mCapabilities.get(position).type);
+
+			if (PropertyType.Url == type) {
+				valueText.setText(Html.fromHtml(String.format(getString(R.string.link_format), value, value)));
+				valueText.setEnabled(true);
+				valueText.setMovementMethod(LinkMovementMethod.getInstance());
+			} else {
+				valueText.setText(value);
+				valueText.setTag(mCapabilities.get(position));
+				valueText.setSingleLine();
+				valueText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+				valueText.setOnEditorActionListener(NodeFragment.this);
+			}
+
+			Utils.setWithDataType(valueText, type);
+		}
+	}
+
+	private class UrlHolder extends TextHolder {
+
+		UrlHolder(View itemView) {
 			super(itemView);
 		}
 
@@ -319,28 +382,29 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 		@Override
 		public void bindView(final int position) {
 			super.bindView(position);
+		}
+	}
 
-			final EditText valueText = (EditText) value;
-			final String value;
+	private class NumberHolder extends TextHolder {
 
-			Property property = getProperty(mCapabilities.get(position).name);
-			if (property != null) {
-				value = property.value.toString();
-			} else {
-				value = TextUtils.isEmpty(mCapabilities.get(position).def) ? "" : mCapabilities.get(position).def;
-			}
+		NumberHolder(View itemView) {
+			super(itemView);
+		}
 
-			valueText.setText(value);
-			valueText.setTag(mCapabilities.get(position));
-			valueText.setSingleLine();
-			valueText.setImeOptions(EditorInfo.IME_ACTION_DONE);
-			valueText.setOnEditorActionListener(NodeFragment.this);
+		@Override
+		protected int valueLayout() {
+			return R.layout.v_input_text;
+		}
+
+		@Override
+		public void bindView(final int position) {
+			super.bindView(position);
 		}
 	}
 
 	private class BoolHolder extends Holder {
 
-		public BoolHolder(View itemView) {
+		BoolHolder(View itemView) {
 			super(itemView);
 		}
 
@@ -353,16 +417,26 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 		public void bindView(int position) {
 			super.bindView(position);
 
-			SwitchCompat valueText = (SwitchCompat) value;
-			valueText.setChecked(Boolean.valueOf(mCapabilities.get(position).def));
-			valueText.setTag(mCapabilities.get(position));
-			valueText.setOnCheckedChangeListener(NodeFragment.this);
+			SwitchCompat switchView = (SwitchCompat) value;
+
+			Property property = getProperty(mCapabilities.get(position).name);
+			if (property != null) {
+				switchView.setChecked((boolean) (property.value));
+			} else {
+				switchView.setChecked(
+						TextUtils.isEmpty(mCapabilities.get(position).def)
+								? false
+								: Boolean.valueOf(mCapabilities.get(position).def));
+			}
+
+			switchView.setTag(mCapabilities.get(position));
+			switchView.setOnCheckedChangeListener(NodeFragment.this);
 		}
 	}
 
 	private class EnumHolder extends Holder {
 
-		public EnumHolder(View itemView) {
+		EnumHolder(View itemView) {
 			super(itemView);
 		}
 
@@ -376,7 +450,6 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 			super.bindView(position);
 
 			List<String> values = getRangeFromJsonArray(mCapabilities.get(position).getLimitation());
-//			final int currentIndex = mPropertyList.get(position).getCurrentConstraintPosition();
 
 			Spinner view = (Spinner) value;
 
@@ -395,14 +468,14 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 			view.setAdapter(adapter);
 			view.setTag(mCapabilities.get(position));
-//			view.setSelection(currentIndex);
+			view.setSelection(values.indexOf(mCapabilities.get(position).def));
 			view.setOnItemSelectedListener(NodeFragment.this);
 		}
 	}
 
 	private class RangeHolder extends Holder {
 
-		public RangeHolder(View itemView) {
+		RangeHolder(View itemView) {
 			super(itemView);
 		}
 
@@ -415,16 +488,17 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 		public void bindView(final int position) {
 			super.bindView(position);
 
+			Capability capability = mCapabilities.get(position);
+
 			AppSeekBar rangeBar = (AppSeekBar) value.findViewById(R.id.range_seek_bar);
 			TextView currentValueView = (TextView) value.findViewById(R.id.range_current_value);
-			currentValueView.setText(mCapabilities.get(position).def);
 
-//			try {
-//				UiUtils.setWithProperty(rangeBar, currentValueView, mPropertyList.get(position));
-//			} catch (NumberFormatException e) {
-//				Log.e(TAG, "bindView: ", e);
-//			}
-//
+			try {
+				Utils.setWithProperty(rangeBar, currentValueView, capability, capability.def);
+			} catch (NumberFormatException e) {
+				Log.e(TAG, "bindView: ", e);
+			}
+
 			rangeBar.setTag(mCapabilities.get(position));
 			rangeBar.setOnSeekBarChangeListener(NodeFragment.this);
 		}
@@ -432,17 +506,54 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 
 	@Override
 	public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+		if (actionId == EditorInfo.IME_ACTION_DONE) {
+			String newText = v.getText().toString();
+
+			if (TextUtils.isEmpty(newText)) {
+				v.setError(getString(R.string.error_empty_field));
+				return true;
+			}
+
+			Utils.hideSoftKeyboard(v);
+
+			Capability capability = (Capability) v.getTag();
+
+			Property property = new Property();
+			property.name = capability.name;
+			property.value = newText;
+
+			changeProperty(property);
+
+			return true;
+		}
 		return false;
 	}
 
 	@Override
-	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+	public void onCheckedChanged(CompoundButton v, boolean isChecked) {
+		// not manual change event
+		if (!v.isPressed()) {
+			return;
+		}
 
+		Capability capability = (Capability) v.getTag();
+
+		Property property = new Property();
+		property.name = capability.name;
+		property.value = isChecked;
+
+		changeProperty(property);
 	}
 
 	@Override
 	public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+		Capability capability = (Capability) parent.getTag();
 
+		Property property = new Property();
+		property.name = capability.name;
+		property.value = parent.getSelectedItem().toString();
+
+		changeProperty(property);
 	}
 
 	@Override
@@ -452,7 +563,13 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 
 	@Override
 	public void onStopTrackingTouch(AppSeekBar seekBar) {
+		Capability capability = (Capability) seekBar.getTag();
 
+		Property property = new Property();
+		property.name = capability.name;
+		property.value = seekBar.getValue();
+
+		changeProperty(property);
 	}
 
 	private List<String> getRangeFromJsonArray(JsonArray array) {

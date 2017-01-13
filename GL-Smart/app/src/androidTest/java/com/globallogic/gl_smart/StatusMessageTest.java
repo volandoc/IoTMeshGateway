@@ -18,7 +18,7 @@ public class StatusMessageTest {
 	@Test
 	public void messageFromString() {
 		StatusMessage message = App.getGson().fromJson(statusMessage, StatusMessage.class);
-//
+
 		Assert.assertNotNull(message);
 	}
 

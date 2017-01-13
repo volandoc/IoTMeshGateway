@@ -24,4 +24,8 @@
     <string name="open_drawable">Open menu</string>
     <string name="close_drawable">Close menu</string>
     <string name="version">Version %s</string>
+
+    <string name="link_format"><![CDATA[<a href="%1$s">%2$s</a>]]></string>
+
+    <string name="error_empty_field">Enter value</string>
 </resources>

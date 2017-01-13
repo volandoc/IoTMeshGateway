@@ -54,16 +54,13 @@ public class MqttManager {
 		mqttAndroidClient.disconnect(null, l);
 	}
 
-	public void sendMessage(String mess, String topic) {
-		if (!MqttManager.self().isConnected()) {
+	public void sendMessage(String topic, String mess) {
+		if (!isConnected()) {
 			return;
 		}
 
-		MqttMessage message = new MqttMessage();
-		message.setPayload(mess.getBytes());
-
 		try {
-			MqttManager.self().getMqtt().publish(topic, message);
+			mqttAndroidClient.publish(topic, new MqttMessage(mess.getBytes()));
 		} catch (MqttException e) {
 			Log.e(TAG, "publish failure: ");
 		}
