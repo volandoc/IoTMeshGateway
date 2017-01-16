@@ -66,6 +66,20 @@ public class Topic {
 		String property;
 		MessageType type;
 
+		public Builder() {
+
+		}
+
+		public Builder(Topic t) {
+			gatewayId = t.gateway();
+			if (TopicType.fromString(t.topic) == TopicType.Plugin) {
+				pluginId = t.plugin();
+			} else if (TopicType.fromString(t.topic) == TopicType.Sensor) {
+				pluginId = t.plugin();
+				deviceId = t.sensor();
+			}
+		}
+
 		public Builder gatewayId(String id) {
 			gatewayId = id;
 			return this;

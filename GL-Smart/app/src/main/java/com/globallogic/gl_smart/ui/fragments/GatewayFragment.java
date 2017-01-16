@@ -71,10 +71,10 @@ public class GatewayFragment extends NodeFragment {
 
 	@Override
 	protected String getTopic() {
-		return new Topic.Builder()
+		return mTopic == null ? new Topic.Builder()
 				.gatewayId("+")
 				.type(MessageType.Status)
-				.build().topic;
+				.build().topic : mTopic.topic;
 	}
 
 	@Override

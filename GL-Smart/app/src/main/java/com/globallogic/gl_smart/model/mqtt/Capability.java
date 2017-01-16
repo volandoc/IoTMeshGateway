@@ -27,6 +27,15 @@ public class Capability {
 		return lim_json.getAsJsonArray();
 	}
 
+	public int currentLimitPosition(Object v) {
+		for (int i = 0; i < getLimitation().size(); i++) {
+			if (String.valueOf(v).equals(String.valueOf(getLimitation().get(i).getAsString()))) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	public Range getRange() {
 		double min = lim_json.getAsJsonArray().get(0).getAsDouble();
 		double max = lim_json.getAsJsonArray().get(1).getAsDouble();

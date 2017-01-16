@@ -42,9 +42,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.property;
 
@@ -58,10 +56,9 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 
 	protected RecyclerView mListView;
 
-	// key - property name, value - topic
-	protected Map<String, String> mPropertyTopicList = new HashMap<>();
-	protected List<Property> mProperties = new ArrayList<>();
+	protected Topic mTopic;
 	protected List<Capability> mCapabilities;
+	protected List<Property> mProperties = new ArrayList<>();
 
 	protected abstract String getTopic();
 
@@ -91,34 +88,37 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 	}
 
 	protected void onStatus(Topic topic, StatusMessage message) {
+		mTopic = topic;
+
 		mCapabilities = message.data;
 		mListView.setAdapter(new Adapter());
 
+		mProperties.clear();
 		for (Capability capability : mCapabilities) {
+			Property p = new Property();
+			p.name = capability.name;
+			mProperties.add(p);
+
 			Topic propertyTopic = new Topic.Builder()
 					.gatewayId(topic.gateway())
 					.type(MessageType.Property)
 					.property(capability.name)
 					.build();
 
-			if (!mPropertyTopicList.containsKey(capability.name)) {
-				mPropertyTopicList.put(capability.name, propertyTopic.topic);
-			}
-
 			MqttManager.self().subscribe(propertyTopic.topic, this);
-
-			//TODO just for test
-			App.getHandler().postDelayed(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						messageArrived("A000000000000001/SSIDPassword", new MqttMessage(property.getBytes()));
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}, 2000);
 		}
+
+		//TODO just for test
+		App.getHandler().postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					messageArrived("A000000000000001/SSIDPassword", new MqttMessage(property.getBytes()));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}, 2000);
 	}
 
 	protected void onCommand() {
@@ -131,13 +131,13 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 		Log.d(TAG, "onProperty: " + property.name + " " + property.value);
 
 		Property p = getProperty(property.name);
-		if (p == null) {
-			mProperties.add(property);
-			mListView.getAdapter().notifyItemChanged(getCapabilityIndex(property.name));
-		} else {
-			p.value = property.value;
-			mListView.getAdapter().notifyItemChanged(getCapabilityIndex(p.name));
-		}
+//		if (p == null) {
+//			mProperties.add(property);
+//			mListView.getAdapter().notifyItemChanged(getCapabilityIndex(property.name));
+//		} else {
+		p.value = property.value;
+		mListView.getAdapter().notifyItemChanged(getCapabilityIndex(p.name));
+//		}
 	}
 
 	@Override
@@ -206,8 +206,9 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 	protected void changeProperty(Property p) {
 		PropertyMessage message = new PropertyMessage(p);
 
-		Log.i(TAG, "ChangeProperty\nTopic = " + mPropertyTopicList.get(p.name) + "\nMessage  = " + message.getAsJson());
-		MqttManager.self().sendMessage(mPropertyTopicList.get(p.name), message.getAsJson());
+		Topic t = new Topic.Builder(mTopic).type(MessageType.Command).build();
+		Log.i(TAG, "ChangeProperty\nTopic = " + t.topic + "\nMessage  = " + message.getAsJson());
+		MqttManager.self().sendMessage(t.topic, message.getAsJson());
 	}
 
 	private enum HolderType {
@@ -344,7 +345,7 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 			final String value;
 
 			Property property = getProperty(mCapabilities.get(position).name);
-			if (property != null) {
+			if (property.value != null) {
 				value = property.value.toString();
 			} else {
 				value = TextUtils.isEmpty(mCapabilities.get(position).def) ? "" : mCapabilities.get(position).def;
@@ -420,7 +421,7 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 			SwitchCompat switchView = (SwitchCompat) value;
 
 			Property property = getProperty(mCapabilities.get(position).name);
-			if (property != null) {
+			if (property.value != null) {
 				switchView.setChecked((boolean) (property.value));
 			} else {
 				switchView.setChecked(
@@ -451,6 +452,14 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 
 			List<String> values = getRangeFromJsonArray(mCapabilities.get(position).getLimitation());
 
+			int index = 0;
+			Object v = getProperty(mCapabilities.get(position).name).value;
+			if (v != null) {
+				index = values.indexOf(String.valueOf(v));
+			} else if (mCapabilities.get(position).def != null) {
+				index = values.indexOf(mCapabilities.get(position).def);
+			}
+
 			Spinner view = (Spinner) value;
 
 			AppSpinnerAdapter<String> adapter = new AppSpinnerAdapter<>(getContext(), values, new AppSpinnerAdapter.AppSpinnerAdapterCallback<String>() {
@@ -468,7 +477,7 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 			view.setAdapter(adapter);
 			view.setTag(mCapabilities.get(position));
-			view.setSelection(values.indexOf(mCapabilities.get(position).def));
+			view.setSelection(index);
 			view.setOnItemSelectedListener(NodeFragment.this);
 		}
 	}
@@ -548,6 +557,16 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 	@Override
 	public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 		Capability capability = (Capability) parent.getTag();
+
+		if (AccessRight.fromString(capability.rw).isReadOnly()) {
+			return;
+		}
+
+		// not manual event
+//		if (getProperty(capability.name).value == null && capability.def != null
+//				&& parent.getSelectedItem().toString().equals(capability.def)) {
+//			return;
+//		}
 
 		Property property = new Property();
 		property.name = capability.name;
