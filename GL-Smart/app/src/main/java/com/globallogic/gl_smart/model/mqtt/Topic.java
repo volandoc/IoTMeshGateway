@@ -11,6 +11,7 @@ import com.globallogic.gl_smart.utils.Utils;
  * @author eugenii.samarskyi.
  */
 public class Topic {
+
 	public String topic;
 
 	private Topic() {

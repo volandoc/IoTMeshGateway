@@ -5,17 +5,13 @@ import java.io.Serializable;
 /**
  * @author eugenii.samarskyi.
  */
-public class Sensor implements Serializable {
-	public String gateway;
-	public String name;
-	public String status;
+public class Sensor extends Node implements Serializable {
 	public String plugin;
 
-	public Sensor(String gateway, String name, String plugin, String status) {
-		this.name = name;
+	public Sensor(String name, String status, String gateway, String plugin) {
+		super(name, status, gateway);
+
 		this.plugin = plugin;
-		this.status = status;
-		this.gateway = gateway;
 	}
 
 	@Override

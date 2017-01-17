@@ -5,15 +5,10 @@ import java.io.Serializable;
 /**
  * @author eugenii.samarskyi.
  */
-public class Plugin implements Serializable {
-	public String gateway;
-	public String name;
-	public String status;
+public class Plugin extends Node implements Serializable {
 
-	public Plugin(String gateway, String name, String status) {
-		this.gateway = gateway;
-		this.name = name;
-		this.status = status;
+	public Plugin(String name, String status, String gateway) {
+		super(name, status, gateway);
 	}
 
 	@Override

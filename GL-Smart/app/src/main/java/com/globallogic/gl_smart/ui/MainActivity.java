@@ -23,15 +23,14 @@ import android.widget.TextView;
 
 import com.globallogic.gl_smart.BuildConfig;
 import com.globallogic.gl_smart.R;
+import com.globallogic.gl_smart.model.mqtt.Topic;
+import com.globallogic.gl_smart.model.type.MessageType;
 import com.globallogic.gl_smart.ui.base.AppActivity;
 import com.globallogic.gl_smart.ui.fragments.GatewayFragment;
-import com.globallogic.gl_smart.ui.fragments.plugin.PluginListFragment;
-import com.globallogic.gl_smart.ui.fragments.sensor.SensorListFragment;
+import com.globallogic.gl_smart.ui.fragments.NodeListFragment;
 import com.globallogic.gl_smart.ui.fragments.SettingsFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 import com.globallogic.gl_smart.utils.Utils;
-
-import static com.globallogic.gl_smart.R.id.plugins;
 
 public class MainActivity extends AppActivity implements NavigationView.OnNavigationItemSelectedListener, GatewayCallback {
 
@@ -132,12 +131,34 @@ public class MainActivity extends AppActivity implements NavigationView.OnNaviga
 				fragment = GatewayFragment.newInstance();
 				break;
 
-			case plugins:
-				fragment = PluginListFragment.newInstance(mGateway);
+			case R.id.plugins:
+				String gwTopic = new Topic.Builder()
+						.gatewayId(mGateway)
+						.type(MessageType.Status)
+						.build().topic;
+
+				String pluginsTopic = new Topic.Builder()
+						.gatewayId(mGateway)
+						.pluginId("+")
+						.type(MessageType.Status)
+						.build().topic;
+				fragment = NodeListFragment.newInstance(new String[]{gwTopic, pluginsTopic}, R.string.plugins_title);
 				break;
 
 			case R.id.sensors:
-				fragment = SensorListFragment.newInstance(mGateway);
+				String gw = new Topic.Builder()
+						.gatewayId(mGateway)
+						.type(MessageType.Status)
+						.build().topic;
+
+				String sensorTopic = new Topic.Builder()
+						.gatewayId(mGateway)
+						.pluginId("+")
+						.deviceId("+")
+						.type(MessageType.Status)
+						.build().topic;
+
+				fragment = NodeListFragment.newInstance(new String[]{gw, sensorTopic}, R.string.sensors_title);
 				break;
 
 			case R.id.settings:

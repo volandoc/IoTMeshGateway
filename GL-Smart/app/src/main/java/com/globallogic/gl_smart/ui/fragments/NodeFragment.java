@@ -22,14 +22,12 @@ import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.mqtt.Capability;
 import com.globallogic.gl_smart.model.mqtt.Property;
 import com.globallogic.gl_smart.model.mqtt.PropertyMessage;
-import com.globallogic.gl_smart.model.mqtt.PropertyPayload;
 import com.globallogic.gl_smart.model.mqtt.StatusMessage;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.AccessRight;
 import com.globallogic.gl_smart.model.type.LimitationType;
 import com.globallogic.gl_smart.model.type.MessageType;
 import com.globallogic.gl_smart.model.type.PropertyType;
-import com.globallogic.gl_smart.ui.base.BaseFragment;
 import com.globallogic.gl_smart.ui.view.AppSeekBar;
 import com.globallogic.gl_smart.ui.view.AppSpinnerAdapter;
 import com.globallogic.gl_smart.utils.MqttManager;
@@ -37,8 +35,6 @@ import com.globallogic.gl_smart.utils.Utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.ArrayList;
@@ -49,8 +45,8 @@ import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.property;
 /**
  * @author eugenii.samarskyi.
  */
-public abstract class NodeFragment extends BaseFragment implements TextView.OnEditorActionListener,
-		CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener, AppSeekBar.Callback, MqttCallback {
+public abstract class NodeFragment extends MqttFragment implements TextView.OnEditorActionListener,
+		CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener, AppSeekBar.Callback {
 
 	private static final String TAG = NodeFragment.class.getSimpleName();
 
@@ -60,7 +56,6 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 	protected List<Capability> mCapabilities;
 	protected List<Property> mProperties = new ArrayList<>();
 
-	protected abstract String getTopic();
 
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -70,21 +65,10 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 		}
 	}
 
-	@Override
-	public void onResume() {
-		super.onResume();
-
-		Log.d(TAG, "onResume: ");
-		MqttManager.self().subscribe(getTopic(), this);
+	protected void onCommand() {
 	}
 
-	@Override
-	public void onDestroy() {
-		Log.d(TAG, "onDestroy: ");
-
-		MqttManager.self().unSubscribe(getTopic());
-
-		super.onDestroy();
+	protected void onEvent() {
 	}
 
 	protected void onStatus(Topic topic, StatusMessage message) {
@@ -121,56 +105,20 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 		}, 2000);
 	}
 
-	protected void onCommand() {
-	}
-
-	protected void onEvent() {
-	}
-
 	protected void onProperty(Property property) {
 		Log.d(TAG, "onProperty: " + property.name + " " + property.value);
 
 		Property p = getProperty(property.name);
-//		if (p == null) {
-//			mProperties.add(property);
-//			mListView.getAdapter().notifyItemChanged(getCapabilityIndex(property.name));
-//		} else {
 		p.value = property.value;
 		mListView.getAdapter().notifyItemChanged(getCapabilityIndex(p.name));
-//		}
 	}
 
-	@Override
-	public void messageArrived(String topic, MqttMessage message) throws Exception {
-		String mess = new String(message.getPayload());
-		Log.d(TAG, "Topic: " + topic + ", Message: " + mess);
+	protected void changeProperty(Property p) {
+		PropertyMessage message = new PropertyMessage(p);
 
-		Topic t = new Topic(topic);
-
-		switch (t.getMessageType()) {
-			case Status:
-				onStatus(t, App.getGson().fromJson(mess, StatusMessage.class));
-				break;
-			case Property:
-				Property property = new Property();
-
-				// get property name from topic
-				String[] arr = topic.split(Utils.SEPARATOR);
-				property.name = arr[arr.length - 1];
-
-				// get property value from payload
-				PropertyPayload payload = new PropertyPayload(mess);
-				property.value = payload.getValue();
-
-				onProperty(property);
-				break;
-			case Command:
-				onCommand();
-				break;
-			case Event:
-				onEvent();
-				break;
-		}
+		Topic t = new Topic.Builder(mTopic).type(MessageType.Command).build();
+		Log.i(TAG, "ChangeProperty\nTopic = " + t.topic + "\nMessage  = " + message.getAsJson());
+		MqttManager.self().sendMessage(t.topic, message.getAsJson());
 	}
 
 	public Property getProperty(String name) {
@@ -191,24 +139,6 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 		}
 
 		return 0;
-	}
-
-	@Override
-	public void deliveryComplete(IMqttDeliveryToken token) {
-		Log.d(TAG, "Delivery Complete!");
-	}
-
-	@Override
-	public void connectionLost(Throwable cause) {
-//		Log.v(TAG, "Connection was lost");
-	}
-
-	protected void changeProperty(Property p) {
-		PropertyMessage message = new PropertyMessage(p);
-
-		Topic t = new Topic.Builder(mTopic).type(MessageType.Command).build();
-		Log.i(TAG, "ChangeProperty\nTopic = " + t.topic + "\nMessage  = " + message.getAsJson());
-		MqttManager.self().sendMessage(t.topic, message.getAsJson());
 	}
 
 	private enum HolderType {
@@ -563,10 +493,14 @@ public abstract class NodeFragment extends BaseFragment implements TextView.OnEd
 		}
 
 		// not manual event
-//		if (getProperty(capability.name).value == null && capability.def != null
-//				&& parent.getSelectedItem().toString().equals(capability.def)) {
-//			return;
-//		}
+		if (getProperty(capability.name).value == null && capability.def != null) {
+			getProperty(capability.name).value = capability.def;
+			return;
+		}
+
+		if (parent.getSelectedItem().toString().equals(getProperty(capability.name).value)) {
+			return;
+		}
 
 		Property property = new Property();
 		property.name = capability.name;
