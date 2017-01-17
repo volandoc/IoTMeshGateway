@@ -27,7 +27,7 @@ public class TopicTest {
 		Topic topic = new Topic.Builder()
 				.gatewayId("777777777")
 				.pluginId("nest")
-				.deviceId("bulb001")
+				.sensorId("bulb001")
 				.type(MessageType.Command)
 				.build();
 
@@ -81,7 +81,7 @@ public class TopicTest {
 		Topic topic = new Topic.Builder()
 				.gatewayId("777777777")
 				.pluginId("nest")
-				.deviceId("bulb001")
+				.sensorId("bulb001")
 				.type(MessageType.Command)
 				.build();
 

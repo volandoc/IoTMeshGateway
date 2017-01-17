@@ -154,7 +154,7 @@ public class MainActivity extends AppActivity implements NavigationView.OnNaviga
 				String sensorTopic = new Topic.Builder()
 						.gatewayId(mGateway)
 						.pluginId("+")
-						.deviceId("+")
+						.sensorId("+")
 						.type(MessageType.Status)
 						.build().topic;
 

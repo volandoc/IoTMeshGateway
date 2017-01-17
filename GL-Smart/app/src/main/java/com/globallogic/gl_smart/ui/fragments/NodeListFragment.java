@@ -15,11 +15,14 @@ import android.widget.TextView;
 
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Node;
+import com.globallogic.gl_smart.model.Plugin;
+import com.globallogic.gl_smart.model.Sensor;
 import com.globallogic.gl_smart.model.mqtt.StatusMessage;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.TopicType;
 import com.globallogic.gl_smart.ui.GatewayCallback;
 import com.globallogic.gl_smart.ui.MainActivity;
+import com.globallogic.gl_smart.ui.NodeActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,14 +31,12 @@ import java.util.List;
  * @author eugenii.samarskyi.
  */
 public class NodeListFragment extends MqttFragment {
-
 	protected List<Node> mData;
 
+	private Toolbar mToolbar;
 	protected RecyclerView mListView;
 	protected ProgressBar mProgressBar;
 
-
-	private Toolbar mToolbar;
 	private GatewayCallback mCallback;
 
 	public static Fragment newInstance(String[] topics, @StringRes int res) {
@@ -99,7 +100,11 @@ public class NodeListFragment extends MqttFragment {
 			String nodeName = topic.get(topicType);
 			Node node = findByName(nodeName);
 			if (node == null) {
-				mData.add(new Node(nodeName, message.status, topic.gateway()));
+				if (TopicType.Sensor == topicType) {
+					mData.add(new Sensor(nodeName, message.status, topic.gateway(), topic.plugin()));
+				} else if (TopicType.Plugin == topicType) {
+					mData.add(new Plugin(nodeName, message.status, topic.gateway()));
+				}
 				mListView.getAdapter().notifyItemInserted(mData.size() - 1);
 			} else {
 				node.status = message.status;
@@ -137,7 +142,7 @@ public class NodeListFragment extends MqttFragment {
 
 		@Override
 		public void onClick(View view) {
-
+			startActivity(NodeActivity.newInstance((Node) view.getTag()));
 		}
 	}
 

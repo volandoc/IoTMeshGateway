@@ -1,6 +1,7 @@
 package com.globallogic.gl_smart.ui.fragments;
 
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
@@ -9,6 +10,7 @@ import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -18,7 +20,11 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.globallogic.gl_smart.App;
+import com.globallogic.gl_smart.BuildConfig;
 import com.globallogic.gl_smart.R;
+import com.globallogic.gl_smart.model.Node;
+import com.globallogic.gl_smart.model.Plugin;
+import com.globallogic.gl_smart.model.Sensor;
 import com.globallogic.gl_smart.model.mqtt.Capability;
 import com.globallogic.gl_smart.model.mqtt.Property;
 import com.globallogic.gl_smart.model.mqtt.PropertyMessage;
@@ -45,7 +51,7 @@ import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.property;
 /**
  * @author eugenii.samarskyi.
  */
-public abstract class NodeFragment extends MqttFragment implements TextView.OnEditorActionListener,
+public class NodeFragment extends MqttFragment implements TextView.OnEditorActionListener,
 		CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener, AppSeekBar.Callback {
 
 	private static final String TAG = NodeFragment.class.getSimpleName();
@@ -56,6 +62,39 @@ public abstract class NodeFragment extends MqttFragment implements TextView.OnEd
 	protected List<Capability> mCapabilities;
 	protected List<Property> mProperties = new ArrayList<>();
 
+	public static Fragment newInstance(Node node) {
+		Bundle args = new Bundle();
+		args.putSerializable("node", node);
+
+		Fragment fragment = new NodeFragment();
+		fragment.setArguments(args);
+		return fragment;
+	}
+
+	@Override
+	protected String[] getTopics() {
+		if (mTopic != null) {
+			return new String[]{mTopic.topic};
+		}
+
+		Node node = (Node) getArguments().getSerializable("node");
+		Topic.Builder builder = new Topic.Builder();
+		builder.type(MessageType.Status);
+		if (node instanceof Plugin) {
+			builder.pluginId(((Plugin) node).name);
+			builder.gatewayId(((Plugin) node).gateway);
+		} else if (node instanceof Sensor) {
+			builder.sensorId(((Sensor) node).name);
+			builder.pluginId(((Sensor) node).plugin);
+			builder.gatewayId(((Sensor) node).gateway);
+		}
+		return new String[]{builder.build().topic};
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		return inflater.inflate(R.layout.f_node, container, false);
+	}
 
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -92,17 +131,18 @@ public abstract class NodeFragment extends MqttFragment implements TextView.OnEd
 			MqttManager.self().subscribe(propertyTopic.topic, this);
 		}
 
-		//TODO just for test
-		App.getHandler().postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					messageArrived("A000000000000001/SSIDPassword", new MqttMessage(property.getBytes()));
-				} catch (Exception e) {
-					e.printStackTrace();
+		if (BuildConfig.BUILD_TYPE.equals("offlane")) {
+			App.getHandler().postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						messageArrived("A000000000000001/SSIDPassword", new MqttMessage(property.getBytes()));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
-			}
-		}, 2000);
+			}, 2000);
+		}
 	}
 
 	protected void onProperty(Property property) {

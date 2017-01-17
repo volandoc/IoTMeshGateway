@@ -5,12 +5,10 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
 import com.globallogic.gl_smart.App;
-import com.globallogic.gl_smart.R;
+import com.globallogic.gl_smart.BuildConfig;
 import com.globallogic.gl_smart.model.mqtt.StatusMessage;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.MessageType;
@@ -34,25 +32,21 @@ public class GatewayFragment extends NodeFragment {
 	private GatewayCallback mGatewayCallback;
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.f_gateway, container, false);
-	}
-
-	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 
-		//TODO just for test
-		App.getHandler().postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					messageArrived("A000000000000001/status", new MqttMessage(status.getBytes()));
-				} catch (Exception e) {
-					Log.e(TAG, "run: " + e.getLocalizedMessage());
+		if (BuildConfig.BUILD_TYPE.equals("offlane")) {
+			App.getHandler().postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						messageArrived("A000000000000001/status", new MqttMessage(status.getBytes()));
+					} catch (Exception e) {
+						Log.e(TAG, "run: " + e.getLocalizedMessage());
+					}
 				}
-			}
-		}, 2000);
+			}, 2000);
+		}
 	}
 
 	@Override

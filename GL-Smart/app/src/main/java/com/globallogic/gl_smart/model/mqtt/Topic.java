@@ -91,7 +91,7 @@ public class Topic {
 			return this;
 		}
 
-		public Builder deviceId(String id) {
+		public Builder sensorId(String id) {
 			deviceId = id;
 			return this;
 		}
