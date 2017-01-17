@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.globallogic.gl_smart.App;
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Node;
-import com.globallogic.gl_smart.ui.fragments.NodeFragment;
+import com.globallogic.gl_smart.ui.fragments.DeviceFragment;
 
 
 public class NodeActivity extends AppCompatActivity {
@@ -23,7 +23,7 @@ public class NodeActivity extends AppCompatActivity {
 
 		if (savedInstanceState == null) {
 			getSupportFragmentManager().beginTransaction()
-					.replace(R.id.content, NodeFragment.newInstance((Node) getIntent().getSerializableExtra("node")))
+					.replace(R.id.content, DeviceFragment.newInstance((Node) getIntent().getSerializableExtra("node")))
 					.commit();
 		}
 	}

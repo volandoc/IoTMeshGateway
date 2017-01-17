@@ -25,6 +25,7 @@ import com.globallogic.gl_smart.BuildConfig;
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.MessageType;
+import com.globallogic.gl_smart.model.type.TopicType;
 import com.globallogic.gl_smart.ui.base.AppActivity;
 import com.globallogic.gl_smart.ui.fragments.GatewayFragment;
 import com.globallogic.gl_smart.ui.fragments.NodeListFragment;
@@ -142,7 +143,8 @@ public class MainActivity extends AppActivity implements NavigationView.OnNaviga
 						.pluginId("+")
 						.type(MessageType.Status)
 						.build().topic;
-				fragment = NodeListFragment.newInstance(new String[]{gwTopic, pluginsTopic}, R.string.plugins_title);
+				fragment = NodeListFragment.newInstance(
+						new String[]{gwTopic, pluginsTopic}, R.string.plugins_title, TopicType.Plugin);
 				break;
 
 			case R.id.sensors:
@@ -158,7 +160,8 @@ public class MainActivity extends AppActivity implements NavigationView.OnNaviga
 						.type(MessageType.Status)
 						.build().topic;
 
-				fragment = NodeListFragment.newInstance(new String[]{gw, sensorTopic}, R.string.sensors_title);
+				fragment = NodeListFragment.newInstance(
+						new String[]{gw, sensorTopic}, R.string.sensors_title, TopicType.Sensor);
 				break;
 
 			case R.id.settings:

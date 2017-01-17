@@ -40,7 +40,7 @@ public class GatewayFragment extends NodeFragment {
 				@Override
 				public void run() {
 					try {
-						messageArrived("A000000000000001/status", new MqttMessage(status.getBytes()));
+						messageArrived(gwStatus, new MqttMessage(status.getBytes()));
 					} catch (Exception e) {
 						Log.e(TAG, "run: " + e.getLocalizedMessage());
 					}
@@ -85,6 +85,9 @@ public class GatewayFragment extends NodeFragment {
 	}
 
 	public static final String property = "000000000000";
+	public static final String gwStatus = "A000000000000001/status";
+	public static final String pluginStatus = "A000000000000001/nestPlugin/status";
+	public static final String sensorStatus = "A000000000000001/nestPlugin/nestThermostat/status";
 
 	public static final String status = "{\n" +
 			"\t\"status\": \"online\",\n" +

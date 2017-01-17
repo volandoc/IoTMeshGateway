@@ -7,12 +7,15 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.globallogic.gl_smart.App;
+import com.globallogic.gl_smart.BuildConfig;
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Node;
 import com.globallogic.gl_smart.model.Plugin;
@@ -24,13 +27,21 @@ import com.globallogic.gl_smart.ui.GatewayCallback;
 import com.globallogic.gl_smart.ui.MainActivity;
 import com.globallogic.gl_smart.ui.NodeActivity;
 
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.pluginStatus;
+import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.sensorStatus;
+import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.status;
 
 /**
  * @author eugenii.samarskyi.
  */
 public class NodeListFragment extends MqttFragment {
+	private static final String TAG = NodeListFragment.class.getSimpleName();
+
 	protected List<Node> mData;
 
 	private Toolbar mToolbar;
@@ -39,10 +50,13 @@ public class NodeListFragment extends MqttFragment {
 
 	private GatewayCallback mCallback;
 
-	public static Fragment newInstance(String[] topics, @StringRes int res) {
+	private TopicType mTopicType;
+
+	public static Fragment newInstance(String[] topics, @StringRes int res, TopicType type) {
 		Bundle args = new Bundle();
 		args.putStringArray("topics", topics);
 		args.putInt("title", res);
+		args.putSerializable("type", type);
 
 		Fragment fragment = new NodeListFragment();
 		fragment.setArguments(args);
@@ -55,6 +69,7 @@ public class NodeListFragment extends MqttFragment {
 		super.onCreate(savedInstanceState);
 
 		mData = new ArrayList<>();
+		mTopicType = (TopicType) getArguments().getSerializable("type");
 	}
 
 	@Override
@@ -83,6 +98,22 @@ public class NodeListFragment extends MqttFragment {
 		mListView.setAdapter(new Adapter());
 
 		mToolbar.setTitle(getArguments().getInt("title"));
+
+		mProgressBar = (ProgressBar) view.findViewById(R.id.progress);
+
+		if (BuildConfig.BUILD_TYPE.equals("offlane")) {
+			App.getHandler().postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						messageArrived(pluginStatus, new MqttMessage(status.getBytes()));
+						messageArrived(sensorStatus, new MqttMessage(status.getBytes()));
+					} catch (Exception e) {
+						Log.e(TAG, "run: " + e.getLocalizedMessage());
+					}
+				}
+			}, 2000);
+		}
 	}
 
 	@Override
@@ -97,6 +128,9 @@ public class NodeListFragment extends MqttFragment {
 			mToolbar.setSubtitle(topic.gateway() + " " + message.status);
 			mCallback.onGateway(topic.gateway());
 		} else {
+			if (topicType != mTopicType) {
+				return;
+			}
 			String nodeName = topic.get(topicType);
 			Node node = findByName(nodeName);
 			if (node == null) {
@@ -110,10 +144,10 @@ public class NodeListFragment extends MqttFragment {
 				node.status = message.status;
 				mListView.getAdapter().notifyItemChanged(mData.indexOf(node));
 			}
-		}
 
-		if (mData.size() > 0) {
-			mProgressBar.setVisibility(View.GONE);
+			if (mData.size() > 0) {
+				mProgressBar.setVisibility(View.GONE);
+			}
 		}
 	}
 

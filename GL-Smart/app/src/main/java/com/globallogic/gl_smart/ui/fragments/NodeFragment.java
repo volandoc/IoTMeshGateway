@@ -1,7 +1,6 @@
 package com.globallogic.gl_smart.ui.fragments;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
@@ -23,8 +22,6 @@ import com.globallogic.gl_smart.App;
 import com.globallogic.gl_smart.BuildConfig;
 import com.globallogic.gl_smart.R;
 import com.globallogic.gl_smart.model.Node;
-import com.globallogic.gl_smart.model.Plugin;
-import com.globallogic.gl_smart.model.Sensor;
 import com.globallogic.gl_smart.model.mqtt.Capability;
 import com.globallogic.gl_smart.model.mqtt.Property;
 import com.globallogic.gl_smart.model.mqtt.PropertyMessage;
@@ -51,45 +48,17 @@ import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.property;
 /**
  * @author eugenii.samarskyi.
  */
-public class NodeFragment extends MqttFragment implements TextView.OnEditorActionListener,
+public abstract class NodeFragment extends MqttFragment implements TextView.OnEditorActionListener,
 		CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener, AppSeekBar.Callback {
 
 	private static final String TAG = NodeFragment.class.getSimpleName();
 
 	protected RecyclerView mListView;
 
+	protected Node mNode;
 	protected Topic mTopic;
 	protected List<Capability> mCapabilities;
 	protected List<Property> mProperties = new ArrayList<>();
-
-	public static Fragment newInstance(Node node) {
-		Bundle args = new Bundle();
-		args.putSerializable("node", node);
-
-		Fragment fragment = new NodeFragment();
-		fragment.setArguments(args);
-		return fragment;
-	}
-
-	@Override
-	protected String[] getTopics() {
-		if (mTopic != null) {
-			return new String[]{mTopic.topic};
-		}
-
-		Node node = (Node) getArguments().getSerializable("node");
-		Topic.Builder builder = new Topic.Builder();
-		builder.type(MessageType.Status);
-		if (node instanceof Plugin) {
-			builder.pluginId(((Plugin) node).name);
-			builder.gatewayId(((Plugin) node).gateway);
-		} else if (node instanceof Sensor) {
-			builder.sensorId(((Sensor) node).name);
-			builder.pluginId(((Sensor) node).plugin);
-			builder.gatewayId(((Sensor) node).gateway);
-		}
-		return new String[]{builder.build().topic};
-	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
