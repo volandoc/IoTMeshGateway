@@ -162,7 +162,7 @@ public class GatewayFragment extends NodeFragment {
 			"\t\t\"type\": \"string\",\n" +
 			"\t\t\"lim_type\": \"regexp\",\n" +
 			"\t\t\"lim_json\": [\n" +
-			"\t\t\t\"[abc]\"\n" +
+			"\t\t\t\"([0-9]{1,3})[.]([0-9]{1,3})[.]([0-9]{1,3})[.]([0-9]{1,3})\"\n" +
 			"\t\t],\n" +
 			"\t\t\"default\": \"10.35.0.2\",\n" +
 			"\t\t\"rw\": \"rw\"\n" +

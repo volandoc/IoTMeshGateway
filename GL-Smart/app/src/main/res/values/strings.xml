@@ -28,4 +28,5 @@
     <string name="link_format"><![CDATA[<a href="%1$s">%2$s</a>]]></string>
 
     <string name="error_empty_field">Enter value</string>
+    <string name="error_wrong_regexp">Regexp not matches</string>
 </resources>

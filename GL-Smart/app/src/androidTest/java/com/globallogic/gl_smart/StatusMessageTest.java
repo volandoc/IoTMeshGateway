@@ -9,6 +9,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.regex.Pattern;
+
 /**
  * @author eugenii.samarskyi.
  */
@@ -31,7 +33,13 @@ public class StatusMessageTest {
 		Assert.assertEquals(3, message.data.size());
 	}
 
-	private final  String statusMessage = "{\n" +
+	@Test
+	public void regexp() throws JSONException {
+		String regexp = "[abc]";
+		Assert.assertEquals(Pattern.compile(regexp).matcher("a").matches(), true);
+	}
+
+	private final String statusMessage = "{\n" +
 			"\t\"status\": \"online\",\n" +
 			"\t\"data\": [{\n" +
 			"\t\t\"name\": \"power\",\n" +

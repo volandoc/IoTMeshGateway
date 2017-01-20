@@ -42,6 +42,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.property;
 
@@ -462,9 +463,17 @@ public abstract class NodeFragment extends MqttFragment implements TextView.OnEd
 				return true;
 			}
 
-			Utils.hideSoftKeyboard(v);
-
 			Capability capability = (Capability) v.getTag();
+			if (LimitationType.Regexp == LimitationType.fromString(capability.lim_type)) {
+				String regexp = capability.getLimitation().get(0).getAsString();
+
+				if (!Pattern.compile(regexp).matcher(newText).matches()) {
+					v.setError(getString(R.string.error_wrong_regexp));
+					return true;
+				}
+			}
+
+			Utils.hideSoftKeyboard(v);
 
 			Property property = new Property();
 			property.name = capability.name;
