@@ -25,5 +25,15 @@ typedef struct
 	uint32_t gpio;
 }control_pin_t;
 
+typedef struct
+{
+	char *name;
+	char *type;
+	char *descr;
+	char *lim_type;
+	char *lim_json;
+	char *deflt;
+	char *rw;
+}property_t;
 
 #endif /* EXAMPLES_EMBGW_HW_PLUGIN_INCLUDE_HW_CONFIG_H_ */
