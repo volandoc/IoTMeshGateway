@@ -28,20 +28,6 @@ QueueHandle_t gpio_queue;
 
 char sub_topic[64];
 
-const property_t led_property = {.name="LED", .type="string", .descr="Led indicator", .lim_type="enum", .lim_json="[\"on\",\"off\"]", .deflt="\"off\"", .rw="rw"};
-const property_t pir_property = {.name="PIR", .type="int", .descr="Motion sensor", .lim_type="", .lim_json="null", .deflt="0", .rw="r"};
-const property_t mic_property = {.name="MIC", .type="int", .descr="Noise detector", .lim_type="", .lim_json="null", .deflt="0", .rw="r"};
-
-
-irq_pin_t     PIR = {.last = 0, .prev = 0, .gpio = GPIO_PIR};
-irq_pin_t     MIC = {.last = 0, .prev = 0, .gpio = GPIO_MIC};
-control_pin_t LED = {.time_on = 0, .gpio = GPIO_LED};
-
-#define PIR_HANDLER gpio05_interrupt_handler
-#define MIC_HANDLER gpio04_interrupt_handler
-#define LED_ACTIVE (0)
-#define LED_TIMEOUT (15000)
-
 const char *property_template = "{\"name\":\"%s\","\
 "\"type\":\"%s\","\
 "\"descr\":\"%s\","\
@@ -67,6 +53,25 @@ typedef struct
 }queue_buf_t;
 
 queue_buf_t pub_msg;
+
+void properties_to_str(char * prop_buf, int buf_size, const property_t * properties, uint8_t prop_count){
+    char tmp_property[192] = "\0";
+    memset(prop_buf,0,buf_size);
+    strcpy(prop_buf,"[");
+    for (int i=0; i<prop_count; i++) {
+        sprintf(tmp_property, property_template,\
+                properties[i].name,\
+                properties[i].type,\
+                properties[i].descr,\
+                properties[i].lim_type,\
+                properties[i].lim_json,\
+                properties[i].deflt,\
+                properties[i].rw);
+        strcat(prop_buf,tmp_property);
+        if (i<(prop_count-1)) strcat(prop_buf,",");
+    }
+    strcat(prop_buf,"]");
+}
 
 void PIR_HANDLER(uint8_t gpio_num)
 {
@@ -141,7 +146,7 @@ static void parse_command(char *command, size_t cmdsize) {
             printf("- data: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
             i++;
-        } else if (jsoneq(command, &tokens[i], "PIR") == 0) {
+        } else if (jsoneq(command, &tokens[i], "motion") == 0) {
             /* We may use strndup() to fetch string value */
             printf("- PIR: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
@@ -151,7 +156,7 @@ static void parse_command(char *command, size_t cmdsize) {
             printf("- PIR: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
             i++;
-        } else if ((jsoneq(command, &tokens[i], "LED") == 0) && ((jsoneq(command, &tokens[i+1], "on") == 0) || (jsoneq(command, &tokens[i+1], "off") == 0))) {
+        } else if ((jsoneq(command, &tokens[i], "power") == 0) && ((jsoneq(command, &tokens[i+1], "on") == 0) || (jsoneq(command, &tokens[i+1], "off") == 0))) {
             /* We may use strndup() to fetch string value */
             printf("- value: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
@@ -187,7 +192,7 @@ static void topic_received(mqtt_message_data_t *md) {
     mqtt_message_t *message = md->message;
     printf("Received: ");
     for( i = 0; i < md->topic->lenstring.len; ++i)
-        printf("%c", md->topic->lenstring.data[ i ]);
+        printf("%c", md->topic->lenstring.data[i]);
 
     printf(" = ");
     for( i = 0; i < (int)message->payloadlen; ++i)
@@ -225,12 +230,16 @@ static void  mqtt_task(void *pvParameters) {
     struct mqtt_network network;
     mqtt_client_t client = mqtt_client_default;
     char mqtt_client_id[20];
-    uint8_t mqtt_buf[511];
-    uint8_t mqtt_readbuf[511];
+    uint8_t mqtt_buf[1023];
+    uint8_t mqtt_readbuf[1023];
     mqtt_packet_will_options_t will = mqtt_packet_will_options_initializer;
     mqtt_packet_connect_data_t data = mqtt_packet_connect_data_initializer;
     queue_buf_t pub_msg_loc;
     TickType_t xLastWakeTime;
+    char * properties=NULL;
+    char msg[PUB_MSG_LEN - 1] = "\0";
+    mqtt_message_t message;
+
 
     char will_topic[64];
     sprintf(will_topic, MQTT_WILL_TOPIC, get_my_id());
@@ -242,7 +251,7 @@ static void  mqtt_task(void *pvParameters) {
 
     mqtt_network_new( &network );
     memset(mqtt_client_id, 0, sizeof(mqtt_client_id));
-    strcpy(mqtt_client_id, "ESP-");
+    strcpy(mqtt_client_id, "Esp8266_");
     strcat(mqtt_client_id, get_my_id());
 
     data.willFlag = 1;
@@ -267,8 +276,8 @@ static void  mqtt_task(void *pvParameters) {
             continue;
         }
         printf("done\n\r");
-        mqtt_client_new(&client, &network, 5000, mqtt_buf, 511,
-                      mqtt_readbuf, 511);
+        mqtt_client_new(&client, &network, 5000, mqtt_buf, 1023,
+                      mqtt_readbuf, 1023);
         printf("Send MQTT connect ... ");
         ret = mqtt_connect(&client, &data);
         if(ret){
@@ -278,33 +287,50 @@ static void  mqtt_task(void *pvParameters) {
             continue;
         }
 
-        char tmp_property[PUB_MSG_LEN - 1] = "\0";
-        char properties[PUB_MSG_LEN - 1] = "\0";
-        strcat(properties,"[");
-        sprintf(tmp_property, property_template, led_property.name, led_property.type, led_property.descr, led_property.lim_type, led_property.lim_json, led_property.deflt, led_property.rw);
-        strcat(properties,tmp_property);
-        strcat(properties,",");
-        sprintf(tmp_property, property_template, pir_property.name, pir_property.type, pir_property.descr, pir_property.lim_type, pir_property.lim_json, pir_property.deflt, pir_property.rw);
-        strcat(properties,tmp_property);
-        strcat(properties,",");
-        sprintf(tmp_property, property_template, mic_property.name, mic_property.type, mic_property.descr, mic_property.lim_type, mic_property.lim_json, mic_property.deflt, mic_property.rw);
-        strcat(properties,tmp_property);
-        strcat(properties,"]");
+        char * properties = malloc(192*HW_PROP_COUNT);
+        if(properties == NULL) {
+            printf("[ERROR allocate memory\n]");
+        } else {
+            properties_to_str(properties, 192*HW_PROP_COUNT, hw_properties, HW_PROP_COUNT);
 
-        char msg[PUB_MSG_LEN - 1] = "\0";
-        xLastWakeTime = xTaskGetTickCount();
-        sprintf(msg, status_template, "available", properties, xLastWakeTime,"null");
-        printf("%s: connection message is %s \n with length %d ",__func__, msg, strlen(msg));
-        
-        mqtt_message_t init_message;
-        init_message.payload = msg;
-        init_message.payloadlen = strlen(msg);
-        init_message.dup = 0;
-        init_message.qos = MQTT_QOS1;
-        init_message.retained = 1;
-        ret = mqtt_publish(&client, will_topic, &init_message);
-        if (ret != MQTT_SUCCESS ){
-            printf("error while send status message: %d\n", ret );
+            xLastWakeTime = xTaskGetTickCount();
+            sprintf(msg, status_template, "available", properties, xLastWakeTime,"null");
+            printf("%s: connection message is %s \n with length %d\n",__func__, msg, strlen(msg));
+
+            message.payload = msg;
+            message.payloadlen = strlen(msg);
+            message.dup = 0;
+            message.qos = MQTT_QOS1;
+            message.retained = 1;
+            ret = mqtt_publish(&client, will_topic, &message);
+            if (ret != MQTT_SUCCESS ){
+                printf("error while send status message: %d\n", ret );
+            }
+            free(properties);
+        }
+
+        for (int i=0; i<HW_DEV_COUNT; i++){
+            int size = 192*hw_devices[i].prop_count;
+            char * properties = malloc(size);
+            if(properties == NULL) {
+                printf("[ERROR allocate memory\n]");
+            } else {
+                properties_to_str(properties, size, hw_devices[i].properties, hw_devices[i].prop_count);
+                memset(msg, 0, sizeof(msg));
+                sprintf(msg, status_template, "available", properties, xLastWakeTime,"null");
+
+                printf("%s: connection message is %s \n with length %d\n",__func__, msg, strlen(msg));
+                message.payload = msg;
+                message.payloadlen = strlen(msg);
+                char dev_will_topic[64];
+                sprintf(dev_will_topic, MQTT_DEV_WILL_TOPIC, get_my_id(), hw_devices[i].name);
+
+                ret = mqtt_publish(&client, dev_will_topic, &message);
+                if (ret != MQTT_SUCCESS ){
+                    printf("error while send status message: %d\n", ret );
+                }
+                free(properties);
+            }
         }
 
         printf("done\r\n");
@@ -316,7 +342,6 @@ static void  mqtt_task(void *pvParameters) {
         while(1){
             while(xQueueReceive(publish_queue, &pub_msg_loc, 0) == pdTRUE){
                 printf("got message to publish\r\n");
-                mqtt_message_t message;
                 message.payload = pub_msg_loc.msg;
                 message.payloadlen = strlen(pub_msg_loc.msg);
                 message.dup = 0;
@@ -462,5 +487,5 @@ void user_init(void)
 
     xTaskCreate(&wifi_task, "wifi_task",  256, NULL, 2, NULL);
     xTaskCreate(&gpio_task, "gpio_task", 256, NULL, 3, NULL);
-    xTaskCreate(&mqtt_task, "mqtt_task", 1024, NULL, 4, NULL);
+    xTaskCreate(&mqtt_task, "mqtt_task", 2048, NULL, 4, NULL);
 }
