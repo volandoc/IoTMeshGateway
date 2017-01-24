@@ -49,6 +49,8 @@ typedef struct
 	char *name;
 	property_t *properties;
 	uint8_t prop_count;
+	char cmd_topic[64];
+	mqtt_message_handler_t cmd_hndlr;
 }device_t;
 
 irq_pin_t     PIR = {.last = 0, .prev = 0, .gpio = GPIO_PIR};
@@ -67,21 +69,38 @@ property_t led_properties[1] = {{.name="power", .type="string", .descr="Led indi
 property_t pir_properties[1] = {{.name="motion", .type="int", .descr="Motion sensor", .lim_type="", .lim_json="null", .deflt="0", .rw="\"r\""}};
 property_t mic_properties[1] = {{.name="noise", .type="int", .descr="Noise detector", .lim_type="", .lim_json="null", .deflt="0", .rw="\"r\""}};
 
+void led_cmd_hndlr(mqtt_message_data_t *md) {
+	printf("Handle command for LED\n");
+}
 
-const device_t hw_devices[HW_DEV_COUNT] = {{
+void pir_cmd_hndlr(mqtt_message_data_t *md) {
+	printf("Handle command for PIR\n");
+}
+
+void mic_cmd_hndlr(mqtt_message_data_t *md) {
+	printf("Handle command for MIC\n");
+}
+
+device_t hw_devices[HW_DEV_COUNT] = {{
 	.name="LED",
 	.properties=led_properties,
-	.prop_count = 1
+	.prop_count = 1,
+	.cmd_topic={0},
+	.cmd_hndlr = led_cmd_hndlr
 },
 {
 	.name="PIR_SENSOR",
 	.properties=pir_properties,
-	.prop_count = 1
+	.prop_count = 1,
+	.cmd_topic={0},
+	.cmd_hndlr = pir_cmd_hndlr
 },
 {
 	.name="MIC_SENSOR",
 	.properties=mic_properties,
-	.prop_count = 1
+	.prop_count = 1,
+	.cmd_topic={0},
+	.cmd_hndlr = mic_cmd_hndlr
 }};
 
 #endif /* EXAMPLES_EMBGW_HW_PLUGIN_INCLUDE_HW_CONFIG_H_ */
