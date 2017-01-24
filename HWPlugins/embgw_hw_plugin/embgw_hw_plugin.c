@@ -151,7 +151,7 @@ static void parse_command(char *command, size_t cmdsize) {
             printf("- PIR: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
             i++;
-        } else if (jsoneq(command, &tokens[i], "MIC") == 0) {
+        } else if (jsoneq(command, &tokens[i], "noise") == 0) {
             /* We may use strndup() to fetch string value */
             printf("- PIR: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
@@ -235,7 +235,7 @@ static void  mqtt_task(void *pvParameters) {
     mqtt_packet_will_options_t will = mqtt_packet_will_options_initializer;
     mqtt_packet_connect_data_t data = mqtt_packet_connect_data_initializer;
     queue_buf_t pub_msg_loc;
-    TickType_t xLastWakeTime;
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     char * properties=NULL;
     char msg[PUB_MSG_LEN - 1] = "\0";
     mqtt_message_t message;
@@ -287,13 +287,12 @@ static void  mqtt_task(void *pvParameters) {
             continue;
         }
 
-        char * properties = malloc(192*HW_PROP_COUNT);
+        properties = malloc(192*HW_PROP_COUNT);
         if(properties == NULL) {
             printf("[ERROR allocate memory\n]");
         } else {
             properties_to_str(properties, 192*HW_PROP_COUNT, hw_properties, HW_PROP_COUNT);
 
-            xLastWakeTime = xTaskGetTickCount();
             sprintf(msg, status_template, "available", properties, xLastWakeTime,"null");
             printf("%s: connection message is %s \n with length %d\n",__func__, msg, strlen(msg));
 
@@ -336,6 +335,10 @@ static void  mqtt_task(void *pvParameters) {
         printf("done\r\n");
         sprintf(sub_topic, MQTT_SUB_TOPIC, get_my_id());
         mqtt_subscribe(&client, sub_topic, MQTT_QOS1, topic_received);
+        for (int i=0; i<HW_DEV_COUNT; i++){
+            sprintf(hw_devices[i].cmd_topic, MQTT_DEV_SUB_TOPIC, get_my_id(), hw_devices[i].name);
+            mqtt_subscribe(&client, hw_devices[i].cmd_topic, MQTT_QOS1, hw_devices[i].cmd_hndlr);
+        }
 
         xQueueReset(publish_queue);
 
@@ -363,7 +366,6 @@ static void  mqtt_task(void *pvParameters) {
                     gpio_write(LED.gpio, 1);
                 }
             }
-
 
             ret = mqtt_yield(&client, 1000);
             if (ret == MQTT_DISCONNECTED)
@@ -445,13 +447,13 @@ void gpio_task(void *pvParameters)
         if(gpio_pin.gpio == GPIO_PIR)
         {
             sprintf(msg, event_template, "1", xLastWakeTime);
-            sprintf(topic, MQTT_PUB_TOPIC, get_my_id(), "PIR");
+            sprintf(topic, MQTT_DEV_PUB_TOPIC, get_my_id(), "PIR_SENSOR", "motion");
 
         }
         else if (gpio_pin.gpio == GPIO_MIC)
         {
             sprintf(msg, event_template, "1", xLastWakeTime);
-            sprintf(topic, MQTT_PUB_TOPIC, get_my_id(), "MIC");
+            sprintf(topic, MQTT_DEV_PUB_TOPIC, get_my_id(), "MIC_SENSOR", "noise");
         }
         else
         {
