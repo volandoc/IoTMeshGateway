@@ -24,15 +24,7 @@
  * of setting up your own MQTT server */
 
 static void execute_command(char * cmd) {
-    if (!strncmp(cmd, "on", 2)) {
-        printf("Turning on LED\r\n");
-        gpio_write(LED.gpio, 0);
-        LED.time_on = xTaskGetTickCount();
-        printf("led on time %d\n", LED.time_on);
-    } else if (!strncmp(cmd, "off", 3)) {
-        printf("Turning off LED\r\n");
-        gpio_write(LED.gpio, 1);
-    }
+    printf("execute command for plugin\n");
 }
 
 static void parse_command(char *command, size_t cmdsize) {
@@ -60,22 +52,22 @@ static void parse_command(char *command, size_t cmdsize) {
             printf("- data: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
             i++;
-        } else if (jsoneq(command, &tokens[i], "motion") == 0) {
+        } else if (jsoneq(command, &tokens[i], "SSID") == 0) {
             /* We may use strndup() to fetch string value */
-            printf("- PIR: %.*s\n", tokens[i+1].end-tokens[i+1].start,
+            printf("- SSID: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
             i++;
-        } else if (jsoneq(command, &tokens[i], "noise") == 0) {
+        } else if (jsoneq(command, &tokens[i], "SSIDPassword") == 0) {
             /* We may use strndup() to fetch string value */
-            printf("- PIR: %.*s\n", tokens[i+1].end-tokens[i+1].start,
+            printf("- SSIDPassword: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
             i++;
-        } else if ((jsoneq(command, &tokens[i], "power") == 0) && ((jsoneq(command, &tokens[i+1], "on") == 0) || (jsoneq(command, &tokens[i+1], "off") == 0))) {
+        } else if (jsoneq(command, &tokens[i], "GWID") == 0) {
             /* We may use strndup() to fetch string value */
-            printf("- value: %.*s\n", tokens[i+1].end-tokens[i+1].start,
+            printf("- GWID: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
-            snprintf(cmd, 4, "%.*s", tokens[i+1].end-tokens[i+1].start,
-                    command + tokens[i+1].start);
+//            snprintf(cmd, 4, "%.*s", tokens[i+1].end-tokens[i+1].start,
+//                    command + tokens[i+1].start);
             execute_command(cmd);
             i++;
         } else if (jsoneq(command, &tokens[i], "time") == 0) {
@@ -363,7 +355,7 @@ void gpioctrl_task(void *pvParameters){
     while(1) {
         vTaskDelay( 100 / portTICK_PERIOD_MS );
         xSemaphoreTake(timer_start, portMAX_DELAY);
-
+        
         if(gpio_read(hw_devices[HW_DEV_LED].ctrl_pin.gpio) == LED_ACTIVE)
         {
             vTaskDelay( LED_TIMEOUT / portTICK_PERIOD_MS );
