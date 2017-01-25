@@ -265,7 +265,7 @@ void led_cmd_hndlr(mqtt_message_data_t *md) {
         gpio_write(hw_devices[HW_DEV_LED].ctrl_pin.gpio, 1);
 		hw_devices[HW_DEV_LED].ctrl_pin.value = 1;
 		success = true;
-		publish_dev_event_or_state("on", hw_devices[HW_DEV_LED].name, hw_devices[HW_DEV_LED].ctrl_pin.name);
+		publish_dev_event_or_state("off", hw_devices[HW_DEV_LED].name, hw_devices[HW_DEV_LED].ctrl_pin.name);
     }
 
 	if (success) {
@@ -277,10 +277,16 @@ void led_cmd_hndlr(mqtt_message_data_t *md) {
 
 void pir_cmd_hndlr(mqtt_message_data_t *md) {
 	printf("Handle command for PIR\n");
+	publish_dev_event_or_state("ack", hw_devices[HW_DEV_PIR].name, "event");
+	publish_dev_event_or_state("err: readonly", hw_devices[HW_DEV_PIR].name, "event");
+	publish_dev_event_or_state(hw_devices[HW_DEV_PIR].irq_pin.value?"1":"0", hw_devices[HW_DEV_PIR].name, hw_devices[HW_DEV_PIR].irq_pin.name);
 }
 
 void mic_cmd_hndlr(mqtt_message_data_t *md) {
 	printf("Handle command for MIC\n");
+	publish_dev_event_or_state("ack", hw_devices[HW_DEV_MIC].name, "event");
+	publish_dev_event_or_state("err: readonly", hw_devices[HW_DEV_MIC].name, "event");
+	publish_dev_event_or_state(hw_devices[HW_DEV_MIC].irq_pin.value?"1":"0", hw_devices[HW_DEV_MIC].name, hw_devices[HW_DEV_MIC].irq_pin.name);
 }
 
 /**
