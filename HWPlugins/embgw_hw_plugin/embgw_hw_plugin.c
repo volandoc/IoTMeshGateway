@@ -16,98 +16,12 @@
 #include <semphr.h>
 #include "jsmn.h"
 
+#include "declarations.h"
 #include "embgw_config.h"
 #include "hw_config.h"
 
 /* You can use http://test.mosquitto.org/ to test mqtt_client instead
  * of setting up your own MQTT server */
-
-SemaphoreHandle_t wifi_alive;
-QueueHandle_t publish_queue;
-QueueHandle_t gpio_queue;
-
-char sub_topic[64];
-
-const char *property_template = "{\"name\":\"%s\","\
-"\"type\":\"%s\","\
-"\"descr\":\"%s\","\
-"\"lim_type\":\"%s\","\
-"\"lim_json\":%s,"\
-"\"default\":%s,"\
-"\"rw\":\"%s\""\
-"}";
-
-const char *status_template = "{\"status\":\"%s\","\
-"\"data\":%s,"\
-"\"time\":%ld,"\
-"\"err\":\"%s\""\
-"}";
-
-const char *event_template = "%s:%ld";
-
-
-typedef struct
-{
-    char *msg;
-    char *topic;
-}queue_buf_t;
-
-queue_buf_t pub_msg;
-
-void properties_to_str(char * prop_buf, int buf_size, const property_t * properties, uint8_t prop_count){
-    char tmp_property[192] = "\0";
-    memset(prop_buf,0,buf_size);
-    strcpy(prop_buf,"[");
-    for (int i=0; i<prop_count; i++) {
-        sprintf(tmp_property, property_template,\
-                properties[i].name,\
-                properties[i].type,\
-                properties[i].descr,\
-                properties[i].lim_type,\
-                properties[i].lim_json,\
-                properties[i].deflt,\
-                properties[i].rw);
-        strcat(prop_buf,tmp_property);
-        if (i<(prop_count-1)) strcat(prop_buf,",");
-    }
-    strcat(prop_buf,"]");
-}
-
-void PIR_HANDLER(uint8_t gpio_num)
-{
-
-    printf("interrupt gpio05 occurred\n");
-    if(xQueueSendToBackFromISR(gpio_queue, &PIR, NULL)== pdFALSE)
-        printf("Publish queue overflow.\r\n");
-
-}
-
-void MIC_HANDLER(uint8_t gpio_num)
-{
-    uint32_t delta;
-    MIC.last = xTaskGetTickCountFromISR();
-    delta = MIC.last - MIC.prev;
-    if(delta > 100)
-    {
-        printf("interrupt gpio04 occurred\n");
-        MIC.prev = MIC.last;
-        if(xQueueSendToBackFromISR(gpio_queue, &MIC, NULL)== pdFALSE)
-            printf("Publish queue overflow.\r\n");
-    }
-    else
-    {
-        printf("Jitter gpio04 detect exit\n");
-    }
-
-}
-
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
-    if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
-            strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
-        return 0;
-    }
-    return -1;
-}
 
 static void execute_command(char * cmd) {
     if (!strncmp(cmd, "on", 2)) {
@@ -202,29 +116,6 @@ static void topic_received(mqtt_message_data_t *md) {
     parse_command((char *)(message->payload), (int)message->payloadlen);
 }
 
-static const char * get_my_id(void) {
-    // Use MAC address for Station as unique ID
-    static char my_id[13];
-    static bool my_id_done = false;
-    int8_t i;
-    uint8_t x;
-    if (my_id_done)
-        return my_id;
-    if (!sdk_wifi_get_macaddr(STATION_IF, (uint8_t *)my_id))
-        return NULL;
-    for (i = 5; i >= 0; --i) {
-        x = my_id[i] & 0x0F;
-        if (x > 9) x += 7;
-        my_id[i * 2 + 1] = x + '0';
-        x = my_id[i] >> 4;
-        if (x > 9) x += 7;
-        my_id[i * 2] = x + '0';
-    }
-    my_id[12] = '\0';
-    my_id_done = true;
-    return my_id;
-}
-
 static void  mqtt_task(void *pvParameters) {
     int ret = 0;
     struct mqtt_network network;
@@ -310,7 +201,7 @@ static void  mqtt_task(void *pvParameters) {
 
         for (int i=0; i<HW_DEV_COUNT; i++){
             int size = 192*hw_devices[i].prop_count;
-            char * properties = malloc(size);
+            properties = malloc(size);
             if(properties == NULL) {
                 printf("[ERROR allocate memory\n]");
             } else {
@@ -356,14 +247,6 @@ static void  mqtt_task(void *pvParameters) {
                 if (ret != MQTT_SUCCESS ){
                     printf("error while publishing message: %d\n", ret );
                     break;
-                }
-            }
-
-            if(gpio_read(LED.gpio) == LED_ACTIVE)
-            {
-                if((xTaskGetTickCount() - LED.time_on) > LED_TIMEOUT)
-                {
-                    gpio_write(LED.gpio, 1);
                 }
             }
 
@@ -423,10 +306,15 @@ static void  wifi_task(void *pvParameters)
     }
 }
 
-void gpio_task(void *pvParameters)
+void gpioirq_task(void *pvParameters)
 {
-    gpio_set_interrupt(GPIO_PIR, GPIO_INTTYPE_EDGE_POS, PIR_HANDLER);
-    gpio_set_interrupt(GPIO_MIC, GPIO_INTTYPE_EDGE_POS, MIC_HANDLER);
+    for (uint8_t i=0; i<HW_DEV_COUNT; i++)
+    {
+        if (hw_devices[i].irq_pin.gpio>0)
+        {
+            gpio_set_interrupt(hw_devices[i].irq_pin.gpio, GPIO_INTTYPE_EDGE_ANY, hw_devices[i].irq_hndl);
+        }
+    }
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
@@ -437,6 +325,7 @@ void gpio_task(void *pvParameters)
         xLastWakeTime = xTaskGetTickCount();
         char *msg = malloc(256);
         char *topic = malloc(64);
+        bool found = false;
 
         if(msg == NULL)
         {
@@ -444,50 +333,73 @@ void gpio_task(void *pvParameters)
             return;
         }
 
-        if(gpio_pin.gpio == GPIO_PIR)
+        for (uint8_t i=0; i<HW_DEV_COUNT; i++)
         {
-            sprintf(msg, event_template, "1", xLastWakeTime);
-            sprintf(topic, MQTT_DEV_PUB_TOPIC, get_my_id(), "PIR_SENSOR", "motion");
+            if (hw_devices[i].irq_pin.gpio == gpio_pin.gpio)
+            {
+                sprintf(msg, event_template, gpio_pin.value, xLastWakeTime);
+                sprintf(topic, MQTT_DEV_PUB_TOPIC, get_my_id(), hw_devices[i].name, gpio_pin.name);
+                found = true;
+                break;
+            }
+        }
 
-        }
-        else if (gpio_pin.gpio == GPIO_MIC)
+        if(found)
         {
-            sprintf(msg, event_template, "1", xLastWakeTime);
-            sprintf(topic, MQTT_DEV_PUB_TOPIC, get_my_id(), "MIC_SENSOR", "noise");
-        }
-        else
+            pub_msg.msg = msg;
+            pub_msg.topic = topic;
+            if (xQueueSend(publish_queue, &pub_msg, 0) == pdFALSE)
+                printf("Publish queue overflow.\r\n");
+        } else
         {
             printf("unidentified sensor\n");
             free(msg);
             free(topic);
         }
-
-        pub_msg.msg = msg;
-        pub_msg.topic = topic;
-
-        if (xQueueSend(publish_queue, &pub_msg, 0) == pdFALSE)
-            printf("Publish queue overflow.\r\n");
-
     }
 }
 
+void gpioctrl_task(void *pvParameters){
+    while(1) {
+        vTaskDelay( 100 / portTICK_PERIOD_MS );
+        xSemaphoreTake(timer_start, portMAX_DELAY);
+
+        if(gpio_read(hw_devices[HW_DEV_LED].ctrl_pin.gpio) == LED_ACTIVE)
+        {
+            vTaskDelay( LED_TIMEOUT / portTICK_PERIOD_MS );
+            gpio_write(hw_devices[HW_DEV_LED].ctrl_pin.gpio, 1);
+            hw_devices[HW_DEV_LED].ctrl_pin.value = 1;
+            publish_dev_event_or_state("off", hw_devices[HW_DEV_LED].name, hw_devices[HW_DEV_LED].ctrl_pin.name);
+        }
+    }
+}
 
 void user_init(void)
 {
     uart_set_baud(0, 115200);
     printf("SDK version:%s\n", sdk_system_get_sdk_version());
 
-    gpio_enable(GPIO_LED, GPIO_OUTPUT);
-    gpio_enable(GPIO_PIR, GPIO_INPUT);
-    gpio_enable(GPIO_MIC, GPIO_INPUT);
-    gpio_write(GPIO_LED, 1);
+    for (uint8_t i=0; i<HW_DEV_COUNT; i++)
+    {
+        if (hw_devices[i].irq_pin.gpio>0)
+        {
+            gpio_enable(hw_devices[i].irq_pin.gpio, GPIO_INPUT);
+        }
+        if (hw_devices[i].ctrl_pin.gpio>0)
+        {
+            gpio_enable(hw_devices[i].ctrl_pin.gpio, GPIO_OUTPUT);
+            gpio_write(hw_devices[i].ctrl_pin.gpio, 1);
+        }
+    }
 
     vSemaphoreCreateBinary(wifi_alive);
+    vSemaphoreCreateBinary(timer_start);
 
     publish_queue = xQueueCreate(3, sizeof(queue_buf_t));
     gpio_queue = xQueueCreate(3, sizeof(irq_pin_t));
 
     xTaskCreate(&wifi_task, "wifi_task",  256, NULL, 2, NULL);
-    xTaskCreate(&gpio_task, "gpio_task", 256, NULL, 3, NULL);
-    xTaskCreate(&mqtt_task, "mqtt_task", 2048, NULL, 4, NULL);
+    xTaskCreate(&gpioirq_task, "gpioirq_task", 256, NULL, 3, NULL);
+    xTaskCreate(&gpioctrl_task, "gpioctrl_task", 256, NULL, 4, NULL);
+    xTaskCreate(&mqtt_task, "mqtt_task", 2048, NULL, 5, NULL);
 }
