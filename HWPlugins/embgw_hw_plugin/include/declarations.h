@@ -1,7 +1,7 @@
 #ifndef __GW_DECLARATIONS_H__
 #define __GW_DECLARATIONS_H__
 
-SemaphoreHandle_t wifi_alive, timer_start;
+SemaphoreHandle_t wifi_alive, mqtt_connected, timer_start;
 QueueHandle_t publish_queue;
 QueueHandle_t gpio_queue;
 

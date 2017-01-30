@@ -28,30 +28,30 @@
 
 typedef struct
 {
-	char name[10];
-	uint32_t last;
-	uint32_t prev;
-	uint8_t gpio;
-	uint8_t value;
+    char name[10];
+    uint32_t last;
+    uint32_t prev;
+    uint8_t gpio;
+    uint8_t value;
 }irq_pin_t;
 
 typedef struct
 {
-	char name[10];
-	uint32_t time_on;
-	uint8_t gpio;
-	uint8_t value;
+    char name[10];
+    uint32_t time_on;
+    uint8_t gpio;
+    uint8_t value;
 }control_pin_t;
 
 typedef struct
 {
-	char *name;
-	char *type;
-	char *descr;
-	char *lim_type;
-	char *lim_json;
-	char *deflt;
-	char *rw;
+    char *name;
+    char *type;
+    char *descr;
+    char *lim_type;
+    char *lim_json;
+    char *deflt;
+    char *rw;
 }property_t;
 
 void properties_to_str(char * prop_buf, int buf_size, const property_t * properties, uint8_t prop_count){
@@ -75,25 +75,25 @@ void properties_to_str(char * prop_buf, int buf_size, const property_t * propert
 
 typedef struct
 {
-	char *name;
-	property_t *properties;
-	uint8_t prop_count;
-	char cmd_topic[64];
-	mqtt_message_handler_t cmd_hndlr;
-	irq_pin_t irq_pin;
-	control_pin_t ctrl_pin;
-	gpio_interrupt_handler_t irq_hndl;
+    char *name;
+    property_t *properties;
+    uint8_t prop_count;
+    char cmd_topic[64];
+    mqtt_message_handler_t cmd_hndlr;
+    irq_pin_t irq_pin;
+    control_pin_t ctrl_pin;
+    gpio_interrupt_handler_t irq_hndl;
 }device_t;
 
 /**
  * Capabilities available for ESP8266 Plugin
 **/
 const property_t hw_properties[HW_PROP_COUNT] = {
-	{.name="SSID", .type="string", .descr="WiFi Name", .lim_type="null", .lim_json="null", .deflt="\"VCH-Simulator\"", .rw="\"rw\""},
-	{.name="SSIDPassword", .type="string", .descr="WiFi password", .lim_type="null", .lim_json="null", .deflt="\"12345678\"", .rw="\"rw\""},
-	{.name="GWID", .type="string", .descr="Gateway ID", .lim_type="null", .lim_json="null", .deflt="A000000000000777", .rw="r"},
-	{.name="MQTTAddr", .type="string", .descr="MQTT Address", .lim_type="null", .lim_json="null", .deflt="192.168.1.1", .rw="r"},
-	{.name="restart", .type="int", .descr="Restart", .lim_type="range", .lim_json="[0, 1]", .deflt="0", .rw="w"},
+    {.name="SSID", .type="string", .descr="WiFi Name", .lim_type="null", .lim_json="null", .deflt="\"VCH-Simulator\"", .rw="\"rw\""},
+    {.name="SSIDPassword", .type="string", .descr="WiFi password", .lim_type="null", .lim_json="null", .deflt="\"12345678\"", .rw="\"rw\""},
+    {.name="GWID", .type="string", .descr="Gateway ID", .lim_type="null", .lim_json="null", .deflt="A000000000000777", .rw="r"},
+    {.name="MQTTAddr", .type="string", .descr="MQTT Address", .lim_type="null", .lim_json="null", .deflt="192.168.1.1", .rw="r"},
+    {.name="restart", .type="int", .descr="Restart", .lim_type="range", .lim_json="[0, 1]", .deflt="0", .rw="w"},
 };
 
 /**
@@ -128,38 +128,38 @@ device_t hw_devices[HW_DEV_COUNT] = {
 /* Led attached to GPIO 2 and placed on ESP8266 PCB */
 /* Has not irq pin                                  */
 {
-	.name="LED",
-	.properties=led_properties,
-	.prop_count = 1,
-	.cmd_topic={0},
-	.cmd_hndlr = led_cmd_hndlr,
-	.irq_pin = {.name={0}, .last = 0, .prev = 0, .gpio = 0, .value=0},
-	.ctrl_pin = {.name="power", .time_on = 0, .gpio = GPIO_LED, .value=1},
-	.irq_hndl = LED_HANDLER
+    .name="LED",
+    .properties=led_properties,
+    .prop_count = 1,
+    .cmd_topic={0},
+    .cmd_hndlr = led_cmd_hndlr,
+    .irq_pin = {.name={0}, .last = 0, .prev = 0, .gpio = 0, .value=0},
+    .ctrl_pin = {.name="power", .time_on = 0, .gpio = GPIO_LED, .value=1},
+    .irq_hndl = LED_HANDLER
 },
 /* PIR SR501 Motion sensor attached to GPIO 5 */
 /* has not control pin, but can be developed  */
 {
-	.name="PIR_SENSOR",
-	.properties=pir_properties,
-	.prop_count = 1,
-	.cmd_topic={0},
-	.cmd_hndlr = pir_cmd_hndlr,
-	.irq_pin = {.name="motion", .last = 0, .prev = 0, .gpio = GPIO_PIR, .value=0},
-	.ctrl_pin = {.name={0}, .time_on = 0, .gpio = 0, .value=0},
-	.irq_hndl = PIR_HANDLER
+    .name="PIR_SENSOR",
+    .properties=pir_properties,
+    .prop_count = 1,
+    .cmd_topic={0},
+    .cmd_hndlr = pir_cmd_hndlr,
+    .irq_pin = {.name="motion", .last = 0, .prev = 0, .gpio = GPIO_PIR, .value=0},
+    .ctrl_pin = {.name={0}, .time_on = 0, .gpio = 0, .value=0},
+    .irq_hndl = PIR_HANDLER
 },
 /* Noise sensor based on LM393 amp.          */
 /* has not control pin, but can be developed */
 {
-	.name="MIC_SENSOR",
-	.properties=mic_properties,
-	.prop_count = 1,
-	.cmd_topic={0},
-	.cmd_hndlr = mic_cmd_hndlr,
-	.irq_pin = {.name="noise", .last = 0, .prev = 0, .gpio = GPIO_MIC, .value=0},
-	.ctrl_pin = {.name={0}, .time_on = 0, .gpio = 0, .value=0},
-	.irq_hndl = MIC_HANDLER
+    .name="MIC_SENSOR",
+    .properties=mic_properties,
+    .prop_count = 1,
+    .cmd_topic={0},
+    .cmd_hndlr = mic_cmd_hndlr,
+    .irq_pin = {.name="noise", .last = 0, .prev = 0, .gpio = GPIO_MIC, .value=0},
+    .ctrl_pin = {.name={0}, .time_on = 0, .gpio = 0, .value=0},
+    .irq_hndl = MIC_HANDLER
 }
 };
 
@@ -189,15 +189,15 @@ void publish_dev_event_or_state(char *cont, char * dev_name, char *prop_name){
  * messages arrived in this topic by own handler
 **/
 void led_cmd_hndlr(mqtt_message_data_t *md) {
-	printf("Handle command for LED\n");
-	bool success = false;
-	publish_dev_event_or_state("ack", hw_devices[HW_DEV_LED].name, "event");
+    printf("Handle command for LED\n");
+    bool success = false;
+    publish_dev_event_or_state("ack", hw_devices[HW_DEV_LED].name, "event");
 
-	int i;
-	char * command = (char *)(md->message->payload);
-	int cmdsize = (int)(md->message->payloadlen);
+    int i;
+    char * command = (char *)(md->message->payload);
+    int cmdsize = (int)(md->message->payloadlen);
 
-	int res;
+    int res;
     jsmn_parser p;
     jsmntok_t tokens[16]; /* We expect no more than 32 tokens */
     char cmd[4];
@@ -249,44 +249,44 @@ void led_cmd_hndlr(mqtt_message_data_t *md) {
     }
 
     if (!strncmp(cmd, "on", 2))
-	{
+    {
         printf("Turning on LED\r\n");
         gpio_write(hw_devices[HW_DEV_LED].ctrl_pin.gpio, 0);
         hw_devices[HW_DEV_LED].ctrl_pin.time_on = xTaskGetTickCount();
         printf("led on time %d\n", hw_devices[HW_DEV_LED].ctrl_pin.time_on);
-		hw_devices[HW_DEV_LED].ctrl_pin.value = 0;
-		success = true;
-		xSemaphoreGive(timer_start);
-		publish_dev_event_or_state("on", hw_devices[HW_DEV_LED].name, hw_devices[HW_DEV_LED].ctrl_pin.name);
+        hw_devices[HW_DEV_LED].ctrl_pin.value = 0;
+        success = true;
+        xSemaphoreGive(timer_start);
+        publish_dev_event_or_state("on", hw_devices[HW_DEV_LED].name, hw_devices[HW_DEV_LED].ctrl_pin.name);
     }
-	else if (!strncmp(cmd, "off", 3))
-	{
+    else if (!strncmp(cmd, "off", 3))
+    {
         printf("Turning off LED\r\n");
         gpio_write(hw_devices[HW_DEV_LED].ctrl_pin.gpio, 1);
-		hw_devices[HW_DEV_LED].ctrl_pin.value = 1;
-		success = true;
-		publish_dev_event_or_state("off", hw_devices[HW_DEV_LED].name, hw_devices[HW_DEV_LED].ctrl_pin.name);
+        hw_devices[HW_DEV_LED].ctrl_pin.value = 1;
+        success = true;
+        publish_dev_event_or_state("off", hw_devices[HW_DEV_LED].name, hw_devices[HW_DEV_LED].ctrl_pin.name);
     }
 
-	if (success) {
-		publish_dev_event_or_state("suc", hw_devices[HW_DEV_LED].name, "event");
-	} else {
-		publish_dev_event_or_state("err", hw_devices[HW_DEV_LED].name, "event");
-	}
+    if (success) {
+        publish_dev_event_or_state("suc", hw_devices[HW_DEV_LED].name, "event");
+    } else {
+        publish_dev_event_or_state("err", hw_devices[HW_DEV_LED].name, "event");
+    }
 }
 
 void pir_cmd_hndlr(mqtt_message_data_t *md) {
-	printf("Handle command for PIR\n");
-	publish_dev_event_or_state("ack", hw_devices[HW_DEV_PIR].name, "event");
-	publish_dev_event_or_state("err: readonly", hw_devices[HW_DEV_PIR].name, "event");
-	publish_dev_event_or_state(hw_devices[HW_DEV_PIR].irq_pin.value?"1":"0", hw_devices[HW_DEV_PIR].name, hw_devices[HW_DEV_PIR].irq_pin.name);
+    printf("Handle command for PIR\n");
+    publish_dev_event_or_state("ack", hw_devices[HW_DEV_PIR].name, "event");
+    publish_dev_event_or_state("err: readonly", hw_devices[HW_DEV_PIR].name, "event");
+    publish_dev_event_or_state(hw_devices[HW_DEV_PIR].irq_pin.value?"1":"0", hw_devices[HW_DEV_PIR].name, hw_devices[HW_DEV_PIR].irq_pin.name);
 }
 
 void mic_cmd_hndlr(mqtt_message_data_t *md) {
-	printf("Handle command for MIC\n");
-	publish_dev_event_or_state("ack", hw_devices[HW_DEV_MIC].name, "event");
-	publish_dev_event_or_state("err: readonly", hw_devices[HW_DEV_MIC].name, "event");
-	publish_dev_event_or_state(hw_devices[HW_DEV_MIC].irq_pin.value?"1":"0", hw_devices[HW_DEV_MIC].name, hw_devices[HW_DEV_MIC].irq_pin.name);
+    printf("Handle command for MIC\n");
+    publish_dev_event_or_state("ack", hw_devices[HW_DEV_MIC].name, "event");
+    publish_dev_event_or_state("err: readonly", hw_devices[HW_DEV_MIC].name, "event");
+    publish_dev_event_or_state(hw_devices[HW_DEV_MIC].irq_pin.value?"1":"0", hw_devices[HW_DEV_MIC].name, hw_devices[HW_DEV_MIC].irq_pin.name);
 }
 
 /**

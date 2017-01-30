@@ -191,39 +191,18 @@ static void  mqtt_task(void *pvParameters) {
             free(properties);
         }
 
-        for (int i=0; i<HW_DEV_COUNT; i++){
-            int size = 192*hw_devices[i].prop_count;
-            properties = malloc(size);
-            if(properties == NULL) {
-                printf("[ERROR allocate memory\n]");
-            } else {
-                properties_to_str(properties, size, hw_devices[i].properties, hw_devices[i].prop_count);
-                memset(msg, 0, sizeof(msg));
-                sprintf(msg, status_template, "available", properties, xLastWakeTime,"null");
-
-                printf("%s: connection message is %s \n with length %d\n",__func__, msg, strlen(msg));
-                message.payload = msg;
-                message.payloadlen = strlen(msg);
-                char dev_will_topic[64];
-                sprintf(dev_will_topic, MQTT_DEV_WILL_TOPIC, get_my_id(), hw_devices[i].name);
-
-                ret = mqtt_publish(&client, dev_will_topic, &message);
-                if (ret != MQTT_SUCCESS ){
-                    printf("error while send status message: %d\n", ret );
-                }
-                free(properties);
-            }
-        }
-
         printf("done\r\n");
         sprintf(sub_topic, MQTT_SUB_TOPIC, get_my_id());
         mqtt_subscribe(&client, sub_topic, MQTT_QOS1, topic_received);
+
         for (int i=0; i<HW_DEV_COUNT; i++){
             sprintf(hw_devices[i].cmd_topic, MQTT_DEV_SUB_TOPIC, get_my_id(), hw_devices[i].name);
             mqtt_subscribe(&client, hw_devices[i].cmd_topic, MQTT_QOS1, hw_devices[i].cmd_hndlr);
         }
 
         xQueueReset(publish_queue);
+
+        xSemaphoreGive( mqtt_connected );
 
         while(1){
             while(xQueueReceive(publish_queue, &pub_msg_loc, 0) == pdTRUE){
@@ -298,7 +277,7 @@ static void  wifi_task(void *pvParameters)
     }
 }
 
-void gpioirq_task(void *pvParameters)
+static void gpioirq_task(void *pvParameters)
 {
     for (uint8_t i=0; i<HW_DEV_COUNT; i++)
     {
@@ -351,17 +330,65 @@ void gpioirq_task(void *pvParameters)
     }
 }
 
-void gpioctrl_task(void *pvParameters){
+static void gpioctrl_task(void *pvParameters)
+{
     while(1) {
         vTaskDelay( 100 / portTICK_PERIOD_MS );
         xSemaphoreTake(timer_start, portMAX_DELAY);
-        
+        printf("[Inside gpioctrl_task]\n");
+
         if(gpio_read(hw_devices[HW_DEV_LED].ctrl_pin.gpio) == LED_ACTIVE)
         {
             vTaskDelay( LED_TIMEOUT / portTICK_PERIOD_MS );
             gpio_write(hw_devices[HW_DEV_LED].ctrl_pin.gpio, 1);
             hw_devices[HW_DEV_LED].ctrl_pin.value = 1;
             publish_dev_event_or_state("off", hw_devices[HW_DEV_LED].name, hw_devices[HW_DEV_LED].ctrl_pin.name);
+        }
+    }
+}
+
+static void mqtt_conn_task()
+{
+    TickType_t xMqttConnTime;
+
+    while(1) {
+        vTaskDelay( 100 / portTICK_PERIOD_MS );
+        xSemaphoreTake(mqtt_connected, portMAX_DELAY);
+
+        xMqttConnTime = xTaskGetTickCount();
+
+        for (int i=0; i<HW_DEV_COUNT; i++){
+            printf("[Inside mqtt_conn_task with dev {%d}]\n", i);
+            int size = 192*hw_devices[i].prop_count;
+            char *properties = malloc(size);
+            char *msg = malloc(PUB_MSG_LEN);
+            char *topic = malloc(64);
+            if(msg == NULL || topic == NULL || properties == NULL)
+            {
+                printf("[ERROR allocate memory]\n");
+                free(msg);
+                free(topic);
+            } else {
+                printf("[Inside mqtt_conn_task publishing status for dev {%d}]\n", i);
+                properties_to_str(properties, size, hw_devices[i].properties, hw_devices[i].prop_count);
+                sprintf(msg, status_template, "available", properties, xMqttConnTime,"null");
+                sprintf(topic, MQTT_DEV_WILL_TOPIC, get_my_id(), hw_devices[i].name);
+                pub_msg.msg = msg;
+                pub_msg.topic = topic;
+                if (xQueueSend(publish_queue, &pub_msg, 0) == pdFALSE)
+                    printf("Publish queue overflow.\r\n");
+            }
+
+            free(properties);
+            if (hw_devices[i].irq_pin.gpio>0)
+            {
+                publish_dev_event_or_state(hw_devices[i].irq_pin.value?"1":"0", hw_devices[i].name, hw_devices[i].irq_pin.name);
+            }
+            if (hw_devices[i].ctrl_pin.gpio>0)
+            {
+                publish_dev_event_or_state(hw_devices[i].ctrl_pin.value?"off":"on", hw_devices[i].name, hw_devices[i].ctrl_pin.name);
+            }
+            taskYIELD();
         }
     }
 }
@@ -384,14 +411,17 @@ void user_init(void)
         }
     }
 
-    vSemaphoreCreateBinary(wifi_alive);
-    vSemaphoreCreateBinary(timer_start);
+    wifi_alive = xSemaphoreCreateBinary();
+    mqtt_connected = xSemaphoreCreateBinary();
+    timer_start = xSemaphoreCreateBinary();
 
-    publish_queue = xQueueCreate(3, sizeof(queue_buf_t));
-    gpio_queue = xQueueCreate(3, sizeof(irq_pin_t));
+    publish_queue = xQueueCreate(6, sizeof(queue_buf_t));
+    gpio_queue = xQueueCreate(4, sizeof(irq_pin_t));
 
     xTaskCreate(&wifi_task, "wifi_task",  256, NULL, 2, NULL);
     xTaskCreate(&gpioirq_task, "gpioirq_task", 256, NULL, 3, NULL);
     xTaskCreate(&gpioctrl_task, "gpioctrl_task", 256, NULL, 4, NULL);
     xTaskCreate(&mqtt_task, "mqtt_task", 2048, NULL, 5, NULL);
+    xTaskCreate(&mqtt_conn_task, "mqtt_conn_task", 2048, NULL, 6, NULL);
+
 }
