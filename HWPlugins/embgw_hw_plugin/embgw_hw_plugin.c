@@ -23,8 +23,25 @@
 /* You can use http://test.mosquitto.org/ to test mqtt_client instead
  * of setting up your own MQTT server */
 
-static void execute_command(char * cmd) {
+static void execute_command(char *cont, char *prop_name) {
+    TickType_t xHndlrStartTime = xTaskGetTickCount();
     printf("execute command for plugin\n");
+
+    char *msg = malloc(256);
+    char *topic = malloc(64);
+    if(msg == NULL || topic == NULL)
+    {
+        printf("[ERROR allocate memory\n]");
+        free(msg);
+        free(topic);
+    } else {
+        sprintf(msg, event_template, cont, xHndlrStartTime);
+        sprintf(topic, MQTT_PUB_TOPIC, get_my_id(), prop_name);
+        pub_msg.msg = msg;
+        pub_msg.topic = topic;
+        if (xQueueSend(publish_queue, &pub_msg, 0) == pdFALSE)
+            printf("Publish queue overflow.\r\n");
+    }
 }
 
 static void parse_command(char *command, size_t cmdsize) {
@@ -32,7 +49,6 @@ static void parse_command(char *command, size_t cmdsize) {
     int res;
     jsmn_parser p;
     jsmntok_t tokens[128]; /* We expect no more than 128 tokens */
-    char cmd[4];
     jsmn_init(&p);
     res = jsmn_parse(&p, command, cmdsize, tokens, sizeof(tokens)/sizeof(tokens[0]));
     if (res < 0) {
@@ -44,7 +60,8 @@ static void parse_command(char *command, size_t cmdsize) {
         printf("Object expected\n");
         return;
     }
-    
+
+    execute_command("ack", "event");
     /* Loop over all keys of the root object */
     for (i = 1; i < res; i++) {
         if (jsoneq(command, &tokens[i], "data") == 0) {
@@ -64,11 +81,20 @@ static void parse_command(char *command, size_t cmdsize) {
             i++;
         } else if (jsoneq(command, &tokens[i], "GWID") == 0) {
             /* We may use strndup() to fetch string value */
-            printf("- GWID: %.*s\n", tokens[i+1].end-tokens[i+1].start,
+            printf("- SSIDPassword: %.*s\n", tokens[i+1].end-tokens[i+1].start,
+                    command + tokens[i+1].start);
+            i++;
+        } else if (jsoneq(command, &tokens[i], "MQTTAddr") == 0) {
+            /* We may use strndup() to fetch string value */
+            printf("- MQTTAddr: %.*s\n", tokens[i+1].end-tokens[i+1].start,
+                    command + tokens[i+1].start);
+            i++;
+        } else if (jsoneq(command, &tokens[i], "restart") == 0) {
+            /* We may use strndup() to fetch string value */
+            printf("- restart: %.*s\n", tokens[i+1].end-tokens[i+1].start,
                     command + tokens[i+1].start);
 //            snprintf(cmd, 4, "%.*s", tokens[i+1].end-tokens[i+1].start,
 //                    command + tokens[i+1].start);
-            execute_command(cmd);
             i++;
         } else if (jsoneq(command, &tokens[i], "time") == 0) {
             /* We may want to do strtol() here to get numeric value */
@@ -89,6 +115,7 @@ static void parse_command(char *command, size_t cmdsize) {
             printf("Unexpected key: %.*s\n", tokens[i].end-tokens[i].start,
                     command + tokens[i].start);
         }
+        execute_command("err: Not implemented yet", "event");
     }
 }
 
@@ -151,8 +178,8 @@ static void  mqtt_task(void *pvParameters) {
         xSemaphoreTake(wifi_alive, portMAX_DELAY);
         printf("%s: started\n\r", __func__);
         printf("%s: (Re)connecting to MQTT server %s ... ",__func__,
-               MQTT_HOST);
-        ret = mqtt_network_connect(&network, MQTT_HOST, MQTT_PORT);
+               plugin_prop.mqttadr);
+        ret = mqtt_network_connect(&network, plugin_prop.mqttadr, plugin_prop.mqttport);
         if( ret ) {
             printf("error: %d\n\r", ret);
             taskYIELD();
@@ -235,10 +262,9 @@ static void  wifi_task(void *pvParameters)
 {
     uint8_t status = 0;
     uint8_t retries = 30;
-    struct sdk_station_config config = {
-        .ssid = WIFI_SSID,
-        .password = WIFI_PASS,
-    };
+    struct sdk_station_config config;
+    memcpy(config.ssid, plugin_prop.ssid, 32);
+    memcpy(config.password, plugin_prop.password, 64);
 
     printf("WiFi: connecting to WiFi\n\r");
     sdk_wifi_set_opmode(STATION_MODE);
@@ -336,7 +362,7 @@ static void gpioctrl_task(void *pvParameters)
         vTaskDelay( 100 / portTICK_PERIOD_MS );
         xSemaphoreTake(timer_start, portMAX_DELAY);
         printf("[Inside gpioctrl_task]\n");
-
+        
         if(gpio_read(hw_devices[HW_DEV_LED].ctrl_pin.gpio) == LED_ACTIVE)
         {
             vTaskDelay( LED_TIMEOUT / portTICK_PERIOD_MS );
