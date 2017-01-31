@@ -218,6 +218,21 @@ static void  mqtt_task(void *pvParameters) {
             free(properties);
         }
 
+        for (int i=0; i<HW_PROP_COUNT; i++){
+            char pr_topic[64];
+            sprintf(msg, event_template, hw_properties[i].deflt, xLastWakeTime);
+            sprintf(pr_topic, MQTT_PUB_TOPIC, get_my_id(), hw_properties[i].name);
+            message.payload = msg;
+            message.payloadlen = strlen(msg);
+            message.dup = 0;
+            message.qos = MQTT_QOS1;
+            message.retained = 1;
+            ret = mqtt_publish(&client, pr_topic, &message);
+            if (ret != MQTT_SUCCESS ){
+                printf("error while send status message: %d\n", ret );
+            }
+        }
+
         printf("done\r\n");
         sprintf(sub_topic, MQTT_SUB_TOPIC, get_my_id());
         mqtt_subscribe(&client, sub_topic, MQTT_QOS1, topic_received);
