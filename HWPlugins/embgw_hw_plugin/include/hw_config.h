@@ -73,6 +73,14 @@ void properties_to_str(char * prop_buf, int buf_size, const property_t * propert
     strcat(prop_buf,"]");
 }
 
+typedef struct {
+    uint8_t ssid[32];     /* Null terminated string */
+    uint8_t password[64]; /* Null terminated string */
+    uint8_t gwid[17];     /* Null terminated string */
+    char mqttadr[16];  /* Null terminated string */
+    uint16_t mqttport;
+}plugin_properties_t;
+
 typedef struct
 {
     char *name;
@@ -92,9 +100,11 @@ const property_t hw_properties[HW_PROP_COUNT] = {
     {.name="SSID", .type="string", .descr="WiFi Name", .lim_type="null", .lim_json="null", .deflt="\"VCH-Simulator\"", .rw="\"rw\""},
     {.name="SSIDPassword", .type="string", .descr="WiFi password", .lim_type="null", .lim_json="null", .deflt="\"12345678\"", .rw="\"rw\""},
     {.name="GWID", .type="string", .descr="Gateway ID", .lim_type="null", .lim_json="null", .deflt="A000000000000777", .rw="r"},
-    {.name="MQTTAddr", .type="string", .descr="MQTT Address", .lim_type="null", .lim_json="null", .deflt="192.168.1.1", .rw="r"},
+    {.name="MQTTAddr", .type="string", .descr="MQTT Address", .lim_type="null", .lim_json="null", .deflt="192.168.1.1", .rw="rw"},
     {.name="restart", .type="int", .descr="Restart", .lim_type="range", .lim_json="[0, 1]", .deflt="0", .rw="w"},
 };
+
+plugin_properties_t plugin_prop={ .ssid = WIFI_SSID, .password = WIFI_PASS, .gwid = "A000000000000777", .mqttadr = MQTT_HOST, .mqttport = MQTT_PORT };
 
 /**
  * Variables for devices initialization
@@ -199,7 +209,7 @@ void led_cmd_hndlr(mqtt_message_data_t *md) {
 
     int res;
     jsmn_parser p;
-    jsmntok_t tokens[16]; /* We expect no more than 32 tokens */
+    jsmntok_t tokens[16]; /* We expect no more than 16 tokens */
     char cmd[4];
     jsmn_init(&p);
     res = jsmn_parse(&p, command, cmdsize, tokens, sizeof(tokens)/sizeof(tokens[0]));
