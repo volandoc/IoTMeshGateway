@@ -136,6 +136,9 @@ const Poco::UInt16 STATE_POWER2 = 0x0076;
 
 
 class LifxMessage {
+private:
+    Poco::Net::DatagramSocket* socketUDP=nullptr;
+    std::string ifname;
 protected:
     LifxPacket lifxPacket;
 
@@ -148,6 +151,15 @@ protected:
 public:
     LifxMessage(){}
     virtual ~LifxMessage(){}
+
+
+    void setSocket(Poco::Net::DatagramSocket* socket){
+        socketUDP = socket;
+    }
+
+    void setNetwork(std::string iname){
+        ifname = iname;
+    }
 
     void sendMessage();
     void sendMessage(std::string address);
@@ -194,6 +206,64 @@ public:
         part[0] = lowByte(power);
         part[1] = highByte(power);
         setData(part, 2);
+    }
+};
+
+class LifxMessageFactory {
+private:
+    Poco::Net::NetworkInterface netInterface;
+    Poco::Net::DatagramSocket socket;
+    std::string ifname;
+public:
+
+    LifxMessageFactory(std::string iname): ifname(iname) {
+        netInterface = Poco::Net::NetworkInterface::forName(iname);
+        Poco::Net::SocketAddress sa(netInterface.broadcastAddress(), LifxPort);
+        socket = Poco::Net::DatagramSocket(sa);
+        socket.setBroadcast(true);
+        socket.setReceiveTimeout(500000);
+        socket.connect(sa);
+    }
+
+    ~LifxMessageFactory(){
+        socket.close();
+    }
+
+    Poco::Net::DatagramSocket* getUDPSocket(){
+        return &socket;
+    }
+
+    LifxMessage* getMessage(Poco::UInt16 type){
+        return getMessage(type, 0, 0, 0, 0);
+    }
+
+    LifxMessage* getMessage(Poco::UInt16 type, Poco::UInt16 arg1){
+        return getMessage(type, arg1, 0, 0, 0);
+    }
+
+    LifxMessage* getMessage(Poco::UInt16 type, Poco::UInt16 arg1, Poco::UInt16 arg2){
+        return getMessage(type, arg1, arg2, 0, 0);
+    }
+
+    LifxMessage* getMessage(Poco::UInt16 type, Poco::UInt16 arg1, Poco::UInt16 arg2, Poco::UInt16 arg3){
+        return getMessage(type, arg1, arg2, arg3, 0);
+    }
+
+    LifxMessage* getMessage(Poco::UInt16 type, Poco::UInt16 arg1, Poco::UInt16 arg2, Poco::UInt16 arg3, Poco::UInt16 arg4){
+        Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+        logger.debug("Creating (%d) message", (int) type);
+        LifxMessage* tmpMessage;
+
+        switch(type){
+            case GET_SERVICE: tmpMessage = new GetServiceMessage(); break;
+            case GET_POWER:   tmpMessage = new GetPowerMessage(); break;
+            case SET_POWER:   tmpMessage = new SetPowerMessage(arg1); break;
+            default: tmpMessage = nullptr;
+        }
+        tmpMessage->setNetwork(ifname);
+        tmpMessage->setSocket(&socket);
+
+        return tmpMessage;
     }
 };
 

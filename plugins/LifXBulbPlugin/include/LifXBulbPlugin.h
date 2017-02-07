@@ -7,6 +7,7 @@
 #include <Poco/Timestamp.h>
 #include <Poco/Timer.h>
 #include "pluginsapi.h"
+#include "messaging.h"
 
 #define POLLING_INTERVAL           5000
 #define POLLING_START_INTERVAL     0
@@ -21,6 +22,7 @@ private:
     Poco::Timer pollingTimer;
     Poco::Timer listenerTimer;
     std::string work_dir;
+    LifxMessageFactory messageFactory;
 
     void doPolling(Poco::Timer &timer);
     void listenUDP(Poco::Timer &timer);

@@ -1,8 +1,7 @@
 #include "LifXBulbPlugin.h"
-#include "messaging.h"
 #include <iostream>
 
-LifXBulbPlugin::LifXBulbPlugin() {
+LifXBulbPlugin::LifXBulbPlugin(): messageFactory(LifxMessageFactory("ap0")) {
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
     this->pluginDetails.type = _PD_T_DEVICE;
     this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
@@ -44,8 +43,9 @@ int LifXBulbPlugin::startPlugin(){
 
 void LifXBulbPlugin::doPolling(Poco::Timer& timer){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+    logger.debug("inside Polling timer");
 
-    LifxMessage *message = new GetServiceMessage();
+    LifxMessage *message = messageFactory.getMessage(GET_SERVICE);
     message->sendMessage();
 
     logger.debug("Polling message sent");
@@ -55,28 +55,30 @@ void LifXBulbPlugin::doPolling(Poco::Timer& timer){
 
 void LifXBulbPlugin::listenUDP(Poco::Timer& timer){
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
+    logger.debug("inside UDP Packet listener");
     try {
-        Poco::Net::NetworkInterface ni = Poco::Net::NetworkInterface::forName("ap0");
-
-        Poco::Net::SocketAddress sa(ni.broadcastAddress().toString(), LifxPort);
-        logger.debug(ni.broadcastAddress().toString());
-        Poco::Net::DatagramSocket dgs(sa);
+        Poco::Net::DatagramSocket *dgs = messageFactory.getUDPSocket();
         Poco::UInt8 buffer[256];
         Poco::Net::SocketAddress sender;
-        dgs.setReceiveTimeout(500000);
 
-        int n = dgs.receiveFrom(buffer, sizeof(buffer)-1, sender);
-        if(n > 0) {
-            buffer[n] = '\0';
-            std::cout << sender.toString() << ": ";
-            for(int i=0; i < n; i++){
-                std::cout << (unsigned int) buffer[i];
+        if(dgs->poll(500000, Poco::Net::Socket::SelectMode::SELECT_READ)) {
+            int n = dgs->receiveFrom(buffer, sizeof(buffer)-1, sender);
+            if(n > 0) {
+                buffer[n] = '\0';
+                std::cout << sender.toString() << ": ";
+                for(int i=0; i < n; i++){
+                    std::cout << (unsigned int) buffer[i];
+                }
+                std::cout << std::endl;
+                logger.debug("UDP Packet received");
+            } else {
+                logger.debug("empty UDP Packet");
             }
-            std::cout << std::endl;
-            logger.debug("UDP Packet received");
+        } else {
+            logger.debug("cannot read from UDP Socket");
         }
     } catch(Poco::Exception excp){
-        logger.error(excp.displayText(), __FILE__, 84);
+        logger.error(excp.displayText() + ":" + excp.message(), __FILE__, 78);
     }
 }
 
@@ -142,14 +144,14 @@ int LifXBulbPlugin::proccessDeviceSetCommand(std::string content, std::string de
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
 
     if(content.find("on") != -1){
-        LifxMessage *message = new SetPowerMessage(65535);
+        LifxMessage *message = messageFactory.getMessage(SET_POWER, 65535);
         message->sendMessage();
 
         logger.debug("Power On message sent to %s", device_id);
 
         delete message;
     } else if(content.find("off") != -1){
-        LifxMessage *message = new SetPowerMessage(0);
+        LifxMessage *message = messageFactory.getMessage(SET_POWER, 0);
         message->sendMessage();
 
         logger.debug("Power Off message sent to %s", device_id);
