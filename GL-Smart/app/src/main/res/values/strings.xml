@@ -11,7 +11,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_infoStatus">Status:</string>
     <string name="settings_infoAddress">Server address:</string>
-    <string name="settings_serverAddress">172.24.254.20</string>
+    <string name="settings_serverAddress">52.90.199.250</string>
 
     <!-- Gateway -->
     <string name="gateway_plugins">Plugins</string>

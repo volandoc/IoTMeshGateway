@@ -41,10 +41,12 @@ import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.status;
  */
 public class NodeListFragment extends MqttFragment {
 	private static final String TAG = NodeListFragment.class.getSimpleName();
+	private static final String TOPICS_KEY = "TOPICS_KEY";
+	private static final String TITLE_KEY = "TITLE_KEY";
+	private static final String TYPE_KEY = "TYPE_KEY";
 
 	protected List<Node> mData;
 
-	private Toolbar mToolbar;
 	protected RecyclerView mListView;
 	protected ProgressBar mProgressBar;
 
@@ -54,9 +56,9 @@ public class NodeListFragment extends MqttFragment {
 
 	public static Fragment newInstance(String[] topics, @StringRes int res, TopicType type) {
 		Bundle args = new Bundle();
-		args.putStringArray("topics", topics);
-		args.putInt("title", res);
-		args.putSerializable("type", type);
+		args.putStringArray(TOPICS_KEY, topics);
+		args.putInt(TITLE_KEY, res);
+		args.putSerializable(TYPE_KEY, type);
 
 		Fragment fragment = new NodeListFragment();
 		fragment.setArguments(args);
@@ -69,7 +71,7 @@ public class NodeListFragment extends MqttFragment {
 		super.onCreate(savedInstanceState);
 
 		mData = new ArrayList<>();
-		mTopicType = (TopicType) getArguments().getSerializable("type");
+		mTopicType = (TopicType) getArguments().getSerializable(TYPE_KEY);
 	}
 
 	@Override
@@ -77,13 +79,6 @@ public class NodeListFragment extends MqttFragment {
 		super.onAttach(context);
 
 		mCallback = (GatewayCallback) context;
-
-		if (context instanceof MainActivity) {
-			mToolbar = ((MainActivity) context).getToolbar();
-			mToolbar.setTitle(null);
-			mToolbar.setSubtitle(null);
-			mToolbar.getMenu().clear();
-		}
 	}
 
 	@Override
@@ -93,11 +88,13 @@ public class NodeListFragment extends MqttFragment {
 
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
+		super.onViewCreated(view,savedInstanceState);
+
 		mListView = (RecyclerView) view.findViewById(R.id.list);
 		mListView.setLayoutManager(new LinearLayoutManager(getActivity()));
 		mListView.setAdapter(new Adapter());
 
-		mToolbar.setTitle(getArguments().getInt("title"));
+		mToolbar.setTitle(getArguments().getInt(TITLE_KEY));
 
 		mProgressBar = (ProgressBar) view.findViewById(R.id.progress);
 
@@ -118,7 +115,7 @@ public class NodeListFragment extends MqttFragment {
 
 	@Override
 	protected String[] getTopics() {
-		return getArguments().getStringArray("topics");
+		return getArguments().getStringArray(TOPICS_KEY);
 	}
 
 	@Override

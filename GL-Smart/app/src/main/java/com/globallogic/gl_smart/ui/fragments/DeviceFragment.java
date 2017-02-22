@@ -2,7 +2,6 @@ package com.globallogic.gl_smart.ui.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,10 +27,11 @@ import static com.globallogic.gl_smart.ui.fragments.GatewayFragment.status;
 public class DeviceFragment extends NodeFragment implements View.OnClickListener {
 
 	private static final String TAG = DeviceFragment.class.getSimpleName();
+	private static final String NODE_KEY = "NODE_KEY";
 
 	public static Fragment newInstance(Node node) {
 		Bundle args = new Bundle();
-		args.putSerializable("node", node);
+		args.putSerializable(NODE_KEY, node);
 
 		Fragment fragment = new DeviceFragment();
 		fragment.setArguments(args);
@@ -42,7 +42,7 @@ public class DeviceFragment extends NodeFragment implements View.OnClickListener
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		mNode = (Node) getArguments().getSerializable("node");
+		mNode = (Node) getArguments().getSerializable(NODE_KEY);
 	}
 
 	@Override
@@ -54,13 +54,12 @@ public class DeviceFragment extends NodeFragment implements View.OnClickListener
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 
-		Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
-		toolbar.setNavigationIcon(R.drawable.ic_chevron_left);
-		toolbar.setNavigationOnClickListener(this);
+		mToolbar.setNavigationIcon(R.drawable.ic_chevron_left);
+		mToolbar.setNavigationOnClickListener(this);
 
 		if (mNode != null) {
-			toolbar.setTitle(mNode.name);
-			toolbar.setSubtitle(mNode.status);
+			mToolbar.setTitle(mNode.name);
+			mToolbar.setSubtitle(mNode.status);
 		}
 
 		if (BuildConfig.BUILD_TYPE.equals("offlane")) {

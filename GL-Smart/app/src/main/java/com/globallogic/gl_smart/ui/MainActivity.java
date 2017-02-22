@@ -27,13 +27,15 @@ import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.MessageType;
 import com.globallogic.gl_smart.model.type.TopicType;
 import com.globallogic.gl_smart.ui.base.AppActivity;
+import com.globallogic.gl_smart.ui.base.ToolbarFragment;
 import com.globallogic.gl_smart.ui.fragments.GatewayFragment;
 import com.globallogic.gl_smart.ui.fragments.NodeListFragment;
 import com.globallogic.gl_smart.ui.fragments.SettingsFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 import com.globallogic.gl_smart.utils.Utils;
 
-public class MainActivity extends AppActivity implements NavigationView.OnNavigationItemSelectedListener, GatewayCallback {
+public class MainActivity extends AppActivity implements NavigationView.OnNavigationItemSelectedListener,
+		GatewayCallback, ToolbarFragment.ToolbarContainer {
 
 	private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -93,6 +95,7 @@ public class MainActivity extends AppActivity implements NavigationView.OnNaviga
 		}
 	}
 
+	@Override
 	public Toolbar getToolbar() {
 		return mToolbar;
 	}

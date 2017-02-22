@@ -1,30 +1,29 @@
 package com.globallogic.gl_smart.ui.base;
 
-import android.content.Context;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
-
-import com.globallogic.gl_smart.ui.MainActivity;
+import android.view.View;
 
 /**
  * @author eugenii.samarskyi.
  */
-public class ToolbarFragment extends BaseFragment {
+public abstract class ToolbarFragment extends BaseFragment {
 
 	private static final String TAG = ToolbarFragment.class.getSimpleName();
 
 	protected Toolbar mToolbar;
 
-	@Override
-	public void onAttach(Context context) {
-		super.onAttach(context);
+	public interface ToolbarContainer {
+		Toolbar getToolbar();
+	}
 
-		if (context instanceof MainActivity) {
-			mToolbar = ((MainActivity) context).getToolbar();
-			mToolbar.setTitle(null);
-			mToolbar.setSubtitle(null);
-			mToolbar.getMenu().clear();
-		} else {
-			throw new IllegalStateException("Wrong Activity, no toolbar");
-		}
+	@Override
+	public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+		mToolbar = ((ToolbarContainer) getActivity()).getToolbar();
+		mToolbar.setTitle(null);
+		mToolbar.setSubtitle(null);
+		mToolbar.getMenu().clear();
 	}
 }

@@ -3,7 +3,6 @@ package com.globallogic.gl_smart.ui.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 
@@ -13,7 +12,6 @@ import com.globallogic.gl_smart.model.mqtt.StatusMessage;
 import com.globallogic.gl_smart.model.mqtt.Topic;
 import com.globallogic.gl_smart.model.type.MessageType;
 import com.globallogic.gl_smart.ui.GatewayCallback;
-import com.globallogic.gl_smart.ui.MainActivity;
 
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
@@ -28,7 +26,6 @@ public class GatewayFragment extends NodeFragment {
 		return new GatewayFragment();
 	}
 
-	private Toolbar mToolbar;
 	private GatewayCallback mGatewayCallback;
 
 	@Override
@@ -55,12 +52,6 @@ public class GatewayFragment extends NodeFragment {
 
 		mGatewayCallback = (GatewayCallback) context;
 
-		if (context instanceof MainActivity) {
-			mToolbar = ((MainActivity) context).getToolbar();
-			mToolbar.setTitle(null);
-			mToolbar.setSubtitle(null);
-			mToolbar.getMenu().clear();
-		}
 	}
 
 	@Override

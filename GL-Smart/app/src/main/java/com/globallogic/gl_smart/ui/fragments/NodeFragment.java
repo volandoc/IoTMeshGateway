@@ -68,6 +68,7 @@ public abstract class NodeFragment extends MqttFragment implements TextView.OnEd
 
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
 		if (mListView == null) {
 			mListView = (RecyclerView) view.findViewById(R.id.list);
 			mListView.setLayoutManager(new LinearLayoutManager(getActivity()));

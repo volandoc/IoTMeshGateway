@@ -7,7 +7,7 @@ import com.globallogic.gl_smart.model.mqtt.Property;
 import com.globallogic.gl_smart.model.mqtt.PropertyPayload;
 import com.globallogic.gl_smart.model.mqtt.StatusMessage;
 import com.globallogic.gl_smart.model.mqtt.Topic;
-import com.globallogic.gl_smart.ui.base.BaseFragment;
+import com.globallogic.gl_smart.ui.base.ToolbarFragment;
 import com.globallogic.gl_smart.utils.MqttManager;
 import com.globallogic.gl_smart.utils.Utils;
 
@@ -18,7 +18,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 /**
  * @author eugenii.samarskyi.
  */
-public abstract class MqttFragment extends BaseFragment implements MqttCallback {
+public abstract class MqttFragment extends ToolbarFragment implements MqttCallback {
 
 	private static final String TAG = MqttFragment.class.getSimpleName();
 

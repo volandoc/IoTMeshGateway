@@ -45,6 +45,8 @@ public class SettingsFragment extends ToolbarFragment implements Toolbar.OnMenuI
 
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
+		super.onViewCreated(view,savedInstanceState);
+
 		mToolbar.setTitle(getString(R.string.settings_title));
 
 		mGatewayView = (EditText) view.findViewById(R.id.gateway);
