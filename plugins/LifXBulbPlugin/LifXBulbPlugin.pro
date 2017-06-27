@@ -17,7 +17,8 @@ INCLUDEPATH += $$PWD/include \
 DEFINES += UCL_PLUGINS_EXPORTS
 
 SOURCES += src/LifXBulbPlugin.cpp \
-    src/messaging.cpp
+    src/messaging.cpp \
+    src/LifXBulbApp.cpp
 
 HEADERS += include/LifXBulbPlugin.h \
     ../include/pluginsapi.h \

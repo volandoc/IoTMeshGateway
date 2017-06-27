@@ -14,10 +14,18 @@ CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,LifXBulbPlugin.so.1
 INCPATH       = -I./include -I../include -I../../core/include
-LIBS          = $(SUBLIBS) -lPocoFoundation -lPocoNet
+LIBS          = -lPocoFoundation -lPocoNet
 DESTDIR       = 
 SOURCES       = src/LifXBulbPlugin.cpp src/messaging.cpp
 OBJECTS       = LifXBulbPlugin.o messaging.o
+
+APPNAME       =  LifxBulbApp
+APPDEFINES    =
+APPCFLAGS     = -c -pipe -O2 -Wall -W -fPIC $(APPDEFINES)
+APPCXXFLAGS   = -c -pipe -O2 -std=gnu++11 -Wall -W -fPIC $(APPDEFINES)
+APPLFLAGS     = -Wl,-O1
+APPLIBS       = $(LIBS) -lPocoUtil -lPocoJSON
+APPOBJECTS    = LifXBulbApp.o $(OBJECTS)
 
 ###
 # Define system commands
@@ -29,6 +37,7 @@ SYMLINK       = ln -f -s
 ###
 # Define target file names
 ###
+APPTARGET     = lifxbulbapp
 TARGET        = libLifXBulbPlugin.so.1.0.0
 TARGETA       = libLifXBulbPlugin.a
 TARGET0       = libLifXBulbPlugin.so
@@ -40,9 +49,9 @@ TARGET2       = libLifXBulbPlugin.so.1.0
 ###
 # BuildRules
 ###
-all: $(TARGET) staticlib
+all: $(TARGET) staticlib $(APPTARGET)
 
-$(TARGET):  $(OBJECTS)  
+$(TARGET): $(OBJECTS)
 	-$(DEL_FILE) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS)
 	$(SYMLINK) $(TARGET) $(TARGET0)
@@ -51,9 +60,13 @@ $(TARGET):  $(OBJECTS)
 
 staticlib: $(TARGETA)
 
-$(TARGETA):  $(OBJECTS)
-	-$(DEL_FILE) $(TARGETA) 
+$(TARGETA): $(OBJECTS)
+	-$(DEL_FILE) $(TARGETA)
 	$(AR) $(TARGETA) $(OBJECTS)
+
+$(APPTARGET): $(APPOBJECTS)
+	-$(DEL_FILE) $(APPTARGET)
+	$(LINK) $(APPLFLAGS) -o $(APPTARGET) $(APPOBJECTS) $(APPLIBS)
 
 LifXBulbPlugin.o: src/LifXBulbPlugin.cpp include/LifXBulbPlugin.h \
 		../include/pluginsapi.h ../../core/include/innerbusclientapi.h
@@ -62,5 +75,8 @@ LifXBulbPlugin.o: src/LifXBulbPlugin.cpp include/LifXBulbPlugin.h \
 messaging.o: src/messaging.cpp include/messaging.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o messaging.o src/messaging.cpp
 
+LifXBulbApp.o: src/LifXBulbApp.cpp
+	$(CXX) -c $(APPCXXFLAGS) $(INCPATH) -o LifXBulbApp.o src/LifXBulbApp.cpp
+
 clean:
-	-$(DEL_FILE) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2) $(TARGETA) $(OBJECTS)
+	-$(DEL_FILE) $(APPTARGET) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2) $(TARGETA) $(APPOBJECTS)

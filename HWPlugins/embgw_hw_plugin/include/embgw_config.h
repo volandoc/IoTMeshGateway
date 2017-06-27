@@ -1,7 +1,7 @@
 #ifndef __EMBGW_CONFIG_H__
 #define __EMBGW_CONFIG_H__
 
-#define MQTT_HOST ("172.24.254.20") //DragonBoard
+#define MQTT_HOST ("54.173.78.1") //DragonBoard
 #define MQTT_PORT 1883
 
 #define MQTT_PUB_TOPIC "A000000000000777/Esp8266_%s/%s"

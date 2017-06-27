@@ -44,8 +44,10 @@ public:
     virtual PluginDetails* getPluginDetails();
 };
 
+#ifdef UCL_PLUGINS_EXPORTS
 POCO_BEGIN_MANIFEST(UCLPluginIf)
     POCO_EXPORT_SINGLETON(LifXBulbPlugin)
 POCO_END_MANIFEST
+#endif
 
 #endif // LIFX_BULB_PLUGIN_H

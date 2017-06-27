@@ -1,7 +1,7 @@
 #include "LifXBulbPlugin.h"
 #include <iostream>
 
-LifXBulbPlugin::LifXBulbPlugin(): messageFactory(LifxMessageFactory("ap0")) {
+LifXBulbPlugin::LifXBulbPlugin(): messageFactory(LifxMessageFactory("wlo1")) {
     Poco::Logger& logger = Poco::Logger::get("LifXBulbPlugin");
     this->pluginDetails.type = _PD_T_DEVICE;
     this->pluginDetails.apiVersion = UCL_PLUGINS_API_VERSION;
