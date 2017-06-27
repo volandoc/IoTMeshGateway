@@ -15,7 +15,7 @@ CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 LFLAGS        = -shared -Wl,-soname,LifXBulbPlugin.so.1
 INCPATH       = -I./include -I../include -I../../core/include
 LIBS          = -lPocoFoundation -lPocoNet
-DESTDIR       = 
+DESTDIR       = ../../bin
 SOURCES       = src/LifXBulbPlugin.cpp src/messaging.cpp
 OBJECTS       = LifXBulbPlugin.o messaging.o
 
@@ -31,6 +31,11 @@ APPOBJECTS    = LifXBulbApp.o $(OBJECTS)
 # Define system commands
 ###
 DEL_FILE      = rm -f
+COPY_FILE     = cp -f
+MOVE_FILE     = mv -f
+MKDIR         = mkdir -p
+COPY_DIR      = cp -f -R
+DEL_DIR       = rm -rf
 AR            = ar cqs
 SYMLINK       = ln -f -s
 
@@ -77,6 +82,9 @@ messaging.o: src/messaging.cpp include/messaging.h
 
 LifXBulbApp.o: src/LifXBulbApp.cpp
 	$(CXX) -c $(APPCXXFLAGS) $(INCPATH) -o LifXBulbApp.o src/LifXBulbApp.cpp
+
+install:
+	-$(MOVE_FILE) $(APPTARGET) $(DESTDIR)
 
 clean:
 	-$(DEL_FILE) $(APPTARGET) $(TARGET) $(TARGET0) $(TARGET1) $(TARGET2) $(TARGETA) $(APPOBJECTS)

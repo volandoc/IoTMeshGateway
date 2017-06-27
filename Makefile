@@ -41,10 +41,7 @@ TARGET        = embgateway
 ###
 # BuildRules
 ###
-all: corelibs pluginlibs $(TARGET)
-	-$(DEL_DIR) $(BIN_DIR)
-	-$(MKDIR) $(BIN_DIR)
-	-$(MOVE_FILE) $(TARGET) $(DESTDIR)
+all: corelibs pluginlibs $(TARGET) install
 
 corelibs:
 	$(MAKE) -C $(CORE_DIR)
@@ -60,6 +57,12 @@ main.o: src/main.cpp plugins/include/pluginsapi.h core/include/innerbusapi.h inc
 
 plugincontainer.o: src/plugincontainer.cpp include/plugincontainer.h include/plugincontainerif.h
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o plugincontainer.o src/plugincontainer.cpp
+
+install:
+	-$(DEL_DIR) $(BIN_DIR)
+	-$(MKDIR) $(BIN_DIR)
+	-$(MOVE_FILE) $(TARGET) $(DESTDIR)
+	$(MAKE) install -C $(SUBPROJECT_DIR)
 
 clean:
 	-$(DEL_DIR) $(BIN_DIR)

@@ -7,6 +7,13 @@ subdirs:
 		$(MAKE) all -C $$dir; \
 	done	
 
+install: isubdirs
+
+isubdirs:
+	for dir in $(PLUGINS); do \
+		$(MAKE) install -C $$dir; \
+	done	
+
 clean: csubdirs
 
 csubdirs:
