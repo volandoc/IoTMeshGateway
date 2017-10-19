@@ -7,7 +7,7 @@
 QT     -= core gui
 CONFIG += c++11
 
-TARGET = LifXBulbPlugin
+TARGET = NestDevicesPlugin
 TEMPLATE = lib
 
 INCLUDEPATH += $$PWD/include \
@@ -16,16 +16,19 @@ INCLUDEPATH += $$PWD/include \
 
 DEFINES += UCL_PLUGINS_EXPORTS
 
-SOURCES += src/LifXBulbPlugin.cpp \
-    src/messaging.cpp \
-    src/LifXBulbApp.cpp
+SOURCES += src/NestDevicesPlugin.cpp \
+    src/NestType.cpp \
+    src/NestTypeFactory.cpp \
+    src/rest.cpp
 
-HEADERS += include/LifXBulbPlugin.h \
+HEADERS += include/NestDevicesPlugin.h \
     ../include/pluginsapi.h \
     ../include/deviceapi.h \
     ../../core/include/innerbusclientapi.h \
-    include/device_types.h \
-    include/messaging.h
+    include/NestType.h \
+    include/NestTypeFactory.h \
+    include/rest.h \
+    include/configuration.h
 
 LIBS += -lPocoFoundation
 

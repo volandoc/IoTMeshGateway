@@ -69,7 +69,7 @@ private:
     int will_set();
     int will_clear();
     int sendCommand(IBMessage message, std::string target);
-    int sendEvent(IBMessage message);
+    int sendEvent(IBMessage message, std::string target);
     int sendStatus(std::string status);
     int subscribe();
     int unsubscribe();

@@ -194,7 +194,7 @@ int InnerBusClient::sendCommand(IBMessage message, std::string target) {
     return rc;
 }
 
-int InnerBusClient::sendEvent(IBMessage message) {
+int InnerBusClient::sendEvent(IBMessage message, std::string target) {
     int rc = 0;
 
     if(cfg.id == cfg.prefix){
@@ -203,7 +203,9 @@ int InnerBusClient::sendEvent(IBMessage message) {
     if( nullptr != callbackObj ) {
         if( (callbackObj->getPluginDetails()->type != NULL)
              && !strcmp(callbackObj->getPluginDetails()->type, _PD_T_DEVICE) ){
-            std::string tmpTopic = cfg.prefix + "/" + cfg.id + "/" + cfg.occurrence_topic;
+            std::string tmpTopic = cfg.prefix + "/" + cfg.id;
+            if(!target.empty()) tmpTopic = tmpTopic + "/" + target;
+            tmpTopic = tmpTopic + "/" + cfg.occurrence_topic;
             rc = publish(tmpTopic, message.toJSON());
         }
 
@@ -409,16 +411,21 @@ mosquitto * InnerBusClient::getMQTTInst(){
 }
 
 int InnerBusClient::sendMessage(IBMessage message, std::string target){
+    Poco::Logger& logger = Poco::Logger::get("InnerBus");
     IBPayload payload;
-    payload.fromJSON(message.getPayload());
+    payload = message.getPayload();
 
     if(!payload.getType().compare("command")){
+        logger.debug("%s- sending command", cfg.id);
         return sendCommand(message, target);
     }
 
     if(!payload.getType().compare("event")){
-        return sendEvent(message);
+        logger.debug("%s- sending event", cfg.id);
+        return sendEvent(message, target);
     }
+
+    logger.debug("%s- wrong message type", cfg.id);
 }
 
 void InnerBusClient::getInfo() {

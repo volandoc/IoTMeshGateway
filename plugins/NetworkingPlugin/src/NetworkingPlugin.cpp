@@ -48,13 +48,12 @@ int NetworkingPlugin::setWorkDir(std::string path){
 
 int NetworkingPlugin::executeCommand(std::string source, IBMessage message){
     Poco::Logger& logger = Poco::Logger::get("NetworkingPlugin");
-    logger.debug("executeCommand for {%s} msg{%s}", source, message.getPayload());
+    IBPayload payload = message.getPayload();
 
-    logger.debug("\"%s : %s : %s : %d\"", message.getId(), message.getPayload(), message.getReference(), (int) message.getTimestamp());
+    logger.debug("executeCommand for {%s} msg{%s}", source, payload.toJSON());
 
-    IBPayload payload;
-    if(payload.fromJSON(message.getPayload()))
-        logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
+    logger.debug("\"%s : %s : %s : %d\"", message.getId(), payload.toJSON(), message.getReference(), (int) message.getTimestamp());
+    logger.debug("\"%s : %s : %s : %s\"", payload.getType(), payload.getValue(), payload.getCvalue(), payload.getContent());
 
     return 0;
 }
@@ -66,7 +65,7 @@ int NetworkingPlugin::executeInternalCommand(std::string source, std::string mes
     return 0;
 }
 
-int NetworkingPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference) {
+int NetworkingPlugin::sendOccurrence(bool success, std::string cvalue, std::string content, std::string reference, std::string sender) {
       return 0;
 }
 
