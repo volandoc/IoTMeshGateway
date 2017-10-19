@@ -99,14 +99,21 @@ In same way all components can utilize POCO::Configuration library and store the
 
 # Sponsors
 This work unable to imagine without [GloblLogic](https://www.globallogic.com/) sponsorship about H/W and people time contribution.
+
 This project could be marked as Globallogic PoC.
 
 # Contributors
 Many thanks to:
+
     Kostyantyn Pelekh
+
     Aleksandr Gaysin
+
     Andrii Maslianyi
+
     Maksym Shestirko
+
     Eugenii Samarskyi
+    
 
 [Goto Top](#table-of-contents)
