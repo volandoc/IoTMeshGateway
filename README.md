@@ -13,6 +13,8 @@ IoTMeshGateway
     <a href="#installing">Installing</a>
     <a href="#runing">Runing</a>
 <a href="#configuration">Configuration</a>
+<a href="#sponsors">Sponsors</a>
+<a href="#contributors">Contributors</a>
 </pre>
 
 # Introduction
@@ -94,5 +96,17 @@ There are basic configiration files in [conf](conf/) folder.
 
 Any other configuration can be placed in any place by desire. For example InnerBus core component has its own configuration file in component folder.
 In same way all components can utilize POCO::Configuration library and store their own configuration.
+
+# Sponsors
+This work unable to imagine without [GloblLogic](https://www.globallogic.com/) sponsorship about H/W and people time contribution.
+This project could be marked as Globallogic PoC.
+
+# Contributors
+Many thanks to:
+    Kostyantyn Pelekh
+    Aleksandr Gaysin
+    Andrii Maslianyi
+    Maksym Shestirko
+    Eugenii Samarskyi
 
 [Goto Top](#table-of-contents)
