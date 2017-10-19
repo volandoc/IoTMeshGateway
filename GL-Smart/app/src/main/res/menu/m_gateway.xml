@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	>
+
+	<!--<item-->
+		<!--android:id="@+id/on"-->
+		<!--android:title="On"-->
+		<!--/>-->
+
+	<!--<item-->
+		<!--android:id="@+id/off"-->
+		<!--android:title="Off"-->
+		<!--/>-->
+
+	<!--<item-->
+		<!--android:id="@+id/get"-->
+		<!--android:title="GetProperties"-->
+		<!--/>-->
+
+	<item
+		android:id="@+id/settings"
+		android:title="Settings"
+	    android:icon="@drawable/ic_settings"
+	    app:showAsAction="always"
+		/>
+
+	<!--<item-->
+		<!--android:id="@+id/subscribe"-->
+		<!--android:title="subscribe"-->
+		<!--app:showAsAction="always"-->
+		<!--/>-->
+
+</menu>
