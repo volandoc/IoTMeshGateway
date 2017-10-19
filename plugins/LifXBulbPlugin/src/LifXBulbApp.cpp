@@ -38,7 +38,7 @@ protected:
         conf_dir = work_dir + conf_dir;
         logger().information(work_dir);
 
-        Poco::Util::Application::loadConfiguration(conf_dir + "embgateway.properties"); // load default configuration files, if present
+        Poco::Util::Application::loadConfiguration(conf_dir + "gw.properties"); // load default configuration files, if present
 
         core_dir = work_dir + Application::config().getString("application.coredir");
 
@@ -95,7 +95,7 @@ protected:
 
     int main(const ArgVec& args) {
         if (!_helpRequested) {
-            logger().information("Start Embedded IoT Gateway version emb-0.0.1");
+            logger().information("Start IoT Mesh Gateway version 0.0.1");
             BusLoader busLoader;
 
             std::string coreBusPath(core_dir + "/InnerBus/InnerBus");

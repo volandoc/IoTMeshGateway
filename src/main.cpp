@@ -23,7 +23,7 @@
 typedef Poco::ClassLoader<InnerBusIF> BusLoader;
 typedef Poco::Manifest<InnerBusIF> BusManifest;
 
-class EmbGateway: public Poco::Util::ServerApplication {
+class Gateway: public Poco::Util::ServerApplication {
 private:
     bool _helpRequested;
     std::string conf_dir = "/conf/";
@@ -40,7 +40,7 @@ protected:
         conf_dir = work_dir + conf_dir;
         logger().information(work_dir);
 
-        Poco::Util::Application::loadConfiguration(conf_dir + "embgateway.properties"); // load default configuration files, if present
+        Poco::Util::Application::loadConfiguration(conf_dir + "gw.properties"); // load default configuration files, if present
 
         plugins_dir = work_dir +  Application::config().getString("application.pluginsdir");
         core_dir = work_dir + Application::config().getString("application.coredir");
@@ -59,22 +59,22 @@ protected:
             Poco::Util::Option("help", "h", "display help information on command line arguments")
                 .required(false)
                 .repeatable(false)
-                .callback(Poco::Util::OptionCallback<EmbGateway>(this, &EmbGateway::handleHelp)));
+                .callback(Poco::Util::OptionCallback<Gateway>(this, &Gateway::handleHelp)));
         options.addOption(
             Poco::Util::Option("conf", "c", "with configuration file")
                 .required(false)
                 .repeatable(false)
-                .callback(Poco::Util::OptionCallback<EmbGateway>(this, &EmbGateway::handleConfig)));
+                .callback(Poco::Util::OptionCallback<Gateway>(this, &Gateway::handleConfig)));
         options.addOption(
             Poco::Util::Option("plugins", "p", "with plugins folder")
                 .required(false)
                 .repeatable(false)
-                .callback(Poco::Util::OptionCallback<EmbGateway>(this, &EmbGateway::handleHelp)));
+                .callback(Poco::Util::OptionCallback<Gateway>(this, &Gateway::handleHelp)));
         options.addOption(
             Poco::Util::Option("verbose", "v", "log everything")
                 .required(false)
                 .repeatable(false)
-                .callback(Poco::Util::OptionCallback<EmbGateway>(this, &EmbGateway::handleVerbose)));
+                .callback(Poco::Util::OptionCallback<Gateway>(this, &Gateway::handleVerbose)));
     }
 
     void handleHelp(const std::string& name, const std::string& value) {
@@ -103,7 +103,7 @@ protected:
 
     int main(const ArgVec& args) {
         if (!_helpRequested) {
-            logger().information("Start Embedded IoT Gateway version emb-0.0.1");
+            logger().information("Start IoT Mesh Gateway version 0.0.1");
             BusLoader busLoader;
             PluginContainer pluginContainer(plugins_dir);
 
@@ -145,13 +145,13 @@ protected:
     }
 
 public:
-    EmbGateway(): _helpRequested(false) {
+    Gateway(): _helpRequested(false) {
     }
 
-    ~EmbGateway()	{
+    ~Gateway()	{
     }
 
 };
 
 
-POCO_SERVER_MAIN(EmbGateway)
+POCO_SERVER_MAIN(Gateway)

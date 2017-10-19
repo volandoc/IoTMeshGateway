@@ -8,13 +8,13 @@ LINK          = g++
 ###
 # Define compile flags and defines
 ###
-DISTNAME      = EmbedGateway1.0.0
+DISTNAME      = IoTMeshGateway1.0.0
 DEFINES       =
 CFLAGS        = -c -pipe -O2 -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -c -pipe -O2 -std=gnu++11 -Wall -W -fPIC $(DEFINES)
 LFLAGS        = -Wl,-O1
 LIBS          = $(SUBLIBS) -lPocoFoundation -lPocoUtil -lPocoJSON
-INCPATH       = -I../EmbGateway/include -I./include -I./plugins/include -I./core/include
+INCPATH       = -I../IoTMeshGateway/include -I./include -I./plugins/include -I./core/include
 DESTDIR       = bin
 SOURCES       = main.cpp plugincontainer.cpp
 OBJECTS       = main.o plugincontainer.o
@@ -36,7 +36,7 @@ DEL_DIR       = rm -rf
 ###
 # Define target file names
 ###
-TARGET        = embgateway
+TARGET        = gateway
 
 ###
 # BuildRules
