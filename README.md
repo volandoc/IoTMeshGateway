@@ -18,9 +18,9 @@ IoTMeshGateway
 </pre>
 
 # Introduction
-Now a wide variety of IoT devices running on different technologies and protocols. They can use wireless technology (wi-fi, Bluetooth, ZWaiv, NFC, etc.), or wired technologies (Ethernet, OneWire, I2C, SPI). These devices can control other physical devices, or be terminal primitives.
+Now a wide variety of IoT devices running on different technologies and protocols. They can use wireless technology (Wi-Fi, Bluetooth, ZWave, NFC, etc.), or wired technologies (Ethernet, OneWire, I2C, SPI). These devices can control other physical devices, or be terminal primitives.
 
-But the lack of common standards limits the ability to use all IoT devices that exactly needed in a particular situation.
+Lack of common standards limits the ability to use all IoT devices that exactly needed in a particular situation.
 
 IoTMeshGateway - project, which was created for combining different devices running on different standards and protocols, and to help them communicate with each other.
 
